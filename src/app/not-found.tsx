@@ -1,88 +1,78 @@
 'use client';
 
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, Home, Search } from 'lucide-react';
+import { ChevronLeft, Home, ArrowRight } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
-      <div className="text-center max-w-md w-full">
-        {/* 404 Text */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center px-4">
+      <div className="text-center max-w-2xl mx-auto">
+        {/* Large 404 heading */}
         <div className="mb-8">
-          <h1 className="text-7xl md:text-8xl font-bold text-transparent bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text mb-4">
+          <div className="text-8xl md:text-9xl font-black bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
             404
-          </h1>
-          <p className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-            Page Not Found
-          </p>
-          <p className="text-muted-foreground text-lg">
-            Oops! The page you&apos;re looking for seems to have wandered off.
-          </p>
-        </div>
-
-        {/* Illustration */}
-        <div className="mb-8 flex justify-center">
-          <div className="relative w-40 h-40 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full flex items-center justify-center">
-            <Search className="w-24 h-24 text-blue-400 opacity-50" />
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button
-            asChild
-            className="gap-2"
+        {/* Main message */}
+        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900 dark:text-white">
+          পেজটি খুঁজে পাওয়া যাচ্ছে না
+        </h1>
+        <p className="text-xl text-slate-600 dark:text-slate-400 mb-12">
+          আমরা দুঃখিত! আপনি যে পেজটি খুঁজছেন তা আমাদের সার্ভারে পাওয়া যাচ্ছে না।
+        </p>
+
+        {/* Action buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 dark:bg-primary-600 text-white rounded-full font-bold hover:bg-slate-800 dark:hover:bg-primary-700 transition-colors shadow-lg"
           >
-            <Link href="/">
-              <Home className="w-4 h-4" />
-              Go Home
-            </Link>
-          </Button>
-          <Button
-            variant="outline"
-            asChild
-            className="gap-2"
+            <Home className="w-5 h-5" />
+            হোম পেজে যান
+          </Link>
+          <button
+            onClick={() => window.history.back()}
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-full font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
-            <button onClick={() => window.history.back()}>
-              <ChevronLeft className="w-4 h-4" />
-              Go Back
-            </button>
-          </Button>
+            <ChevronLeft className="w-5 h-5" />
+            পিছনে ফিরে যান
+          </button>
         </div>
 
-        {/* Quick Links */}
-        <div className="mt-12 pt-8 border-t border-border">
-          <p className="text-sm text-muted-foreground mb-4">
-            Here are some helpful links instead:
+        {/* Quick navigation links */}
+        <div className="pt-8 border-t border-slate-200 dark:border-slate-700">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+            অথবা এই জনপ্রিয় পেজগুলোতে ভিজিট করুন:
           </p>
-          <div className="flex flex-wrap gap-3 justify-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Link
               href="/shop"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-slate-700 font-semibold transition-colors group"
             >
-              Shop
+              কিনুন
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <span className="text-muted-foreground">•</span>
             <Link
               href="/blog"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-slate-700 font-semibold transition-colors group"
             >
-              Blog
+              ব্লগ
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <span className="text-muted-foreground">•</span>
             <Link
-              href="/ai-tools/gift-finder"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              href="/deals"
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-slate-700 font-semibold transition-colors group"
             >
-              Gift Finder
+              অফার
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <span className="text-muted-foreground">•</span>
             <Link
-              href="/features"
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              href="/contact"
+              className="flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-slate-700 font-semibold transition-colors group"
             >
-              Features
+              যোগাযোগ
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
