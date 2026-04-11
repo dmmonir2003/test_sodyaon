@@ -15,6 +15,7 @@ interface MenuItemConfig {
   color?: 'slate' | 'primary' | 'secondary';
   isHighlighted?: boolean;
   icon?: React.ComponentType<{ className?: string }>;
+  subItems?: MenuItemConfig[];
 }
 
 interface MobileMenuSectionProps {
@@ -24,6 +25,7 @@ interface MobileMenuSectionProps {
   onToggle: () => void;
   items: MenuItemConfig[];
   onClose: () => void;
+  showSubcategories?: boolean;
 }
 
 // Helper Components - defined before Navbar to ensure proper hoisting
@@ -36,7 +38,16 @@ function MobileNavLink({ href, text, onClick }: { href: string; text: string; on
   );
 }
 
-function MobileMenuSection({ id, title, isExpanded, onToggle, items, onClose }: MobileMenuSectionProps) {
+function MobileMenuSection({ id, title, isExpanded, onToggle, items, onClose, showSubcategories = false }: MobileMenuSectionProps) {
+  const [expandedSubItems, setExpandedSubItems] = useState<Record<string, boolean>>({});
+
+  const toggleSubItem = (itemLabel: string) => {
+    setExpandedSubItems(prev => ({
+      ...prev,
+      [itemLabel]: !prev[itemLabel]
+    }));
+  };
+
   return (
     <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">
       <button
@@ -48,28 +59,74 @@ function MobileMenuSection({ id, title, isExpanded, onToggle, items, onClose }: 
       </button>
 
       <div
-        className={`overflow-hidden transition-all duration-300 ${isExpanded ? 'max-h-96' : 'max-h-0'}`}
+        className={`overflow-hidden transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-0'}`}
       >
         <div className="space-y-1 mt-2">
-          {items.map((item) => {
+          {items.map((item, index) => {
             const IconComponent = item.icon;
+            const hasSubItems = showSubcategories && item.subItems && item.subItems.length > 0;
+            const isSubExpanded = expandedSubItems[item.label];
+
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onClose}
-                className={`flex items-center justify-between py-2 px-3 text-base font-bold rounded-xl transition-colors ${
-                  item.isHighlighted
-                    ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
-                    : `text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50`
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  {IconComponent && <IconComponent className="w-4 h-4" />}
-                  {item.label}
-                </span>
-                <ChevronRight className={`h-4 w-4 ${item.isHighlighted ? 'text-primary-400' : 'text-slate-400'}`} />
-              </Link>
+              <div key={`${item.label}-${index}`}>
+                {hasSubItems ? (
+                  <button
+                    onClick={() => toggleSubItem(item.label)}
+                    className={`w-full flex items-center justify-between py-2 px-3 text-base font-bold rounded-xl transition-colors ${
+                      item.isHighlighted
+                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                        : `text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50`
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      {IconComponent && <IconComponent className="w-4 h-4" />}
+                      {item.label}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isSubExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+                ) : (
+                  <Link
+                    href={item.href}
+                    onClick={onClose}
+                    className={`flex items-center justify-between py-2 px-3 text-base font-bold rounded-xl transition-colors ${
+                      item.isHighlighted
+                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                        : `text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50`
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      {IconComponent && <IconComponent className="w-4 h-4" />}
+                      {item.label}
+                    </span>
+                    <ChevronRight className={`h-4 w-4 ${item.isHighlighted ? 'text-primary-400' : 'text-slate-400'}`} />
+                  </Link>
+                )}
+
+                {/* Render sub-items if they exist */}
+                {hasSubItems && (
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ml-4 ${isSubExpanded ? 'max-h-full' : 'max-h-0'}`}
+                  >
+                    <div className="space-y-1 mt-1">
+                      {item.subItems!.map((subItem) => (
+                        <Link
+                          key={subItem.href}
+                          href={subItem.href}
+                          onClick={onClose}
+                          className={`flex items-center justify-between py-1.5 px-3 text-sm font-medium rounded-lg transition-colors ${
+                            subItem.isHighlighted
+                              ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                              : `text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50`
+                          }`}
+                        >
+                          {subItem.label}
+                          <ChevronRight className={`h-3 w-3 ${subItem.isHighlighted ? 'text-primary-400' : 'text-slate-400'}`} />
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -377,10 +434,58 @@ export default function Navbar() {
                 title="কেনাকাটা"
                 isExpanded={expandedSections.shopping}
                 onToggle={() => toggleSection('shopping')}
+                showSubcategories={true}
                 items={[
-                  { label: "শপ", href: "/shop", color: "slate" },
-                  { label: "শিশু পণ্য", href: "/shop/baby", color: "primary", isHighlighted: true },
-                  { label: "উইশলিস্ট", href: "/wishlist", color: "slate" }
+                  {
+                    label: "সব খেলনা দেখুন",
+                    href: "/shop",
+                    color: "slate"
+                  },
+                  {
+                    label: "বয়স-ভিত্তিক ফাইন্ডার",
+                    href: "/shop/age",
+                    color: "slate"
+                  },
+                  {
+                    label: "ফ্ল্যাশ ডিল",
+                    href: "/deals",
+                    color: "secondary"
+                  },
+                  {
+                    label: "বান্ডেল ডিল",
+                    href: "/bundles",
+                    color: "slate"
+                  },
+                  {
+                    label: "শীর্ষ ক্যাটাগরি",
+                    href: "#",
+                    color: "slate",
+                    subItems: [
+                      { label: "অ্যাকশন ফিগার", href: "/shop/categories/action-figures" },
+                      { label: "বিল্ডিং সেট", href: "/shop/categories/building-sets" },
+                      { label: "শিক্ষামূলক", href: "/shop/categories/educational" },
+                      { label: "পুতুল ও ফিগার", href: "/shop/categories/dolls" },
+                      { label: "আউটডোর প্লে", href: "/shop/categories/outdoor" }
+                    ]
+                  },
+                  {
+                    label: "শিশু পণ্য",
+                    href: "#",
+                    color: "primary",
+                    isHighlighted: true,
+                    subItems: [
+                      { label: "শিশু খাবার", href: "/shop/baby/food" },
+                      { label: "শিশু ব্যাগ", href: "/shop/baby/bags", isHighlighted: true },
+                      { label: "ডায়াপার", href: "/shop/baby/diapers" },
+                      { label: "শিশু পোশাক", href: "/shop/baby/clothes" },
+                      { label: "শিশু যত্ন পণ্য", href: "/shop/baby/care" }
+                    ]
+                  },
+                  {
+                    label: "উইশলিস্ট",
+                    href: "/wishlist",
+                    color: "slate"
+                  }
                 ]}
                 onClose={() => setIsMobileMenuOpen(false)}
               />
