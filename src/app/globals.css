@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ========================================
    GLOBAL THEME COLOR CONFIGURATION
    Change colors here to update entire app
