@@ -72,11 +72,10 @@ function MobileMenuSection({ id, title, isExpanded, onToggle, items, onClose, sh
                 {hasSubItems ? (
                   <button
                     onClick={() => toggleSubItem(item.label)}
-                    className={`w-full flex items-center justify-between py-2 px-3 text-base font-bold rounded-xl transition-colors ${
-                      item.isHighlighted
-                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
-                        : `text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50`
-                    }`}
+                    className={`w-full flex items-center justify-between py-2 px-3 text-base font-bold rounded-xl transition-colors ${item.isHighlighted
+                      ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                      : `text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50`
+                      }`}
                   >
                     <span className="flex items-center gap-2">
                       {IconComponent && <IconComponent className="w-4 h-4" />}
@@ -88,11 +87,10 @@ function MobileMenuSection({ id, title, isExpanded, onToggle, items, onClose, sh
                   <Link
                     href={item.href}
                     onClick={onClose}
-                    className={`flex items-center justify-between py-2 px-3 text-base font-bold rounded-xl transition-colors ${
-                      item.isHighlighted
-                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
-                        : `text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50`
-                    }`}
+                    className={`flex items-center justify-between py-2 px-3 text-base font-bold rounded-xl transition-colors ${item.isHighlighted
+                      ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                      : `text-slate-800 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800/50`
+                      }`}
                   >
                     <span className="flex items-center gap-2">
                       {IconComponent && <IconComponent className="w-4 h-4" />}
@@ -113,11 +111,10 @@ function MobileMenuSection({ id, title, isExpanded, onToggle, items, onClose, sh
                           key={subItem.href}
                           href={subItem.href}
                           onClick={onClose}
-                          className={`flex items-center justify-between py-1.5 px-3 text-sm font-medium rounded-lg transition-colors ${
-                            subItem.isHighlighted
-                              ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
-                              : `text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50`
-                          }`}
+                          className={`flex items-center justify-between py-1.5 px-3 text-sm font-medium rounded-lg transition-colors ${subItem.isHighlighted
+                            ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                            : `text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50`
+                            }`}
                         >
                           {subItem.label}
                           <ChevronRight className={`h-3 w-3 ${subItem.isHighlighted ? 'text-primary-400' : 'text-slate-400'}`} />
@@ -269,7 +266,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full glass-card border-b border-indigo-100 dark:border-slate-800">
-      
+
       {/* 1st Line: Top Banner */}
       <div className="bg-primary-600 text-white text-center py-1.5 md:py-1 px-4 text-xs md:text-sm font-medium tracking-wide">
         ২৫০০ টাকার উপরের অর্ডারে ফ্রি শিপিং! কোড ব্যবহার করুন TOYFUN24
@@ -277,11 +274,11 @@ export default function Navbar() {
 
       {/* Main Navbar Header Background */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* 2nd Line: Mobile Header (Logo Center, Hamburger Left, Actions Right) */}
         <div className="flex justify-between items-center h-16 md:h-20">
 
-          {/* Left: Hamburger (Mobile Only) */}
+
           <div className="flex items-center md:hidden flex-none w-[80px]">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
@@ -289,10 +286,6 @@ export default function Navbar() {
             >
               <Menu className="h-6 w-6" />
             </button>
-          </div>
-
-          {/* Center/Left: Logo + Theme Switchers (Mobile) */}
-          <div className="flex justify-center md:justify-start flex-1 md:flex-none items-center gap-2">
             <Link href="/" className="flex items-center gap-2 hover-lift">
               <div className="bg-primary-500 text-white p-1 md:p-1.5 rounded-lg md:rounded-xl shadow-sm md:shadow-md rotate-3">
                 <Package className="h-5 w-5 md:h-6 md:w-6" />
@@ -302,10 +295,29 @@ export default function Navbar() {
               </span>
             </Link>
 
+
+          </div>
+
+          {/* Center/Left: Logo + Theme Switchers (Mobile) */}
+          <div className="flex justify-end md:justify-start flex-1 md:flex-none items-center gap-2">
+
+
             {/* Mobile-only Theme Switchers right after Logo */}
-            <div className="flex sm:hidden items-center gap-1.5 ml-1">
+            <div className="flex sm:hidden justify-end gap-0.5 ml-1">
               <BgThemeSwitcher />
               <ThemeSwitcher />
+              <Link href="/wishlist" className="flex items-center justify-center text-slate-600 hover:text-accent-500 dark:text-slate-300 transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                <Heart className="h-5 w-5" />
+              </Link>
+
+              <Link href="/cart" className="flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 relative transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                <ShoppingCart className="h-5 w-5" />
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] sm:text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-accent-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
+                  ৩
+                </span>
+              </Link>
+
+
             </div>
           </div>
 
@@ -323,41 +335,38 @@ export default function Navbar() {
 
           {/* Right: Actions */}
           <div className="flex items-center justify-end flex-none gap-2 md:gap-4 lg:space-x-4">
-            
+
             <Link href="/ai-tools/gift-finder" className="hidden lg:flex items-center gap-1.5 text-slate-600 hover:text-primary-600 dark:text-slate-300 transition-colors text-sm font-medium mr-2 group">
               <Bot className="h-5 w-5 text-secondary-500 group-hover:scale-110 transition-transform" />
               <span>এআই গিফট ফাইন্ডার</span>
             </Link>
 
+            {/* <div className="hidden sm:flex items-center gap-2">
+              <BgThemeSwitcher />
+              <ThemeSwitcher />
+
+            </div> */}
+
+
             <div className="hidden sm:flex items-center gap-2">
               <BgThemeSwitcher />
               <ThemeSwitcher />
+
+              <Link href="/wishlist" className="flex items-center justify-center text-slate-600 hover:text-accent-500 dark:text-slate-300 transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                <Heart className="h-5 w-5" />
+              </Link>
+
+              <Link href="/cart" className="flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 relative transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                <ShoppingCart className="h-5 w-5" />
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] sm:text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-accent-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
+                  ৩
+                </span>
+              </Link>
+
             </div>
 
-            {/* Desktop & Mobile: User Auth Dropdown */}
-            <div className="flex items-center">
-              {isAuthenticated ? (
-                <UserDropdown />
-              ) : (
-                <>
-                  <Link 
-                    href="/login" 
-                    className="hidden sm:flex items-center gap-2 bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 font-bold px-4 py-2 rounded-xl hover:bg-primary-100 dark:hover:bg-primary-900/60 transition-colors"
-                  >
-                    <User className="h-4 w-4" />
-                    <span>লগইন</span>
-                  </Link>
-                  <Link 
-                    href="/login" 
-                    className="sm:hidden flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
-                  >
-                    <User className="h-5 w-5" />
-                  </Link>
-                </>
-              )}
-            </div>
-            
-            <Link href="/wishlist" className="flex items-center justify-center text-slate-600 hover:text-accent-500 dark:text-slate-300 transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+
+            {/* <Link href="/wishlist" className="flex items-center justify-center text-slate-600 hover:text-accent-500 dark:text-slate-300 transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
               <Heart className="h-5 w-5" />
             </Link>
 
@@ -366,7 +375,31 @@ export default function Navbar() {
               <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] sm:text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-accent-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
                 ৩
               </span>
-            </Link>
+            </Link> */}
+            {/* Desktop & Mobile: User Auth Dropdown */}
+            <div className="flex items-center">
+              {isAuthenticated ? (
+                <UserDropdown />
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="hidden sm:flex items-center gap-2 bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 font-bold px-4 py-2 rounded-xl hover:bg-primary-100 dark:hover:bg-primary-900/60 transition-colors"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>লগইন</span>
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="sm:hidden flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                  >
+                    <User className="h-5 w-5" />
+                  </Link>
+                </>
+              )}
+            </div>
+
+
           </div>
         </div>
 
@@ -404,14 +437,14 @@ export default function Navbar() {
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-[100] flex">
           {/* Black Overlay Background */}
-          <div 
+          <div
             className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          
+
           {/* Main Left Drawer */}
-          <div className="relative flex flex-col w-4/5 max-w-sm h-[100dvh] bg-white dark:bg-slate-900 shadow-2xl transform transition-transform duration-300 ease-in-out border-r border-slate-100 dark:border-slate-800">
-            
+          <div className="relative flex flex-col w-4/5 max-w-sm h-dvh bg-white dark:bg-slate-900 shadow-2xl transform transition-transform duration-300 ease-in-out border-r border-slate-100 dark:border-slate-800">
+
             {/* Header in Left Sidebar */}
             <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
               <span className="font-heading font-black text-xl text-slate-800 dark:text-white tracking-tight">
@@ -428,7 +461,7 @@ export default function Navbar() {
             {/* Menu Items */}
             <div className="flex-1 overflow-y-auto py-2">
               <MobileNavLink href="/" text="হোম" onClick={() => setIsMobileMenuOpen(false)} />
-              
+
               <MobileMenuSection
                 id="shopping"
                 title="কেনাকাটা"
@@ -436,26 +469,38 @@ export default function Navbar() {
                 onToggle={() => toggleSection('shopping')}
                 showSubcategories={true}
                 items={[
+                  // {
+                  //   label: "সব খেলনা দেখুন",
+                  //   href: "/shop",
+                  //   color: "slate"
+                  // },
+                  // {
+                  //   label: "বয়স-ভিত্তিক ফাইন্ডার",
+                  //   href: "/shop/age",
+                  //   color: "slate"
+                  // },
+                  // {
+                  //   label: "ফ্ল্যাশ ডিল",
+                  //   href: "/deals",
+                  //   color: "secondary"
+                  // },
+                  // {
+                  //   label: "বান্ডেল ডিল",
+                  //   href: "/bundles",
+                  //   color: "slate"
+                  // },
                   {
-                    label: "সব খেলনা দেখুন",
-                    href: "/shop",
-                    color: "slate"
+                    label: "খেলনা সংগ্রহ",
+                    href: "#",
+                    color: "slate",
+                    subItems: [
+                      { label: "সব খেলনা দেখুন", href: "/shop" },
+                      { label: "বয়স-ভিত্তিক ফাইন্ডার", href: "/shop/age" },
+                      { label: "ফ্ল্যাশ ডিল", href: "/deals", isHighlighted: true },
+                      { label: "বান্ডেল ডিল", href: "/bundles" }
+                    ]
                   },
-                  {
-                    label: "বয়স-ভিত্তিক ফাইন্ডার",
-                    href: "/shop/age",
-                    color: "slate"
-                  },
-                  {
-                    label: "ফ্ল্যাশ ডিল",
-                    href: "/deals",
-                    color: "secondary"
-                  },
-                  {
-                    label: "বান্ডেল ডিল",
-                    href: "/bundles",
-                    color: "slate"
-                  },
+
                   {
                     label: "শীর্ষ ক্যাটাগরি",
                     href: "#",
@@ -474,11 +519,11 @@ export default function Navbar() {
                     color: "primary",
                     isHighlighted: true,
                     subItems: [
-                      { label: "শিশু খাবার", href: "/shop/baby/food" },
-                      { label: "শিশু ব্যাগ", href: "/shop/baby/bags", isHighlighted: true },
-                      { label: "ডায়াপার", href: "/shop/baby/diapers" },
-                      { label: "শিশু পোশাক", href: "/shop/baby/clothes" },
-                      { label: "শিশু যত্ন পণ্য", href: "/shop/baby/care" }
+                      { label: "শিশু খাবার", href: "/shop/food" },
+                      { label: "শিশু ব্যাগ", href: "/shop/bags", isHighlighted: true },
+                      { label: "ডায়াপার", href: "/shop/diapers" },
+                      { label: "শিশু পোশাক", href: "/shop/clothes" },
+                      { label: "শিশু যত্ন পণ্য", href: "/shop/care" }
                     ]
                   },
                   {
@@ -506,12 +551,12 @@ export default function Navbar() {
               <MobileNavLink href="/features" text="ফিচারসমূহ" onClick={() => setIsMobileMenuOpen(false)} />
               <MobileNavLink href="/blog" text="ব্লগ ও শিখন" onClick={() => setIsMobileMenuOpen(false)} />
             </div>
-            
+
             {/* Theme switches at the bottom of the drawer */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 flex justify-around">
-               <BgThemeSwitcher />
-               <ThemeSwitcher />
-            </div>
+            {/* <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 flex justify-around">
+              <BgThemeSwitcher />
+              <ThemeSwitcher />
+            </div> */}
 
           </div>
         </div>
