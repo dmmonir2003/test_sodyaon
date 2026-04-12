@@ -38,6 +38,8 @@ function MobileNavLink({ href, text, onClick }: { href: string; text: string; on
   );
 }
 
+// add somthing 
+
 function MobileMenuSection({ id, title, isExpanded, onToggle, items, onClose, showSubcategories = false }: MobileMenuSectionProps) {
   const [expandedSubItems, setExpandedSubItems] = useState<Record<string, boolean>>({});
 
