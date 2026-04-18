@@ -23,7 +23,7 @@ export default function BabyFoodPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
-  const products = getProductsByCategory("baby-food");
+  const products = getProductsByCategory(1);
 
   return (
     <div className="bg-slate-50 dark:bg-slate-900 min-h-screen pb-24">
