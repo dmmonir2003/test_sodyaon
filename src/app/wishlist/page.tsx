@@ -25,7 +25,7 @@ export default function WishlistPage() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           <ProductCard name="Interactive Smart Robot" price="$89.99" img="bg-indigo-100" />
           <ProductCard name="Programmable Music Keyboard" price="$49.99" img="bg-purple-100" />
           <ProductCard name="Dinosaur Fossil Dig Kit" price="$24.99" img="bg-amber-100" />

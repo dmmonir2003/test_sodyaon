@@ -5,6 +5,10 @@ import ProductCard from "@/components/shared/ProductCard";
 import SortDropdown from "@/components/shop/SortDropdown";
 import FiltersSidebar from "@/components/shop/FiltersSidebar";
 import { PRODUCTS } from "@/data/database";
+import { SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
+import MobileFilterDrawer from '@/components/shared/MobileFilterDrawer';
+import MobileSortDrawer from '@/components/shared/MobileSortDrawer';
 
 const AGES = [
   { id: "0-1", label: "Babies", range: "0-1 Years" },
@@ -22,6 +26,9 @@ export default function AgeFinder() {
   // Get active range from URL, default to "1-3"
   const currentRangeId = searchParams.get("range");
   const activeAge = AGES.find((a) => a.id === currentRangeId) || AGES[0];
+
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
 
   const handleAgeChange = (id: string) => {
     router.push(`/shop/age?range=${encodeURIComponent(id)}`);
@@ -68,10 +75,26 @@ export default function AgeFinder() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white hidden md:block">
             Toys for {activeAge.range}
           </h2>
-          <SortDropdown />
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <button 
+              onClick={() => setFilterOpen(true)}
+              className="md:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-medium hover:bg-slate-50 transition-colors"
+            >
+              <SlidersHorizontal className="w-4 h-4" /> ফিল্টার
+            </button>
+            <button
+              onClick={() => setSortOpen(true)}
+              className="md:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-medium hover:bg-slate-50 transition-colors"
+            >
+              সর্ট
+            </button>
+            <div className="hidden md:block">
+              <SortDropdown />
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col md:flex-row gap-8">
@@ -80,7 +103,7 @@ export default function AgeFinder() {
           </div>
 
           <div className="flex-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {PRODUCTS.filter((prod) => prod.ageRange === activeAge.id).map(
                 (prod) => (
                   <ProductCard
@@ -96,6 +119,9 @@ export default function AgeFinder() {
           </div>
         </div>
       </div>
+      
+      <MobileFilterDrawer isOpen={filterOpen} onClose={() => setFilterOpen(false)} />
+      <MobileSortDrawer isOpen={sortOpen} onClose={() => setSortOpen(false)} />
     </div>
   );
 }

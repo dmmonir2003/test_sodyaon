@@ -4,8 +4,11 @@
 import FiltersSidebar from "@/components/shop/FiltersSidebar";
 import SortDropdown from "@/components/shop/SortDropdown";
 import ProductCard from "@/components/shared/ProductCard";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import MobileFilterDrawer from '@/components/shared/MobileFilterDrawer';
+import MobileSortDrawer from '@/components/shared/MobileSortDrawer';
 import { BABY_CARE_PRODUCTS } from "@/data/products";
 
 export default function BabyCareProductsPage() {
@@ -14,6 +17,9 @@ export default function BabyCareProductsPage() {
     description: "শিশুর ত্বক এবং স্বাস্থ্যের যত্নের জন্য প্রাকৃতিক এবং নিরাপদ পণ্যের সম্পূর্ণ পরিসর।",
     theme: "bg-teal-500"
   };
+
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
 
   return (
     <div className="bg-slate-50 dark:bg-slate-900 min-h-screen pb-24">
@@ -41,11 +47,27 @@ export default function BabyCareProductsPage() {
 
           <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
-              <span className="text-slate-500 font-medium">১২টি পণ্য পাওয়া গেছে</span>
-              <SortDropdown />
+              <span className="text-slate-500 font-medium hidden md:block">১২টি পণ্য পাওয়া গেছে</span>
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <button 
+                  onClick={() => setFilterOpen(true)}
+                  className="md:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-medium hover:bg-slate-50 transition-colors"
+                >
+                  <SlidersHorizontal className="w-4 h-4" /> ফিল্টার
+                </button>
+                <button
+                  onClick={() => setSortOpen(true)}
+                  className="md:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-medium hover:bg-slate-50 transition-colors"
+                >
+                  সর্ট
+                </button>
+                <div className="hidden md:block">
+                  <SortDropdown />
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {BABY_CARE_PRODUCTS.map((prod, i) => (
                 <ProductCard 
                   key={i} 
@@ -59,6 +81,9 @@ export default function BabyCareProductsPage() {
           </div>
         </div>
       </div>
+
+      <MobileFilterDrawer isOpen={filterOpen} onClose={() => setFilterOpen(false)} />
+      <MobileSortDrawer isOpen={sortOpen} onClose={() => setSortOpen(false)} />
     </div>
   );
 }
