@@ -1226,18 +1226,19 @@ export default function ProductDetailsClient({
         </nav>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white dark:bg-slate-800 rounded-[2rem] lg:rounded-[2.5rem] p-4 md:p-6 lg:p-12 shadow-2xl border border-slate-100 dark:border-slate-700">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-2 lg:mt-0">
+        <div className="bg-transparent sm:bg-white sm:dark:bg-slate-800 rounded-none sm:rounded-[2rem] lg:rounded-[2.5rem] px-4 py-2 sm:p-6 lg:p-12 shadow-none sm:shadow-2xl border-none sm:border border-slate-100 dark:border-slate-700">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-16">
             {/* Left: Image Gallery */}
-            <div className="flex flex-row lg:flex-col gap-3 lg:gap-6">
-              {/* Vertical Side Thumbnails on Mobile (Right side via order-last), Horizontal on Desktop */}
-              <div className="flex lg:flex-row flex-col gap-2 lg:gap-4 lg:overflow-x-auto pb-2 custom-scrollbar order-last shrink-0">
+            <div className="flex flex-row lg:flex-col gap-3 sm:gap-4 lg:gap-6">
+              
+              {/* Thumbnails: Vertical on Mobile (Right), Horizontal on Desktop (Bottom) */}
+              <div className="flex flex-col lg:flex-row gap-2 sm:gap-3 lg:gap-4 overflow-y-auto lg:overflow-x-auto pb-0 lg:pb-2 custom-scrollbar shrink-0 order-last w-14 sm:w-16 lg:w-auto">
                 {(MOCK_PRODUCT.images || []).map((img: string, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImage(idx)}
-                    className={`w-14 h-14 lg:w-24 lg:h-24 flex-shrink-0 rounded-xl lg:rounded-2xl border-[3px] lg:border-4 transition-all overflow-hidden ${activeImage === idx ? "border-primary-500 shadow-md lg:shadow-lg scale-105" : "border-transparent hover:border-primary-300 opacity-70 hover:opacity-100"}`}
+                    className={`w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 flex-shrink-0 rounded-xl lg:rounded-2xl border-[2px] lg:border-4 transition-all overflow-hidden ${activeImage === idx ? "border-primary-500 shadow-md lg:shadow-lg scale-105" : "border-transparent hover:border-primary-300 opacity-70 hover:opacity-100"}`}
                   >
                     <div className={`w-full h-full ${img}`}></div>
                   </button>
@@ -1246,7 +1247,7 @@ export default function ProductDetailsClient({
 
               {/* Main Image */}
               <div
-                className={`flex-1 relative w-full aspect-[4/5] lg:aspect-square rounded-2xl lg:rounded-3xl overflow-hidden cursor-crosshair transition-colors duration-500 ${MOCK_PRODUCT.images[activeImage]} shadow-inner`}
+                className={`flex-1 order-first relative w-full aspect-[4/5] sm:aspect-square lg:aspect-square rounded-2xl lg:rounded-3xl overflow-hidden cursor-crosshair transition-colors duration-500 ${MOCK_PRODUCT.images[activeImage]} shadow-inner`}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
               >
@@ -1536,22 +1537,22 @@ export default function ProductDetailsClient({
             <div className="absolute bottom-0 left-0 -ml-10 -mb-10 md:-ml-20 md:-mb-20 w-40 h-40 md:w-64 md:h-64 rounded-full bg-cyan-300 opacity-20 blur-3xl"></div>
             
             <h3 className="text-2xl md:text-4xl lg:text-5xl font-black font-heading mb-3 md:mb-4 relative z-10 text-white drop-shadow-md leading-tight">
-              সোনামণির হাতেখড়িতে সেরা কম্বো
+              সৃজনশীলতা বিকাশের সেরা খেলনা
             </h3>
             <p className="text-primary-50 text-[15px] md:text-lg lg:text-xl max-w-3xl mx-auto relative z-10 leading-relaxed font-medium">
-              জায়ান ইন্টেলিজেন্স বুক ও বিশেষ ফ্ল্যাশকার্ড সেট! শিশুর পড়াশোনাকে আনন্দদায়ক করতে আমরা নিয়ে এসেছি একটি প্রিমিয়াম লার্নিং প্যাকেজ। মোবাইল আসক্তি দূর করে আপনার শিশুকে সৃজনশীল শিক্ষায় ব্যস্ত রাখার জন্য এটি একটি আদর্শ উপহার।
+              ম্যাগনা-টাইলস ১০০-পিস ক্লিয়ার কালারস সেট! মজায় মজায় বিজ্ঞান, গণিত ও স্থাপত্যবিদ্যার হাতেখড়ি নিতে এই ম্যাগনেটিক টাইলস অতুলনীয়। মোবাইল আসক্তি দূর করে আপনার শিশুকে কল্পনাপ্রসূত খেলায় ব্যস্ত রাখার এটি এক আদর্শ উপহার।
             </p>
           </div>
 
           <div className="p-4 md:p-8 lg:p-12">
             
             <div className="text-center mb-8 md:mb-10 max-w-3xl mx-auto">
-                <h4 className="text-[17px] md:text-2xl font-bold text-slate-900 dark:text-white mb-2 md:mb-3">খেলার ছলে নৈতিক ও আধুনিক শিক্ষা 🎓🌟</h4>
-                <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-base leading-relaxed">একটি শিশুর প্রাথমিক শিক্ষার ভিত্তি মজবুত করতে প্রয়োজন সঠিক সরঞ্জাম। আমাদের এই বিশেষ কম্বোটি এমনভাবে সাজানো হয়েছে যা শিশুকে সাধারণ শিক্ষার পাশাপাশি ধর্মীয় ও সৃজনশীল শিক্ষায় আগ্রহী করে তুলবে।</p>
+                <h4 className="text-[17px] md:text-2xl font-bold text-slate-900 dark:text-white mb-2 md:mb-3">খেলার ছলে ব্রেন ডেভেলপমেন্ট 🎓🌟</h4>
+                <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-base leading-relaxed">শিশুর মেধা বিকাশে চাই সঠিক খেলনা। এই ৩ডি ম্যাগনেটিক টাইলস দিয়ে বাচ্চারা নিজেরাই বানাতে পারবে বিশাল দুর্গ, রকেট বা যেকোনো জ্যামিতিক নকশা আকার যা তাদের স্থানিক যুক্তি এবং সূক্ষ্ম মোটর স্কিল বাড়ায়।</p>
             </div>
 
             {/* Elegant Features Row */}
-            <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-5 md:mb-6 text-center">কেন এই কম্বোটি প্রয়োজন?</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-5 md:mb-6 text-center">কেন এই সেটটি প্রয়োজন?</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10 md:mb-16">
               
               {/* Feature 1 */}
@@ -1561,7 +1562,7 @@ export default function ProductDetailsClient({
                 </div>
                 <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">মোবাইল আসক্তি মুক্তি</h4>
                 <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
-                  টিভি বা ফোনের বদলে শিশুকে শিক্ষণীয় কাজে দীর্ঘক্ষণ ব্যস্ত রাখে।
+                  টিভি বা ফোনের বদলে শিশুকে শিক্ষণীয় ম্যাগনেটিক ব্লকস তৈরি করতে দীর্ঘক্ষণ ব্যস্ত রাখে।
                 </p>
               </div>
 
@@ -1572,7 +1573,7 @@ export default function ProductDetailsClient({
                 </div>
                 <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">সৃজনশীলতা বৃদ্ধি</h4>
                 <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
-                  ওয়াটারবুকের মাধ্যমে হাতের লেখা ও আঁকাআঁকির প্রতি শিশুর আগ্রহ বাড়ে।
+                  অগণিত থ্রিডি মডেল তৈরির মাধ্যমে শিশুর কল্পনাশক্তি ও সৃজনশীলতা বহুগুণ বৃদ্ধি পায়।
                 </p>
               </div>
 
@@ -1583,7 +1584,7 @@ export default function ProductDetailsClient({
                 </div>
                 <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">মেধা বিকাশ</h4>
                 <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
-                  ছবি এবং শব্দের সমন্বয়ে শেখার ফলে পড়ার বিষয়গুলো শিশুর মনে দ্রুত গেঁথে যায়।
+                  জ্যামিতিক আকৃতি ও রঙ মেলানোর খেলা শিশুর ব্রেনের সঠিক বিকাশ ঘটাতে সাহায্য করে।
                 </p>
               </div>
 
@@ -1594,7 +1595,7 @@ export default function ProductDetailsClient({
                 </div>
                 <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">উপহার হিসেবে সেরা</h4>
                 <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
-                  জন্মদিন বা যেকোনো বিশেষ অনুষ্ঠানে সোনামণিদের দেওয়ার জন্য মার্জিত উপহার।
+                  ৩ বছর থেকে শুরু করে যেকোনো বয়সের বাচ্চার জন্মদিনের সেরা ও নিরাপদ উপহার।
                 </p>
               </div>
 
@@ -1617,10 +1618,10 @@ export default function ProductDetailsClient({
               {/* Flex Tags for included items */}
               <div className="flex flex-wrap gap-2.5 sm:gap-4 mb-6 md:mb-8">
                 {[
-                  { count: "১x", text: "জায়ান বুক (৪০ পৃষ্ঠা)" },
-                  { count: "१x", text: "ম্যাজিক ওয়াটারবুক" },
-                  { count: "१x", text: "ম্যাজিক পেন" },
-                  { count: "१६x", text: "দুয়া ফ্ল্যাশকার্ড" },
+                  { count: "৫০x", text: "ছোট স্কয়ার টাইলস" },
+                  { count: "২০x", text: "সমবাহু ত্রিভুজ" },
+                  { count: "১৫x", text: "সমদ্বিবাহু ত্রিভুজ" },
+                  { count: "১৫x", text: "বড় স্কয়ার টাইলস" },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center bg-white dark:bg-slate-900 pl-1 pr-3 md:pr-4 py-1.5 md:py-1.5 rounded-full border border-slate-200 dark:border-slate-700/80 shadow-sm transition-colors cursor-default">
                     <span className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-400 font-bold text-[12px] md:text-sm flex items-center justify-center mr-2 md:mr-3 shrink-0">
@@ -1638,22 +1639,22 @@ export default function ProductDetailsClient({
                   <div className="flex gap-3 md:gap-4 items-start">
                     <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mt-1 md:mt-0.5 shrink-0" />
                     <div>
-                        <h5 className="font-bold text-slate-900 dark:text-white text-[15px] md:text-base">জায়ান ইন্টেলিজেন্স বুক (४० পৃষ্ঠা)</h5>
-                        <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm mt-1">এটি একটি আপডেটেড স্মার্ট লার্নিং বুক। এতে বাংলা, ইংরেজি, গণিত ও আরবি শিক্ষার পাশাপাশি বিশেষ ক্যালকুলেটর ভার্সন রয়েছে, যা শিশুকে উচ্চারণের সাথে নতুন কিছু শিখতে সাহায্য করে।</p>
+                        <h5 className="font-bold text-slate-900 dark:text-white text-[15px] md:text-base">১০০-পিস ম্যাগনেটিক সেট</h5>
+                        <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm mt-1">এই সেটে রয়েছে বিভিন্ন আকৃতির ১০০টি শক্তিশালী ম্যাগনেটিক টাইলস যা দিয়ে অনায়াসেই বিশাল থেকে বিশাল সব ভাস্কর্য তৈরি করা সম্ভব। এটি বাচ্চাদের জ্যামিতি এবং আর্কিটেকচারের প্রাথমিক ধারণা দেয়।</p>
                     </div>
                   </div>
                   <div className="flex gap-3 md:gap-4 items-start">
                     <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mt-1 md:mt-0.5 shrink-0" />
                     <div>
-                        <h5 className="font-bold text-slate-900 dark:text-white text-[15px] md:text-base">ম্যাজিক ওয়াটারবুক + পেন</h5>
-                        <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm mt-1">পানি দিয়ে আঁকাআঁকি করার মজার বই। শুকিয়ে গেলে ছবি আবার উধাও হয়ে যায়, ফলে শিশু বারবার একই বইয়ে রঙ করতে পারে। এটি শিশুর হাতের জড়তা কাটাতে দারুণ কার্যকর।</p>
+                        <h5 className="font-bold text-slate-900 dark:text-white text-[15px] md:text-base">বিপিএ-মুক্ত ও সম্পূর্ণ নিরাপদ</h5>
+                        <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm mt-1">সবগুলো টাইলস নন-টক্সিক ফুড-গ্রেড এবিএস (ABS) প্লাস্টিক দিয়ে তৈরি এবং এতে কোনো ক্ষতিকারক রাসায়নিক নেই। প্রতিটি টাইলসে অত্যন্ত নিরাপত্তার জন্য স্টেইনলেস স্টিল রিভেট ব্যবহার করা হয়েছে।</p>
                     </div>
                   </div>
                   <div className="flex gap-3 md:gap-4 items-start">
                     <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mt-1 md:mt-0.5 shrink-0" />
                     <div>
-                        <h5 className="font-bold text-slate-900 dark:text-white text-[15px] md:text-base">१६টি দুয়া ফ্ল্যাশকার্ড</h5>
-                        <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm mt-1">শিশুদের দৈনন্দিন প্রয়োজনীয় ছোট ছোট দুয়া ও ইসলামিক আদব শেখার জন্য বিশেষ কার্ড। এটি শিশুর মাঝে ধর্মীয় মূল্যবোধ তৈরিতে সাহায্য করে।</p>
+                        <h5 className="font-bold text-slate-900 dark:text-white text-[15px] md:text-base">উজ্জ্বল ক্লিয়ার কালারস</h5>
+                        <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm mt-1">টাইলসগুলো সূর্যের আলোতে বা ঘরের লাইটে অত্যন্ত আকর্ষণীয় দেখায় যা বাচ্চাদের মনোযোগ আকর্ষণ করে এবং রঙ पहचानने (কালার রিকগনিশন) দক্ষতা বাড়ায়।</p>
                     </div>
                   </div>
                </div>
@@ -1880,7 +1881,7 @@ export default function ProductDetailsClient({
                   </div>
                 </div>
                 <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed mb-4">
-                  খুব স্মুথলি ফ্যানটা চলে। শোঁ শোঁ বাতাস। চার্জও থাকে দীর্ঘক্ষণ। বাচ্চাকে নিয়ে বাইরে বের হলে ফ্যানটা খুব কাজে দেয়।
+                  সোনামণির খুব পছন্দের একটি খেলনা! ঘণ্টার পর ঘণ্টা সে এটা দিয়ে দুর্গ, ঘর, এবং গাড়ি বানাচ্ছে। কোয়ালিটি সত্যিই চমৎকার আর শক্তিশালী ম্যাগনেট হওয়ার কারণে ব্লকগুলো সহজেই লেগে থাকে।
                 </p>
                 
                 <div className="mb-3">
@@ -1918,7 +1919,7 @@ export default function ProductDetailsClient({
                   </div>
                 </div>
                 <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed mb-1">
-                  ४०००mAh ব্যাটারি খুবই দীর্ঘস্থায়ী—একবার চার্জ দিলেই অনেকক্ষণ চলে। গরমের দিনে বাইরে গেলে বা বিদ্যুৎ না থাকলে এটা সত্যিই খুব কাজে দেয়।
+                  বাচ্চারা মোবাইল ছেড়ে এই টাইলস নিয়ে ব্যস্ত থাকে, এটাই সবচেয়ে বড় সুবিধা। প্লাস্টিকগুলো অনেক মজবুত, কয়েকবার হাত থেকে পড়লেও একটুও ভাঙেনি। হাইলি রেকমেন্ডেড!
                 </p>
                 <div className="mb-4">
                   <button className="text-primary-500 text-xs font-bold hover:underline">Read More</button>
@@ -1989,14 +1990,14 @@ export default function ProductDetailsClient({
                 <div className="flex gap-2 sm:gap-3 mb-4">
                   <span className="font-bold text-slate-800 dark:text-white">Q:</span>
                   <div>
-                    <p className="text-slate-800 dark:text-slate-200 mb-1 text-sm sm:text-base">ম্যাক্স পাওয়ারে কতক্ষণ চার্জিং ব্যাক আপ পাব??</p>
+                    <p className="text-slate-800 dark:text-slate-200 mb-1 text-sm sm:text-base">এই সেট দিয়ে কি গাড়ি বানানো যাবে?</p>
                     <p className="text-xs sm:text-[13px] text-slate-500">Questioned by <span className="font-semibold text-slate-600 dark:text-slate-400">880****564</span> on 24 Apr, 2025</p>
                   </div>
                 </div>
                 <div className="flex gap-2 sm:gap-3 ml-2 md:ml-6">
                   <span className="font-bold text-slate-800 dark:text-white">A:</span>
                   <div>
-                    <p className="text-slate-800 dark:text-slate-200 mb-1 text-sm sm:text-base">প্রিয় গ্রাহক, ম্যাক্স পাওয়ারে প্রায় ३ ঘণ্টা চার্জিং ব্যাকআপ পাবে।</p>
+                    <p className="text-slate-800 dark:text-slate-200 mb-1 text-sm sm:text-base">প্রিয় গ্রাহক, এই সেটে চাকাযুক্ত কোনো বেস নেই, তবে আপনি স্কয়ার টাইলস দিয়ে গাড়ির বডি বানাতে পারবেন।</p>
                     <p className="text-xs sm:text-[13px] text-slate-500">Answered by <span className="font-semibold text-slate-600 dark:text-slate-400">Rafid Ahmed</span> on 24 Apr, 2025</p>
                   </div>
                 </div>
@@ -2007,14 +2008,14 @@ export default function ProductDetailsClient({
                 <div className="flex gap-2 sm:gap-3 mb-4">
                   <span className="font-bold text-slate-800 dark:text-white">Q:</span>
                   <div>
-                    <p className="text-slate-800 dark:text-slate-200 mb-1 text-sm sm:text-base">Which Colour available? ?</p>
+                    <p className="text-slate-800 dark:text-slate-200 mb-1 text-sm sm:text-base">Are the plastics totally safe for kids?</p>
                     <p className="text-xs sm:text-[13px] text-slate-500">Questioned by <span className="font-semibold text-slate-600 dark:text-slate-400">Sourav Das</span> on 23 Mar, 2025</p>
                   </div>
                 </div>
                 <div className="flex gap-2 sm:gap-3 ml-2 md:ml-6">
                   <span className="font-bold text-slate-800 dark:text-white">A:</span>
                   <div>
-                    <p className="text-slate-800 dark:text-slate-200 mb-1 text-sm sm:text-base">Dear customer, all three colors are available.</p>
+                    <p className="text-slate-800 dark:text-slate-200 mb-1 text-sm sm:text-base">Dear customer, yes! The tiles are made of Food-grade ABS plastic which is BPA free and completely safe.</p>
                     <p className="text-xs sm:text-[13px] text-slate-500">Answered by <span className="font-semibold text-slate-600 dark:text-slate-400">Rafid Ahmed</span> on 23 Mar, 2025</p>
                   </div>
                 </div>

@@ -15,11 +15,11 @@ export const adminAuthApi = baseApi.injectEndpoints({
         }
 
         let assignedRole: Role | null = null;
-        if (email === "admin@playtime.com") assignedRole = "SUPER_ADMIN";
-        else if (email === "investor@playtime.com") assignedRole = "INVESTOR";
-        else if (email === "finance@playtime.com") assignedRole = "FINANCE_MANAGER";
-        else if (email === "marketing@playtime.com") assignedRole = "DIGITAL_MARKETER";
-        else if (email === "content@playtime.com") assignedRole = "CONTENT_MANAGER";
+        if (email === "admin@sodayon.com") assignedRole = "SUPER_ADMIN";
+        else if (email === "investor@sodayon.com") assignedRole = "INVESTOR";
+        else if (email === "finance@sodayon.com") assignedRole = "FINANCE_MANAGER";
+        else if (email === "marketing@sodayon.com") assignedRole = "DIGITAL_MARKETER";
+        else if (email === "content@sodayon.com") assignedRole = "CONTENT_MANAGER";
 
         if (!assignedRole) {
           return { error: { status: 403, data: "Unauthorized Email" } as any };

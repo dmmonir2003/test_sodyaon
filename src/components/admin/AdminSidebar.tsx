@@ -66,7 +66,7 @@ function AdminSidebar() {
             P
           </div>
           <span className="text-xl font-bold font-heading text-white tracking-tight">
-            PlayTime <span className="text-primary-500">Admin</span>
+            Sodayon <span className="text-primary-500">Admin</span>
           </span>
         </div>
       </div>

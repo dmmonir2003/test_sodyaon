@@ -476,7 +476,7 @@ export default function Navbar() {
                 <Package className="h-5 w-5" />
               </div>
               <span className="font-heading font-bold text-xl text-slate-800 dark:text-white tracking-tight">
-                Play<span className="text-primary-600">Time</span>
+               Soday<span className="text-primary-600">on</span>
               </span>
             </Link>
           </div>
@@ -490,7 +490,7 @@ export default function Navbar() {
               <Package className="h-6 w-6" />
             </div>
             <span className="font-heading font-bold text-2xl text-slate-800 dark:text-white tracking-tight">
-              Play<span className="text-primary-600">Time</span>
+              Soday<span className="text-primary-600">on</span>
             </span>
           </Link>
 

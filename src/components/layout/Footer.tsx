@@ -13,7 +13,7 @@ export default function Footer() {
                 <Package className="h-6 w-6" />
               </div>
               <span className="font-heading font-bold text-2xl text-white">
-                Play<span className="text-primary-500">Time</span>
+                Soday<span className="text-primary-500">on</span>
               </span>
             </Link>
             <p className="text-slate-400 text-sm max-w-sm leading-relaxed">
@@ -72,7 +72,7 @@ export default function Footer() {
 
         <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-slate-500">
-            &copy; {new Date().getFullYear()} PlayTime E-Commerce. সর্বস্বত্ব সংরক্ষিত।
+            &copy; {new Date().getFullYear()} Sodayon E-Commerce. সর্বস্বত্ব সংরক্ষিত।
           </p>
           <div className="flex space-x-6 text-xs text-slate-500">
             <Link href="/privacy" className="hover:text-white transition-colors">গোপনীয়তা নীতি</Link>

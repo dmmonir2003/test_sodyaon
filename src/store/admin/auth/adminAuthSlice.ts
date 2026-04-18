@@ -21,7 +21,7 @@ const adminAuthSlice = createSlice({
           // For now, we simulate hydration dynamically using the token as the Role.
           state.user = {
             id: `usr_${Math.random().toString(36).substring(2)}`,
-            email: "cached@playtime.com",
+            email: "cached@sodayon.com",
             name: savedToken.split('_').join(' '),
             role: savedToken,
             permissions: getPermissionsForRole(savedToken),

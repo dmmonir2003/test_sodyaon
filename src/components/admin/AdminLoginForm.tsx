@@ -64,7 +64,7 @@ export default function AdminLoginForm() {
                   type="email" 
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="admin@playtime.com"
+                  placeholder="admin@sodayon.com"
                   required
                   className="w-full bg-slate-950 border border-slate-800 pl-11 pr-4 py-3.5 rounded-xl text-white text-sm focus:outline-none focus:border-primary-500 transition-colors"
                 />
@@ -109,11 +109,11 @@ export default function AdminLoginForm() {
           <div className="mt-8 pt-6 border-t border-slate-800/50">
              <div className="text-xs text-slate-600 font-bold mb-3 uppercase tracking-wider">Demo Credentials:</div>
              <div className="grid grid-cols-1 gap-2 text-xs text-slate-500">
-               <div className="flex justify-between"><span>Super Admin:</span> <code className="text-primary-400">admin@playtime.com</code></div>
-               <div className="flex justify-between"><span>Investor:</span> <code className="text-primary-400">investor@playtime.com</code></div>
-               <div className="flex justify-between"><span>Finance Mgr:</span> <code  className="text-emerald-400">finance@playtime.com</code></div>
-               <div className="flex justify-between"><span>Marketer:</span> <code className="text-pink-400">marketing@playtime.com</code></div>
-               <div className="flex justify-between"><span>Content Manager:</span> <code className="text-pink-400">content@playtime.com</code></div>
+               <div className="flex justify-between"><span>Super Admin:</span> <code className="text-primary-400">admin@sodayon.com</code></div>
+               <div className="flex justify-between"><span>Investor:</span> <code className="text-primary-400">investor@sodayon.com</code></div>
+               <div className="flex justify-between"><span>Finance Mgr:</span> <code  className="text-emerald-400">finance@sodayon.com</code></div>
+               <div className="flex justify-between"><span>Marketer:</span> <code className="text-pink-400">marketing@sodayon.com</code></div>
+               <div className="flex justify-between"><span>Content Manager:</span> <code className="text-pink-400">content@sodayon.com</code></div>
                <div className="text-slate-600 italic mt-1">Password for all is <code className="text-slate-400">admin123</code></div>
              </div>
           </div>

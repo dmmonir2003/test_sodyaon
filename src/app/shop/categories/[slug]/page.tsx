@@ -30,10 +30,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const category = getCategoryMetadata(resolvedParams.slug);
   
   return {
-    title: `${category.name} | Shop at PlayTime`,
+    title: `${category.name} | Shop at Sodayon`,
     description: `Shop the best ${category.name} toys. ${category.description}`,
     openGraph: {
-      title: `${category.name} Toys | PlayTime`,
+      title: `${category.name} Toys | Sodayon`,
       description: category.description,
       type: "website",
     }

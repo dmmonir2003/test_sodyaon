@@ -24,11 +24,11 @@ export default function TeamManagementPage() {
   }
 
   const managers = [
-    { id: 1, name: "Admin Alpha", role: "SUPER_ADMIN", email: "alpha@playtime.com", status: "Active" },
+    { id: 1, name: "Admin Alpha", role: "SUPER_ADMIN", email: "alpha@sodayon.com", status: "Active" },
     { id: 2, name: "FinCorp Invest", role: "INVESTOR", email: "investor@capital.com", status: "Active" },
-    { id: 3, name: "Sarah Books", role: "FINANCE_MANAGER", email: "sarah@playtime.com", status: "Active" },
-    { id: 4, name: "Max Marketing", role: "DIGITAL_MARKETER", email: "max@playtime.com", status: "Active" },
-    { id: 5, name: "Leo Contents", role: "CONTENT_MANAGER", email: "leo@playtime.com", status: "Pending" },
+    { id: 3, name: "Sarah Books", role: "FINANCE_MANAGER", email: "sarah@sodayon.com", status: "Active" },
+    { id: 4, name: "Max Marketing", role: "DIGITAL_MARKETER", email: "max@sodayon.com", status: "Active" },
+    { id: 5, name: "Leo Contents", role: "CONTENT_MANAGER", email: "leo@sodayon.com", status: "Pending" },
   ];
 
   return (
