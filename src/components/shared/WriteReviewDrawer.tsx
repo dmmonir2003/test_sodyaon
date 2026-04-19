@@ -24,31 +24,50 @@ export default function WriteReviewDrawer({
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
+  const [mounted, setMounted] = useState(false);
+  const [showAnimated, setShowAnimated] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      setMounted(true);
+      const timer = setTimeout(() => {
+        setShowAnimated(true);
+      }, 50);
+      return () => clearTimeout(timer);
     } else {
       document.body.style.overflow = "";
+      setShowAnimated(false);
+      const timer = setTimeout(() => setMounted(false), 500);
+      return () => clearTimeout(timer);
     }
+  }, [isOpen]);
+
+  useEffect(() => {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOpen]);
+  }, []);
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-[100] backdrop-blur-sm transition-opacity"
+        className={`fixed inset-0 bg-black/40 z-[100] backdrop-blur-sm transition-opacity duration-500 ${
+          showAnimated ? "opacity-100" : "opacity-0"
+        }`}
         onClick={onClose}
       />
 
       {/* Drawer */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-[110] bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl transform transition-transform duration-300 ease-in-out md:max-w-lg md:mx-auto md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:rounded-2xl max-h-[90vh] flex flex-col`}
+        className={`fixed bottom-0 left-0 right-0 z-[110] bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:max-w-lg md:mx-auto md:bottom-auto md:top-1/2 md:rounded-2xl max-h-[90vh] flex flex-col ${
+          showAnimated
+            ? "translate-y-0 md:-translate-y-1/2 opacity-100 md:scale-100"
+            : "translate-y-full md:translate-y-[100%] md:opacity-0 md:scale-95"
+        }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">

@@ -1069,6 +1069,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   ChevronRight,
+  ChevronDown,
   Star,
   Heart,
   Share2,
@@ -1094,6 +1095,66 @@ import {
 import ProductCard from "@/components/shared/ProductCard";
 import MobileStickyCart from "@/components/shared/MobileStickyCart";
 import WriteReviewDrawer from "@/components/shared/WriteReviewDrawer";
+
+// Custom Headless Dropdown for Filters to match Color System
+function CustomSortDropdown({ 
+  value, 
+  options, 
+  onChange 
+}: { 
+  value: string; 
+  options: string[]; 
+  onChange: (val: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  return (
+    <div className="relative inline-block w-[160px]" ref={ref}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between gap-2 px-3 py-1.5 border rounded-md text-sm transition-colors cursor-pointer ${
+          isOpen ? 'bg-white dark:bg-slate-900 border-primary-500 ring-2 ring-primary-500/20' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-primary-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+        }`}
+      >
+        <span className="font-medium text-slate-700 dark:text-slate-200 font-sans">{value}</span>
+        <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${isOpen ? 'rotate-180 text-primary-500' : ''}`} />
+      </button>
+      
+      <div 
+        className={`absolute top-full mt-1.5 left-0 w-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-xl rounded-lg overflow-hidden z-20 transition-all duration-200 origin-top border ${
+          isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
+        }`}
+      >
+        <div className="py-1">
+          {options.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => { onChange(opt); setIsOpen(false); }}
+              className={`w-full text-left px-4 py-2 text-sm transition-colors font-sans ${
+                value === opt 
+                  ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 font-bold' 
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium'
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Mock Data
 const MOCK_PRODUCT = {
@@ -1156,6 +1217,8 @@ export default function ProductDetailsClient({
   const [showDesktopStickyCart, setShowDesktopStickyCart] = useState(false);
   const [mobileTab, setMobileTab] = useState<'description' | 'video'>('description');
   const [feedbackTab, setFeedbackTab] = useState<'reviews' | 'qa'>('reviews');
+  const [reviewSort, setReviewSort] = useState("Default");
+  const [qaSort, setQaSort] = useState("Default");
   const bottomMarkerRef = useRef<HTMLDivElement>(null);
 
   // ✅ WORKING: Sticky cart positioning based on scroll distance from bottom
@@ -1857,11 +1920,11 @@ export default function ProductDetailsClient({
             {/* Sorting Dropdown */}
             <div className="flex items-center gap-2 pb-5 border-b border-slate-100 dark:border-slate-800">
                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h10M4 18h4"/></svg>
-               <select className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-sm focus:outline-none focus:border-primary-500 cursor-pointer min-w-[120px]">
-                 <option>Default</option>
-                 <option>Recent</option>
-                 <option>Highest Rating</option>
-               </select>
+               <CustomSortDropdown 
+                 value={reviewSort} 
+                 options={["Default", "Recent", "Highest Rating"]} 
+                 onChange={setReviewSort} 
+               />
             </div>
 
             <div className="flex flex-col mt-5">
@@ -1987,11 +2050,11 @@ export default function ProductDetailsClient({
             {/* Sorting Dropdown */}
             <div className="flex items-center gap-2 pb-5 border-b border-slate-100 dark:border-slate-800">
                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h10M4 18h4"/></svg>
-               <select className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-sm focus:outline-none focus:border-primary-500 cursor-pointer min-w-[120px]">
-                 <option>Default</option>
-                 <option>Most Recent</option>
-                 <option>Top Answered</option>
-               </select>
+               <CustomSortDropdown 
+                 value={qaSort} 
+                 options={["Default", "Most Recent", "Top Answered"]} 
+                 onChange={setQaSort} 
+               />
             </div>
 
             <div className="flex flex-col mt-5">
