@@ -5,6 +5,7 @@ import React from "react";
 
 export interface MobileStickyCartProps {
   onAddToCart?: () => void;
+  onBuyNow?: () => void;
   
   /** 
    * Whether to switch from fixed position to absolute position
@@ -31,6 +32,7 @@ export interface MobileStickyCartProps {
 
 export default function MobileStickyCart({
   onAddToCart,
+  onBuyNow,
   isAbsoluteMode = false,
   showTrustBadges = true,
   hasAlternative = false,
@@ -90,14 +92,20 @@ export default function MobileStickyCart({
         </div>
       )}
 
-      {/* Primary Add to Cart Button */}
-      <div className={`px-3 pb-3 ${(!hasAlternative && showTrustBadges) ? 'pt-1' : 'pt-3'}`}>
+      {/* Primary Action Buttons */}
+      <div className={`px-3 pb-3 ${(!hasAlternative && showTrustBadges) ? 'pt-1' : 'pt-3'} flex gap-3`}>
         <button 
           onClick={onAddToCart}
-          className="w-full py-3.5 bg-primary-600 hover:bg-primary-500 active:bg-primary-700 text-white font-bold text-lg rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
+          className="flex-1 py-3 bg-primary-50 dark:bg-slate-800 text-primary-600 dark:text-primary-400 font-bold text-[15px] sm:text-base rounded-xl transition-colors flex items-center justify-center gap-2 border border-primary-200 dark:border-slate-700 hover:bg-primary-100 dark:hover:bg-slate-700"
         >
-          <ShoppingCart className="w-5 h-5" />
+          <ShoppingCart className="w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0" />
           কার্টে যোগ করুন
+        </button>
+        <button 
+          onClick={onBuyNow}
+          className="flex-1 py-3 bg-primary-600 hover:bg-primary-500 active:bg-primary-700 text-white font-bold text-[15px] sm:text-base rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
+        >
+          অর্ডার করুন
         </button>
       </div>
     </div>

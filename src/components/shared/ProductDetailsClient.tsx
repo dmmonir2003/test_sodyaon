@@ -1153,6 +1153,7 @@ export default function ProductDetailsClient({
   const [zoomStyle, setZoomStyle] = useState({});
   const [isWriteReviewOpen, setIsWriteReviewOpen] = useState(false);
   const [isAbsoluteMode, setIsAbsoluteMode] = useState(false);
+  const [showDesktopStickyCart, setShowDesktopStickyCart] = useState(false);
   const [mobileTab, setMobileTab] = useState<'description' | 'video'>('description');
   const [feedbackTab, setFeedbackTab] = useState<'reviews' | 'qa'>('reviews');
   const bottomMarkerRef = useRef<HTMLDivElement>(null);
@@ -1167,6 +1168,9 @@ export default function ProductDetailsClient({
 
       // Switch to absolute mode when within 600px of bottom
       setIsAbsoluteMode(distanceFromBottom < 600);
+
+      // Desktop sticky cart: Show when scrolled past 600px
+      setShowDesktopStickyCart(window.scrollY > 600);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -1423,10 +1427,16 @@ export default function ProductDetailsClient({
                     </button>
                   </div>
                 </div>
-                {/* Desktop Inline Add to Cart Button */}
-                <button className="hidden lg:flex flex-1 py-4 bg-primary-600 hover:bg-primary-500 active:bg-primary-700 text-white rounded-xl font-black text-lg shadow-lg transition-all items-center justify-center gap-3 transform hover:-translate-y-1">
-                  কার্টে যোগ করুন — ৳{MOCK_PRODUCT.price * quantity}
-                </button>
+                {/* Desktop Inline Action Buttons */}
+                <div className="hidden lg:flex flex-1 gap-3">
+                  <button className="flex-1 py-4 bg-primary-50 dark:bg-slate-800 hover:bg-primary-100 dark:hover:bg-slate-700 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-slate-700 rounded-xl font-bold text-lg shadow-sm transition-all flex items-center justify-center gap-2">
+                    <ShoppingCart className="w-5 h-5" />
+                    কার্টে যোগ করুন
+                  </button>
+                  <button className="flex-1 py-4 bg-primary-600 hover:bg-primary-500 active:bg-primary-700 text-white rounded-xl font-black text-lg shadow-lg transition-transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                    অর্ডার করুন — ৳{MOCK_PRODUCT.price * quantity}
+                  </button>
+                </div>
               </div>
 
               {/* Desktop/Mobile Guarantees Box */}
@@ -2075,11 +2085,45 @@ export default function ProductDetailsClient({
       {/* STICKY ADD TO CART BAR (MOBILE ONLY) */}
       <MobileStickyCart 
         isAbsoluteMode={isAbsoluteMode}
-        hasAlternative={true} 
+        hasAlternative={false} 
         alternativeTitle="eBook Version Available"
         alternativePrice="180"
         alternativeImage="/next.svg"
       />
+
+      {/* DESKTOP STICKY ADD TO CART FAB (Middle Right Side) */}
+      <div className={`hidden lg:flex fixed right-0 top-1/2 -translate-y-1/2 z-[60] flex-col items-end gap-3 transition-all duration-500 transform ${showDesktopStickyCart ? 'translate-x-0 opacity-100' : 'translate-x-[150%] opacity-0 pointer-events-none'}`}>
+         
+         {/* Expandable Cart Button */}
+         <button className="group relative flex items-center justify-end h-16 bg-primary-50 dark:bg-slate-800 text-primary-600 dark:text-primary-400 border-y border-l border-primary-200 dark:border-slate-700 hover:bg-primary-100 dark:hover:bg-slate-700 rounded-l-2xl shadow-[-4px_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 w-16 hover:w-[200px] overflow-hidden">
+            <span className="text-[14px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2 pl-5">
+               কার্টে যোগ করুন
+            </span>
+            <div className="w-16 h-16 shrink-0 flex items-center justify-center">
+              <ShoppingCart className="w-5 h-5" strokeWidth={2.5} />
+            </div>
+            {/* Notification Dot */}
+            {quantity > 1 && (
+              <span className="absolute top-1.5 right-2.5 w-4 h-4 bg-primary-600 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-sm transition-opacity group-hover:opacity-0">
+                {quantity}
+              </span>
+            )}
+         </button>
+
+         {/* Expandable Buy Now Button */}
+         <button className="group relative flex items-center justify-end h-16 bg-primary-600 hover:bg-primary-500 active:bg-primary-700 text-white rounded-l-2xl shadow-[-8px_0_20px_rgba(0,0,0,0.15)] transition-all duration-300 w-16 hover:w-[240px] overflow-hidden border-y border-l border-primary-500/30">
+            <span className="text-[14px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2 pl-4">
+               অর্ডার করুন
+               <span className="w-1.5 h-1.5 rounded-full bg-white/50 shrink-0"></span>
+               ৳{MOCK_PRODUCT.price * quantity}
+            </span>
+            <div className="w-16 h-16 shrink-0 flex items-center justify-center">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+         </button>
+      </div>
 
       {/* WRITE A REVIEW DRAWER */}
       <WriteReviewDrawer
