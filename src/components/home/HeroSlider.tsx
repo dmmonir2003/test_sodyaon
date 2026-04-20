@@ -135,11 +135,10 @@ export default function HeroSlider() {
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === currentSlide
+              className={`w-3 h-3 rounded-full transition-all ${index === currentSlide
                   ? "bg-primary-600 w-8"
                   : "bg-white/60 hover:bg-white/80 dark:bg-slate-400/60 dark:hover:bg-slate-400/80"
-              }`}
+                }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}

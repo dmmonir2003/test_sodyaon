@@ -5,6 +5,7 @@ import "./globals.css";
 import Analytics from "@/components/shared/Analytics";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import ExitIntentPopup from "@/components/shared/ExitIntentPopup";
 import StoreProvider from "@/store/StoreProvider";
 
@@ -76,10 +77,11 @@ export default function RootLayout({
         <StoreProvider>
           <Analytics />
           <Navbar />
-          <main className="flex-grow flex flex-col">
+          <main className="flex-grow flex flex-col pb-20 md:pb-0">
             {children}
           </main>
           <Footer />
+          <MobileBottomNav />
           <ExitIntentPopup />
         </StoreProvider>
       </body>
