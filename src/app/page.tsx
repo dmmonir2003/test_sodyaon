@@ -21,12 +21,13 @@ import TestimonialCard from "@/components/home/TestimonialCard";
 import BlogCard from "@/components/home/BlogCard";
 import ProductCard from "@/components/shared/ProductCard";
 import HeroSlider from "@/components/home/HeroSlider";
+import PremiumHeroSection from "@/components/home/PremiumHeroSection";
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
-      {/* 1. Hero Slider Banner */}
-      <HeroSlider />
+      {/* 1. Premium Hero Section */}
+      <PremiumHeroSection />
 
       {/* 2. Featured Features Bar */}
       <section className="-mt-16 mx-4 relative z-20">
