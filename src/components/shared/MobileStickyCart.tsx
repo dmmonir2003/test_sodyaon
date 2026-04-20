@@ -1,6 +1,7 @@
 "use client";
 
-import { ShoppingCart, Banknote, RotateCcw, CloudDownload } from "lucide-react";
+import { ShoppingCart, Banknote, RotateCcw, CloudDownload, Phone } from "lucide-react";
+import { FaWhatsapp } from 'react-icons/fa'; // Assuming we can use react-icons, if not we'll use a lucide icon
 import React from "react";
 
 export interface MobileStickyCartProps {
@@ -28,6 +29,14 @@ export interface MobileStickyCartProps {
   alternativePrice?: string | number;
   alternativeButtonText?: string;
   onAlternativeClick?: () => void;
+
+  /** 
+   * Admin dynamic settings to show/hide quick order buttons
+   */
+  showWhatsapp?: boolean;
+  whatsappNumber?: string;
+  showCall?: boolean;
+  phoneNumber?: string;
 }
 
 export default function MobileStickyCart({
@@ -41,7 +50,24 @@ export default function MobileStickyCart({
   alternativePrice = "180",
   alternativeButtonText = "Buy to Read",
   onAlternativeClick,
+  showWhatsapp = false,
+  whatsappNumber = "+8801900000000",
+  showCall = false,
+  phoneNumber = "+8801900000000",
 }: MobileStickyCartProps) {
+
+  const handleWhatsapp = () => {
+    if (whatsappNumber) {
+      window.open(`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`, '_blank');
+    }
+  };
+
+  const handleCall = () => {
+    if (phoneNumber) {
+      window.open(`tel:${phoneNumber}`);
+    }
+  };
+
   return (
     <div className={`lg:hidden left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] w-full pb-safe ${isAbsoluteMode ? 'absolute bottom-0' : 'fixed bottom-0'}`}>
       
@@ -93,21 +119,50 @@ export default function MobileStickyCart({
       )}
 
       {/* Primary Action Buttons */}
-      <div className={`px-3 pb-3 ${(!hasAlternative && showTrustBadges) ? 'pt-1' : 'pt-3'} flex gap-3`}>
-        <button 
-          onClick={onAddToCart}
-          className="flex-1 py-3 bg-primary-50 dark:bg-slate-800 text-primary-600 dark:text-primary-400 font-bold text-[15px] sm:text-base rounded-xl transition-colors flex items-center justify-center gap-2 border border-primary-200 dark:border-slate-700 hover:bg-primary-100 dark:hover:bg-slate-700"
-        >
-          <ShoppingCart className="w-[18px] h-[18px] sm:w-5 sm:h-5 shrink-0" />
-          কার্টে যোগ করুন
-        </button>
-        <button 
-          onClick={onBuyNow}
-          className="flex-1 py-3 bg-primary-600 hover:bg-primary-500 active:bg-primary-700 text-white font-bold text-[15px] sm:text-base rounded-xl shadow-md transition-colors flex items-center justify-center gap-2"
-        >
-          অর্ডার করুন
-        </button>
+      <div className={`px-3 pb-3 ${(!hasAlternative && showTrustBadges) ? 'pt-1' : 'pt-3'} flex flex-col gap-2.5`}>
+        
+        {/* Row 1: Add to Cart and Buy Now */}
+        <div className="flex gap-2.5">
+          <button 
+            onClick={onAddToCart}
+            className="flex-1 py-2.5 sm:py-3 bg-[#f39422] hover:bg-[#e67e22] text-white font-bold text-[13px] sm:text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <ShoppingCart className="w-[18px] h-[18px] shrink-0" />
+            <span className="uppercase tracking-wide">ADD TO CART</span>
+          </button>
+          <button 
+            onClick={onBuyNow}
+            className="flex-1 py-2.5 sm:py-3 bg-[#0a1b24] hover:bg-[#061118] text-white font-bold text-[13px] sm:text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <span className="uppercase tracking-wide">BUY NOW</span>
+          </button>
+        </div>
+
+        {/* Row 2: WhatsApp and Call For Order (Conditionally Rendered based on props) */}
+        {(showWhatsapp || showCall) && (
+           <div className="flex gap-2.5">
+            {showWhatsapp && (
+              <button 
+                onClick={handleWhatsapp}
+                className="flex-1 py-2.5 sm:py-3 bg-[#24b05a] hover:bg-[#1f964c] text-white font-bold text-[13px] sm:text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <FaWhatsapp className="w-5 h-5 shrink-0" />
+                <span className="tracking-wide">Order On WhatsApp</span>
+              </button>
+            )}
+            {showCall && (
+              <button 
+                onClick={handleCall}
+                className="flex-1 py-2.5 sm:py-3 bg-[#2b4491] hover:bg-[#203679] text-white font-bold text-[13px] sm:text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <Phone className="w-4 h-4 shrink-0" />
+                <span className="tracking-wide">Call For Order</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 }
+

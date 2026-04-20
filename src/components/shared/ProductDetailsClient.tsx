@@ -1262,7 +1262,7 @@ export default function ProductDetailsClient({
   };
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-900 min-h-screen pb-48 relative">
+    <div className="bg-slate-50 dark:bg-slate-900 min-h-screen pb-10 relative">
       {/* Breadcrumbs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <nav
@@ -1293,7 +1293,7 @@ export default function ProductDetailsClient({
         </nav>
       </div>
 
-      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-2 lg:mt-0">
+      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-0 lg:mt-0">
         <div className="bg-transparent sm:bg-white sm:dark:bg-slate-800 rounded-none sm:rounded-[2rem] lg:rounded-[2.5rem] px-4 py-2 sm:p-6 lg:p-12 shadow-none sm:shadow-2xl border-none sm:border border-slate-100 dark:border-slate-700">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-16">
             {/* Left: Image Gallery */}
@@ -1314,7 +1314,7 @@ export default function ProductDetailsClient({
 
               {/* Main Image */}
               <div
-                className={`flex-1 order-first relative w-full aspect-[4/5] sm:aspect-square lg:aspect-square rounded-2xl lg:rounded-3xl overflow-hidden cursor-crosshair transition-colors duration-500 ${MOCK_PRODUCT.images[activeImage]} shadow-inner`}
+                className={`flex-1 order-first relative w-full aspect-[15/10] sm:aspect-square lg:aspect-square rounded-2xl lg:rounded-3xl overflow-hidden cursor-crosshair transition-colors duration-500 ${MOCK_PRODUCT.images[activeImage]} shadow-inner`}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
               >
@@ -1469,10 +1469,10 @@ export default function ProductDetailsClient({
               </div>
 
                {/* Inline Quantity block */}
-               <div className="flex items-center gap-4 mb-10 pt-8 border-t border-slate-100 dark:border-slate-700/50">
+               <div className="flex items-center gap-4 mb-0 lg:mb-10 pt-2 border-t border-slate-100 dark:border-slate-700/50">
                 <div className="flex items-center gap-3 md:gap-4">
                   <span className="font-bold text-[17px] text-slate-900 dark:text-white lg:hidden">পরিমাণ:</span>
-                  <div className="flex items-center justify-between border border-slate-300 dark:border-slate-700 rounded-xl w-[105px] h-11 overflow-hidden bg-transparent shrink-0">
+                  <div className="flex items-center justify-between border border-slate-300 dark:border-slate-700 rounded-xl w-full lg:w-[105px] h-11 overflow-hidden bg-transparent shrink-0">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       className="w-10 h-full flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-bold text-lg"
@@ -1523,7 +1523,7 @@ export default function ProductDetailsClient({
       </div>
 
       {/* UNIQUE SECTION: Play Personality Match */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 md:mt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3 md:mt-16">
         <div className="bg-emerald-600 rounded-[2rem] p-5 md:p-12 text-white shadow-xl flex flex-col md:flex-row items-center gap-5 md:gap-10 relative overflow-hidden">
           
           <div className="absolute right-0 top-0 opacity-10 pointer-events-none text-[12rem] md:text-[20rem] font-black leading-none translate-x-4 -translate-y-4 md:translate-x-0 md:translate-y-0">
@@ -1582,7 +1582,7 @@ export default function ProductDetailsClient({
       </div>
 
       {/* TABS (DESKTOP & MOBILE) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-16 lg:mt-24 border-b border-slate-200 dark:border-slate-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-12 lg:mt-24 border-b border-slate-200 dark:border-slate-800">
         <div className="flex w-full md:max-w-2xl md:mx-auto">
           <button 
             onClick={() => setMobileTab('description')}
@@ -1740,7 +1740,7 @@ export default function ProductDetailsClient({
       {/* VIDEO DEMONSTRATION SECTION */}
       <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 lg:mt-12 ${mobileTab === 'video' ? 'block' : 'hidden'}`}>
         <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-5xl font-black font-heading text-slate-900 dark:text-white mb-4">
+          <h2 className="text-3xl md:text-5xl font-black font-heading text-slate-900 dark:text-white mb-2">
             ভিডিওটি দেখুন
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto">
@@ -1832,7 +1832,7 @@ export default function ProductDetailsClient({
       </div>
 
       {/* FEEDBACK TABS (Reviews / Q&A) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 lg:mt-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 lg:mt-24">
         <div className="flex border-b border-slate-200 dark:border-slate-800">
           <button 
             onClick={() => setFeedbackTab('reviews')}
@@ -1973,7 +1973,7 @@ export default function ProductDetailsClient({
               </div>
 
               {/* Second Review Item */}
-              <div className="border-b border-slate-100 dark:border-slate-800 pb-6 mb-4">
+              {/* <div className="border-b border-slate-100 dark:border-slate-800 pb-6 mb-4">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center shrink-0 border border-slate-200 overflow-hidden">
                     <img src="/icons/book.png" alt="Avatar" className="w-full h-full object-cover opacity-50" />
@@ -2011,10 +2011,10 @@ export default function ProductDetailsClient({
                     Not Helpful
                   </button>
                 </div>
-              </div>
+              </div> */}
 
               {/* Show more Review button */}
-              <div className="py-2">
+              <div className="py-1">
                 <button className="text-primary-500 text-sm font-medium hover:underline flex items-center justify-between w-full text-left">
                   Show more Review(s)
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
@@ -2108,7 +2108,7 @@ export default function ProductDetailsClient({
       </div>
 
       {/* RELATED PRODUCTS */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24 lg:mt-32">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 lg:mt-32">
         <h2 className="text-2xl lg:text-3xl font-black font-heading text-slate-900 dark:text-white mb-6 lg:mb-10">
           এগুলোর সাথে মানানসই
         </h2>
@@ -2127,7 +2127,7 @@ export default function ProductDetailsClient({
       </div>
 
       {/* RECENTLY VIEWED PRODUCTS */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 lg:mt-24 mb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 lg:mt-24 mb-2">
         <h2 className="text-2xl lg:text-3xl font-black font-heading text-slate-900 dark:text-white mb-6 lg:mb-10">
           রিসেন্টলি দেখা পণ্য
         </h2>
@@ -2152,6 +2152,11 @@ export default function ProductDetailsClient({
         alternativeTitle="eBook Version Available"
         alternativePrice="180"
         alternativeImage="/next.svg"
+        // TODO: Map these to your real backend admin configurations
+        showWhatsapp={true}
+        whatsappNumber="+8801700000000"
+        showCall={true}
+        phoneNumber="+8801700000000"
       />
 
       {/* DESKTOP STICKY ADD TO CART FAB (Middle Right Side) */}
