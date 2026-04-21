@@ -3,11 +3,12 @@ import Script from "next/script";
 import { Hind_Siliguri, Noto_Serif_Bengali } from "next/font/google";
 import "./globals.css";
 import Analytics from "@/components/shared/Analytics";
-import Navbar from "@/components/layout/Navbar";
+import Navbar from "@/components/layout/Navbar/Navbar";
 import Footer from "@/components/layout/Footer";
-import MobileBottomNav from "@/components/layout/MobileBottomNav";
+
 import ExitIntentPopup from "@/components/shared/ExitIntentPopup";
 import StoreProvider from "@/store/StoreProvider";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
 const inter = Hind_Siliguri({
   variable: "--font-inter",
@@ -81,7 +82,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
-          <MobileBottomNav />
+          <MobileBottomNav  />
           <ExitIntentPopup />
         </StoreProvider>
       </body>

@@ -4,6 +4,7 @@ import adminAuthReducer from './admin/auth/adminAuthSlice';
 import financeReducer from './admin/finance/financeSlice';
 import cartReducer from './user/cart/cartSlice';
 import profileReducer from './user/profile/profileSlice';
+import uiReducer from './ui/uiSlice';
 
 export const store = configureStore({
   reducer: {
@@ -15,6 +16,7 @@ export const store = configureStore({
     finance: financeReducer,
     cart: cartReducer,
     profile: profileReducer,
+    ui: uiReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(baseApi.middleware),
