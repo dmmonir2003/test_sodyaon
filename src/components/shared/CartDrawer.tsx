@@ -65,10 +65,14 @@ export default function CartDrawer() {
     }
   };
 
-  if (!isOpen) return null;
+
 
   return (
-    <div className="fixed inset-0 z-[200] flex justify-end">
+    <div 
+      className={`fixed inset-0 z-[200] flex justify-end transition-all duration-300 ${
+        isOpen ? "opacity-100 visible pointer-events-auto" : "opacity-0 invisible pointer-events-none"
+      }`}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
@@ -76,7 +80,11 @@ export default function CartDrawer() {
       />
 
       {/* Drawer */}
-      <div className="relative w-full max-w-md h-[100dvh] bg-white dark:bg-slate-900 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out border-l border-slate-100 dark:border-slate-800">
+      <div 
+        className={`relative w-full max-w-md h-[100dvh] bg-white dark:bg-slate-900 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out border-l border-slate-100 dark:border-slate-800 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
         
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
