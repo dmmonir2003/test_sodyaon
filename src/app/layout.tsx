@@ -9,6 +9,8 @@ import Footer from "@/components/layout/Footer";
 import ExitIntentPopup from "@/components/shared/ExitIntentPopup";
 import StoreProvider from "@/store/StoreProvider";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import CartDrawer from "@/components/shared/CartDrawer";
+import MobileSearchDrawer from "@/components/shared/MobileSearchDrawer";
 
 const inter = Hind_Siliguri({
   variable: "--font-inter",
@@ -84,6 +86,8 @@ export default function RootLayout({
           <Footer />
           <MobileBottomNav  />
           <ExitIntentPopup />
+          <CartDrawer />
+          <MobileSearchDrawer />
         </StoreProvider>
       </body>
     </html>

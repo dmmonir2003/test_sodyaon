@@ -1,8 +1,9 @@
 "use client";
 
-import { ShoppingCart, Banknote, RotateCcw, CloudDownload, Phone } from "lucide-react";
+import { ShoppingCart, Banknote, RotateCcw, CloudDownload, Phone, Zap } from "lucide-react";
 import { FaWhatsapp } from 'react-icons/fa'; // Assuming we can use react-icons, if not we'll use a lucide icon
 import React from "react";
+import Link from "next/link";
 
 export interface MobileStickyCartProps {
   onAddToCart?: () => void;
@@ -130,12 +131,13 @@ export default function MobileStickyCart({
             <ShoppingCart className="w-[18px] h-[18px] shrink-0" />
             <span className="uppercase tracking-wide">ADD TO CART</span>
           </button>
-          <button 
-            onClick={onBuyNow}
+          <Link 
+            href="/checkout"
             className="flex-1 py-2.5 sm:py-3 bg-[#0a1b24] hover:bg-[#061118] text-white font-bold text-[13px] sm:text-sm rounded-lg transition-colors flex items-center justify-center gap-2"
           >
+            <Zap className="w-[18px] h-[18px] shrink-0" />
             <span className="uppercase tracking-wide">BUY NOW</span>
-          </button>
+          </Link>
         </div>
 
         {/* Row 2: WhatsApp and Call For Order (Conditionally Rendered based on props) */}

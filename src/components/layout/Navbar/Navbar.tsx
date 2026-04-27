@@ -18,20 +18,26 @@ import BgThemeSwitcher from "@/components/shared/BgThemeSwitcher";
 import UserDropdown from "../UserDropdown";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { setMobileMenuOpen } from "@/store/ui/uiSlice";
+import { setCartOpen } from "@/store/user/cart/cartSlice";
 
 import ShopMegaMenu from "./ShopMegaMenu";
 import MobileNavLink from "./MobileNavLink";
 import NavLink from "./NavLink";
 import MobileMenuSection from "./MobileMenuSection";
 import NavDropdown from "./NavDropdown";
+import PopularSearchTags from "@/components/shared/PopularSearchTags";
 
 export default function Navbar() {
   const dispatch = useAppDispatch();
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({});
+  const [isDesktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const { isAuthenticated } = useAppSelector((state) => state.profile);
   const isMobileMenuOpen = useAppSelector((state) => state.ui.isMobileMenuOpen);
+  const isMobileSearchOpen = useAppSelector((state) => state.ui.isMobileSearchOpen);
+  const cartItems = useAppSelector((state) => state.cart.items);
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   // Prevent scrolling when mobile sidebar is open
   useEffect(() => {
@@ -104,27 +110,38 @@ export default function Navbar() {
                 <Heart className="h-5 w-5" />
               </Link>
 
-              <Link
-                href="/cart"
+              <button
+                onClick={() => dispatch(setCartOpen(true))}
                 className="flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 relative transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
               >
                 <ShoppingCart className="h-5 w-5" />
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] sm:text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-accent-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
-                  ৩
-                </span>
-              </Link>
+                {cartCount > 0 && (
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] sm:text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-accent-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
 
           {/* Desktop Search (Hidden on Mobile) */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-6">
+          <div className="hidden md:flex flex-1 max-w-lg mx-6 relative z-50">
             <div className="relative w-full group">
               <input
                 type="text"
                 placeholder="নিখুঁত খেলনা খুঁজুন..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-full border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all outline-none text-sm shadow-sm hover:shadow-md"
+                onFocus={() => setDesktopSearchOpen(true)}
+                onBlur={() => setTimeout(() => setDesktopSearchOpen(false), 200)}
+                className={`w-full pl-10 pr-4 py-2.5 border-2 bg-slate-50 dark:bg-slate-800 focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all outline-none text-sm shadow-sm hover:shadow-md ${isDesktopSearchOpen ? 'rounded-t-2xl border-primary-500 border-b-transparent shadow-none hover:shadow-none' : 'rounded-full border-slate-200 dark:border-slate-700'}`}
               />
-              <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
+              <Search className={`absolute left-3.5 top-3 h-4 w-4 transition-colors ${isDesktopSearchOpen ? 'text-primary-600' : 'text-slate-400 group-focus-within:text-primary-500'}`} />
+              
+              {/* Desktop Dropdown Overlay */}
+              <div className={`absolute top-[100%] left-0 w-full min-w-[400px] -mt-[2px] bg-white dark:bg-slate-900 border-2 border-primary-500 border-t-0 rounded-b-2xl shadow-xl overflow-hidden transition-all duration-200 origin-top transform ${isDesktopSearchOpen ? 'scale-y-100 opacity-100 pointer-events-auto' : 'scale-y-0 opacity-0 pointer-events-none'}`}>
+                 <div className="p-5 border-t border-slate-100 dark:border-slate-800">
+                    <PopularSearchTags />
+                 </div>
+              </div>
             </div>
           </div>
 
@@ -149,15 +166,17 @@ export default function Navbar() {
                 <Heart className="h-5 w-5" />
               </Link>
 
-              <Link
-                href="/cart"
+              <button
+                onClick={() => dispatch(setCartOpen(true))}
                 className="flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 relative transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
               >
                 <ShoppingCart className="h-5 w-5" />
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] sm:text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-accent-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
-                  ৩
-                </span>
-              </Link>
+                {cartCount > 0 && (
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] sm:text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-accent-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
             </div>
 
             {/* Desktop & Mobile: User Auth Dropdown */}
@@ -206,17 +225,7 @@ export default function Navbar() {
         </nav>
       </div>
 
-      {/* 3rd Line: Mobile Search Bar (Always visible below header on Mobile) */}
-      <div className="md:hidden px-4 pb-3 border-t border-slate-100 dark:border-slate-800/50 pt-3">
-        <div className="relative w-full">
-          <input
-            type="text"
-            placeholder="খেলনা খুঁজুন..."
-            className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:bg-white focus:border-primary-400 transition-all outline-none text-sm shadow-sm"
-          />
-          <Search className="absolute left-3.5 top-2.5 sm:top-3 h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
-        </div>
-      </div>
+      {/* Note: The Mobile Search Drawer is now triggered by the MobileBottomNav globally and handled by the separate MobileSearchDrawer component at layout level. */}
 
       {/* Left Sidebar Overlay & Menu (Mobile Hamburger) */}
       {isMobileMenuOpen && (

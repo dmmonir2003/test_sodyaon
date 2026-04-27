@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Trash2, Plus, Minus, ArrowRight, ShieldCheck, CreditCard } from "lucide-react";
+import MobileStickyOrderNow from "@/components/shared/MobileStickyOrderNow";
 
 export default function CartPage() {
   const [items, setItems] = useState([
@@ -122,6 +123,10 @@ export default function CartPage() {
           </div>
         )}
       </div>
+      <MobileStickyOrderNow 
+        buttonText="অর্ডার নিশ্চিত করুন" 
+        onClick={() => console.log("Processing order...")} 
+      />
     </div>
   );
 }

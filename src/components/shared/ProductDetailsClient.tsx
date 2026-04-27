@@ -1091,70 +1091,18 @@ import {
   Package,
   Gift,
   Smartphone,
+  ShoppingBag,
+  MessageSquare,
+  Phone,
 } from "lucide-react";
 import ProductCard from "@/components/shared/ProductCard";
 import MobileStickyCart from "@/components/shared/MobileStickyCart";
 import WriteReviewDrawer from "@/components/shared/WriteReviewDrawer";
+import { useAppDispatch } from "@/store/hooks";
+import { addItem, setCartOpen } from "@/store/user/cart/cartSlice";
+import CustomSelect from "@/components/shared/CustomSelect";
 
-// Custom Headless Dropdown for Filters to match Color System
-function CustomSortDropdown({ 
-  value, 
-  options, 
-  onChange 
-}: { 
-  value: string; 
-  options: string[]; 
-  onChange: (val: string) => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  return (
-    <div className="relative inline-block w-[160px]" ref={ref}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-2 px-3 py-1.5 border rounded-md text-sm transition-colors cursor-pointer ${
-          isOpen ? 'bg-white dark:bg-slate-900 border-primary-500 ring-2 ring-primary-500/20' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-primary-500 hover:bg-slate-50 dark:hover:bg-slate-800'
-        }`}
-      >
-        <span className="font-medium text-slate-700 dark:text-slate-200 font-sans">{value}</span>
-        <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${isOpen ? 'rotate-180 text-primary-500' : ''}`} />
-      </button>
-      
-      <div 
-        className={`absolute top-full mt-1.5 left-0 w-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-xl rounded-lg overflow-hidden z-20 transition-all duration-200 origin-top border ${
-          isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
-        }`}
-      >
-        <div className="py-1">
-          {options.map((opt) => (
-            <button
-              key={opt}
-              onClick={() => { onChange(opt); setIsOpen(false); }}
-              className={`w-full text-left px-4 py-2 text-sm transition-colors font-sans ${
-                value === opt 
-                  ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 font-bold' 
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium'
-              }`}
-            >
-              {opt}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Mock Data
 const MOCK_PRODUCT = {
@@ -1196,6 +1144,7 @@ export default function ProductDetailsClient({
   product: any;
   relatedProducts: any[];
 }) {
+  const dispatch = useAppDispatch();
   const MOCK_PRODUCT = {
     reviewsCount: 1284,
     colors: [
@@ -1490,15 +1439,54 @@ export default function ProductDetailsClient({
                     </button>
                   </div>
                 </div>
-                {/* Desktop Inline Action Buttons */}
-                <div className="hidden lg:flex flex-1 gap-3">
-                  <button className="flex-1 py-4 bg-primary-50 dark:bg-slate-800 hover:bg-primary-100 dark:hover:bg-slate-700 text-primary-600 dark:text-primary-400 border border-primary-200 dark:border-slate-700 rounded-xl font-bold text-lg shadow-sm transition-all flex items-center justify-center gap-2">
-                    <ShoppingCart className="w-5 h-5" />
-                    কার্টে যোগ করুন
+                {/* Desktop Action Buttons Grid (4 Buttons) */}
+                <div className="hidden lg:grid grid-cols-2 gap-4 flex-1">
+                  <button 
+                    onClick={() => {
+                      dispatch(addItem({
+                        id: MOCK_PRODUCT.id.toString(),
+                        name: MOCK_PRODUCT.name,
+                        price: MOCK_PRODUCT.price,
+                        quantity: quantity,
+                        img: MOCK_PRODUCT.images[0]
+                      }));
+                      dispatch(setCartOpen(true));
+                    }}
+                    className="flex items-center justify-center gap-2 py-4 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-lg shadow-sm transition-all uppercase tracking-wide"
+                  >
+                    <ShoppingBag className="w-5 h-5" />
+                    ADD TO CART
                   </button>
-                  <button className="flex-1 py-4 bg-primary-600 hover:bg-primary-500 active:bg-primary-700 text-white rounded-xl font-black text-lg shadow-lg transition-transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                    অর্ডার করুন — ৳{MOCK_PRODUCT.price * quantity}
+                  <Link 
+                    href="/checkout"
+                    className="flex items-center justify-center py-4 bg-slate-900 dark:bg-black hover:bg-slate-800 text-white font-bold rounded-lg shadow-sm transition-all uppercase tracking-wide"
+                  >
+                    BUY NOW
+                  </Link>
+                  <button 
+                    onClick={() => window.open(`https://wa.me/+8801700000000`, '_blank')}
+                    className="flex items-center justify-center gap-2 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm transition-all"
+                  >
+                    <MessageSquare className="w-5 h-5" />
+                    Order On WhatsApp
                   </button>
+                  <button 
+                    onClick={() => window.open(`tel:+8801700000000`)}
+                    className="flex items-center justify-center gap-2 py-4 bg-indigo-800 hover:bg-indigo-900 text-white font-bold rounded-lg shadow-sm transition-all"
+                  >
+                    <Phone className="w-5 h-5" />
+                    Call For Order
+                  </button>
+                </div>
+              </div>
+
+              {/* Brand Logo Section */}
+              <div className="hidden lg:block mt-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-950/50">
+                  <span className="text-sm font-bold text-slate-500">Brand:</span>
+                  <div className="h-8 w-24 bg-slate-100 dark:bg-slate-800 rounded flex items-center justify-center text-[10px] font-black italic tracking-tighter">
+                    SHO<span className="text-accent-500">S</span>TI
+                  </div>
                 </div>
               </div>
 
@@ -1920,9 +1908,14 @@ export default function ProductDetailsClient({
             {/* Sorting Dropdown */}
             <div className="flex items-center gap-2 pb-5 border-b border-slate-100 dark:border-slate-800">
                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h10M4 18h4"/></svg>
-               <CustomSortDropdown 
+               <CustomSelect 
+                 className="w-[160px]"
                  value={reviewSort} 
-                 options={["Default", "Recent", "Highest Rating"]} 
+                 options={[
+                   { value: "Default", label: "Default" },
+                   { value: "Recent", label: "Recent" },
+                   { value: "Highest Rating", label: "Highest Rating" }
+                 ]}
                  onChange={setReviewSort} 
                />
             </div>
@@ -2050,9 +2043,14 @@ export default function ProductDetailsClient({
             {/* Sorting Dropdown */}
             <div className="flex items-center gap-2 pb-5 border-b border-slate-100 dark:border-slate-800">
                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h10M4 18h4"/></svg>
-               <CustomSortDropdown 
+               <CustomSelect 
+                 className="w-[160px]"
                  value={qaSort} 
-                 options={["Default", "Most Recent", "Top Answered"]} 
+                 options={[
+                   { value: "Default", label: "Default" },
+                   { value: "Most Recent", label: "Most Recent" },
+                   { value: "Top Answered", label: "Top Answered" }
+                 ]}
                  onChange={setQaSort} 
                />
             </div>
@@ -2152,6 +2150,16 @@ export default function ProductDetailsClient({
         alternativeTitle="eBook Version Available"
         alternativePrice="180"
         alternativeImage="/next.svg"
+        onAddToCart={() => {
+          dispatch(addItem({
+            id: MOCK_PRODUCT.id.toString(),
+            name: MOCK_PRODUCT.name,
+            price: MOCK_PRODUCT.price,
+            quantity: quantity,
+            img: MOCK_PRODUCT.images[0]
+          }));
+          dispatch(setCartOpen(true));
+        }}
         // TODO: Map these to your real backend admin configurations
         showWhatsapp={true}
         whatsappNumber="+8801700000000"
@@ -2163,7 +2171,19 @@ export default function ProductDetailsClient({
       <div className={`hidden lg:flex fixed right-0 top-1/2 -translate-y-1/2 z-[60] flex-col items-end gap-3 transition-all duration-500 transform ${showDesktopStickyCart ? 'translate-x-0 opacity-100' : 'translate-x-[150%] opacity-0 pointer-events-none'}`}>
          
          {/* Expandable Cart Button */}
-         <button className="group relative flex items-center justify-end h-16 bg-primary-50 dark:bg-slate-800 text-primary-600 dark:text-primary-400 border-y border-l border-primary-200 dark:border-slate-700 hover:bg-primary-100 dark:hover:bg-slate-700 rounded-l-2xl shadow-[-4px_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 w-16 hover:w-[200px] overflow-hidden">
+         <button 
+            onClick={() => {
+              dispatch(addItem({
+                id: MOCK_PRODUCT.id.toString(),
+                name: MOCK_PRODUCT.name,
+                price: MOCK_PRODUCT.price,
+                quantity: quantity,
+                img: MOCK_PRODUCT.images[0]
+              }));
+              dispatch(setCartOpen(true));
+            }}
+            className="group relative flex items-center justify-end h-16 bg-primary-50 dark:bg-slate-800 text-primary-600 dark:text-primary-400 border-y border-l border-primary-200 dark:border-slate-700 hover:bg-primary-100 dark:hover:bg-slate-700 rounded-l-2xl shadow-[-4px_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 w-16 hover:w-[200px] overflow-hidden"
+         >
             <span className="text-[14px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2 pl-5">
                কার্টে যোগ করুন
             </span>
@@ -2179,7 +2199,10 @@ export default function ProductDetailsClient({
          </button>
 
          {/* Expandable Buy Now Button */}
-         <button className="group relative flex items-center justify-end h-16 bg-primary-600 hover:bg-primary-500 active:bg-primary-700 text-white rounded-l-2xl shadow-[-8px_0_20px_rgba(0,0,0,0.15)] transition-all duration-300 w-16 hover:w-[240px] overflow-hidden border-y border-l border-primary-500/30">
+         <Link 
+            href="/checkout"
+            className="group relative flex items-center justify-end h-16 bg-primary-600 hover:bg-primary-500 active:bg-primary-700 text-white rounded-l-2xl shadow-[-8px_0_20px_rgba(0,0,0,0.15)] transition-all duration-300 w-16 hover:w-[240px] overflow-hidden border-y border-l border-primary-500/30"
+          >
             <span className="text-[14px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2 pl-4">
                অর্ডার করুন
                <span className="w-1.5 h-1.5 rounded-full bg-white/50 shrink-0"></span>
@@ -2190,7 +2213,7 @@ export default function ProductDetailsClient({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-         </button>
+         </Link>
       </div>
 
       {/* WRITE A REVIEW DRAWER */}

@@ -86,7 +86,8 @@
 
 import { usePathname } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setMobileMenuOpen } from '@/store/ui/uiSlice';
+import { setMobileMenuOpen, toggleMobileSearch } from '@/store/ui/uiSlice';
+import { setCartOpen } from '@/store/user/cart/cartSlice';
 import Link from 'next/link';
 
 export default function MobileBottomNav() {
@@ -113,14 +114,16 @@ export default function MobileBottomNav() {
       id: 'cart',
       icon: '🛒',
       label: 'CART',
-      href: '/cart',
+      href: '#',
+      action: () => dispatch(setCartOpen(true)),
       badge: cartCount > 0 ? cartCount : null,
     },
     {
       id: 'search',
       icon: '🔍',
       label: 'SEARCH',
-      href: '/search',
+      href: '#',
+      action: () => dispatch(toggleMobileSearch()),
     },
     {
       id: 'account',
@@ -136,6 +139,15 @@ export default function MobileBottomNav() {
     }
     return pathname.startsWith(href) && href !== '#';
   };
+
+  // Do not show on Product Details, Cart, or Order pages
+  const isProductDetails = pathname.startsWith('/shop/products/');
+  const isCartPage = pathname === '/cart';
+  const isOrderPage = pathname.startsWith('/order') || pathname.startsWith('/checkout');
+
+  if (isProductDetails || isCartPage || isOrderPage) {
+    return null;
+  }
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-lg">
