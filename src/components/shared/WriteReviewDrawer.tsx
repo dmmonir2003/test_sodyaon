@@ -85,9 +85,9 @@ export default function WriteReviewDrawer({
         <div className="overflow-y-auto p-4 flex-1">
           {/* Product Info */}
           <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100 dark:border-slate-800">
-            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden shrink-0 flex items-center justify-center">
+            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden shrink-0 flex items-center justify-center relative">
               {productImage ? (
-                <img src={productImage} alt={productName} className="w-full h-full object-cover" />
+                <Image src={productImage} alt={productName} fill className="object-cover" />
               ) : (
                 <div className="w-full h-full bg-primary-100" />
               )}

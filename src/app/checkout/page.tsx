@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   ChevronRight, 
   Trash2, 
@@ -112,8 +113,8 @@ export default function CheckoutPage() {
                 <div className="divide-y divide-slate-100 dark:divide-slate-700">
                   {items.map((item) => (
                     <div key={item.id} className="p-4 md:p-6 flex items-center gap-4 md:gap-6 relative group">
-                      <div className="w-20 h-20 md:w-24 md:h-24 bg-slate-50 dark:bg-slate-900 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      <div className="w-20 h-20 md:w-24 md:h-24 bg-slate-50 dark:bg-slate-900 rounded-xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800 relative">
+                        <Image src={item.image} alt={item.name} fill sizes="(max-width: 768px) 80px, 96px" className="object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm md:text-base font-bold text-slate-900 dark:text-white truncate mb-1">

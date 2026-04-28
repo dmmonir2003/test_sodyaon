@@ -4,6 +4,7 @@ import { ShoppingCart, Banknote, RotateCcw, CloudDownload, Phone, Zap } from "lu
 import { FaWhatsapp } from 'react-icons/fa'; // Assuming we can use react-icons, if not we'll use a lucide icon
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export interface MobileStickyCartProps {
   onAddToCart?: () => void;
@@ -79,7 +80,7 @@ export default function MobileStickyCart({
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 relative rounded shadow-sm overflow-hidden shrink-0 bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
                 {alternativeImage ? (
-                  <img src={alternativeImage} alt={alternativeTitle} className="w-full h-full object-cover" />
+                  <Image src={alternativeImage} alt={alternativeTitle || "Product"} fill sizes="40px" className="object-cover" />
                 ) : (
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">IMAGE</span>
                 )}

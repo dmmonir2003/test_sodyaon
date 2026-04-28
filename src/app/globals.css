@@ -646,4 +646,17 @@ h1, h2, h3, h4, h5, h6 {
   .status-info {
     @apply text-info-600 bg-info-50 dark:text-info-500 dark:bg-info-900/20;
   }
+
+  /* Utility for hiding scrollbar but retaining scroll functionality */
+  .hide-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}
+
+html {
+  scroll-behavior: smooth;
 }

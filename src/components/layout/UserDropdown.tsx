@@ -9,25 +9,26 @@ import { useRouter } from "next/navigation";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
   
   const { data: user } = useAppSelector((state) => state.profile);
 
+  // Prevent SSR/client hydration mismatch — only render after mount
+  useEffect(() => { setMounted(true); }, []);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // For desktop dropdown closing
       if (window.innerWidth >= 1024 && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-    
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Prevent scrolling when mobile sidebar is open
   useEffect(() => {
     if (isOpen && window.innerWidth < 1024) {
       document.body.style.overflow = 'hidden';
@@ -92,6 +93,15 @@ export default function UserDropdown() {
     </>
   );
 
+  // SSR-safe: render nothing interactive until mounted on client
+  if (!mounted) {
+    return (
+      <Link href="/login" className="hidden sm:flex items-center gap-2 bg-primary-50 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 px-3 py-1.5 rounded-xl text-sm font-semibold border border-primary-100 dark:border-primary-800 hover:bg-primary-100 transition-colors">
+        <User className="h-4 w-4" /> লগইন
+      </Link>
+    );
+  }
+
   return (
     <div className="relative" ref={dropdownRef}>
       <button 
@@ -123,15 +133,11 @@ export default function UserDropdown() {
       {/* MOBILE FULL-HEIGHT SIDEBAR (below lg) */}
       {isOpen && (
         <div className="lg:hidden fixed inset-0 z-[100]">
-          {/* Overlay */}
           <div 
             className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
             onClick={() => setIsOpen(false)}
           />
-          
-          {/* Slide-out Sidebar */}
           <div className="absolute top-0 right-0 h-[100dvh] w-[280px] bg-white dark:bg-slate-900 shadow-2xl flex flex-col transform transition-transform duration-300">
-            {/* Sidebar Header */}
             <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center gap-3 overflow-hidden">
                 <div className="bg-primary-100 dark:bg-primary-900/40 p-2 rounded-full text-primary-600 dark:text-primary-400 flex-shrink-0">
@@ -149,8 +155,6 @@ export default function UserDropdown() {
                 <X className="h-6 w-6" />
               </button>
             </div>
-            
-            {/* Sidebar Links */}
             <div className="flex-1 overflow-y-auto py-2 flex flex-col pt-4">
               <ProfilLinks />
             </div>
