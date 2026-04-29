@@ -96,7 +96,16 @@ export default function MobileBottomNav() {
   const cartItems = useAppSelector(state => state.cart.items);
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const navItems = [
+  interface NavItem {
+    id: string;
+    icon: string;
+    label: string;
+    href: string;
+    action?: () => void;
+    badge?: number | null;
+  }
+
+  const navItems: NavItem[] = [
     {
       id: 'home',
       icon: '🏠',
@@ -126,10 +135,10 @@ export default function MobileBottomNav() {
       action: () => dispatch(toggleMobileSearch()),
     },
     {
-      id: 'account',
+      id: 'profile',
       icon: '👤',
-      label: 'ACCOUNT',
-      href: '/account',
+      label: 'PROFILE',
+      href: '/profile',
     },
   ];
 

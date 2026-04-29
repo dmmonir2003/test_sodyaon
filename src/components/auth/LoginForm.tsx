@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Phone, Mail, Lock, ArrowRight, Package } from "lucide-react";
 import { useLoginProfileMutation } from "@/store/user/profile/profileApi";
 
@@ -15,7 +15,10 @@ export default function LoginForm() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+
+  const redirectUrl = searchParams.get("redirect") || "/";
 
   const [loginProfile, { isLoading }] = useLoginProfileMutation();
 
@@ -29,7 +32,7 @@ export default function LoginForm() {
 
       const response = await loginProfile(payload).unwrap();
       dispatch(setCredentials({ user: response.user, token: response.token }));
-      router.push("/profile");
+      router.push(redirectUrl);
     } catch (err) {
       console.error("লগইন ব্যর্থ হয়েছে", err);
       alert("লগইন করতে সমস্যা হয়েছে। সঠিক তথ্য দিন।");
@@ -43,7 +46,7 @@ export default function LoginForm() {
         password: "social_dummy",
       }).unwrap();
       dispatch(setCredentials({ user: response.user, token: response.token }));
-      router.push("/profile");
+      router.push(redirectUrl);
     } catch (err) {
       console.error("সোশ্যাল লগইন ব্যর্থ হয়েছে", err);
     }
@@ -193,7 +196,7 @@ export default function LoginForm() {
           <p className="text-center text-slate-500 font-medium">
             একাউন্ট নেই?{" "}
             <Link
-              href="/register"
+              href={redirectUrl !== "/" ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : "/register"}
               className="text-primary-600 font-bold underline ml-1"
             >
               রেজিস্টার করুন

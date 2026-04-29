@@ -1,6 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Star, Package } from "lucide-react";
+import { useAppDispatch } from "@/store/hooks";
+import { addItem } from "@/store/user/cart/cartSlice";
+import { setCartOpen } from "@/store/user/cart/cartSlice";
 
 export type HomeProductCardProps = {
   id: number;
@@ -16,6 +21,12 @@ export type HomeProductCardProps = {
   inStock: boolean;
 };
 
+/** Parse a price string like "৳ 2,199" or "৳ 222" into a number */
+function parsePrice(priceStr: string): number {
+  const cleaned = priceStr.replace(/[^\d.]/g, '');
+  return parseFloat(cleaned) || 0;
+}
+
 export default function HomeProductCard({
   id,
   name,
@@ -29,9 +40,21 @@ export default function HomeProductCard({
   reviewCount,
   inStock,
 }: HomeProductCardProps) {
+  const dispatch = useAppDispatch();
   
   // Choose badge background based on color choice from Rokomari image (yellow or red starburst)
   const badgeBg = badgeColor === "red" ? "bg-red-600 text-white" : "bg-amber-400 text-slate-900";
+
+  const handleAddToCart = () => {
+    dispatch(addItem({
+      id: id.toString(),
+      name,
+      price: parsePrice(currentPrice),
+      quantity: 1,
+      image: img.startsWith('bg-') ? undefined : img,
+    }));
+    dispatch(setCartOpen(true));
+  };
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 border border-transparent shadow-sm hover:shadow-xl hover:border-slate-100 dark:hover:border-slate-700 transition-all duration-300 relative group overflow-hidden">
@@ -104,8 +127,12 @@ export default function HomeProductCard({
 
         {/* Desktop Contextual / Mobile Persistent Action Button */}
         <div className="w-full mt-auto">
-          <button className="w-full py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-primary-600 border border-primary-600 rounded bg-white dark:bg-transparent hover:bg-primary-600 hover:text-white transition-colors">
-            Add to Cart
+          <button 
+            onClick={handleAddToCart}
+            disabled={!inStock}
+            className="w-full py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-primary-600 border border-primary-600 rounded bg-white dark:bg-transparent hover:bg-primary-600 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+          >
+            {inStock ? 'Add to Cart' : 'Out of Stock'}
           </button>
         </div>
 

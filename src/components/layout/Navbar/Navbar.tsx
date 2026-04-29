@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Search,
   ShoppingCart,
@@ -13,12 +14,13 @@ import {
   Heart,
   Package,
 } from "lucide-react";
-import ThemeSwitcher from "@/components/shared/ThemeSwitcher";
-import BgThemeSwitcher from "@/components/shared/BgThemeSwitcher";
-import UserDropdown from "../UserDropdown";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { setMobileMenuOpen } from "@/store/ui/uiSlice";
 import { setCartOpen } from "@/store/user/cart/cartSlice";
+
+import ThemeSwitcher from "@/components/shared/ThemeSwitcher";
+import BgThemeSwitcher from "@/components/shared/BgThemeSwitcher";
+import UserDropdown from "../UserDropdown";
 
 import ShopMegaMenu from "./ShopMegaMenu";
 import MobileNavLink from "./MobileNavLink";
@@ -28,6 +30,7 @@ import NavDropdown from "./NavDropdown";
 import PopularSearchTags from "@/components/shared/PopularSearchTags";
 
 export default function Navbar() {
+  const pathname = usePathname();
   const dispatch = useAppDispatch();
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
@@ -181,25 +184,7 @@ export default function Navbar() {
 
             {/* Desktop & Mobile: User Auth Dropdown */}
             <div className="flex items-center">
-              {isAuthenticated ? (
-                <UserDropdown />
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="hidden sm:flex items-center gap-2 bg-primary-50 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 font-bold px-4 py-2 rounded-xl hover:bg-primary-100 dark:hover:bg-primary-900/60 transition-colors"
-                  >
-                    <User className="h-4 w-4" />
-                    <span>লগইন</span>
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="sm:hidden flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
-                  >
-                    <User className="h-5 w-5" />
-                  </Link>
-                </>
-              )}
+              <UserDropdown />
             </div>
           </div>
         </div>

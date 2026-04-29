@@ -114,12 +114,18 @@ export default function Home() {
   ];
 
   const combos = [
-    { id: 1, name: "বেবি কেয়ার কম্বো ১", price: "৳ ১,২০০", oldPrice: "৳ ১,৫০০", img: "/mock/baby_bag.png" },
-    { id: 2, name: "লার্নিং কিট ডিল", price: "৳ ৯৫০", oldPrice: "৳ ১,১০০", img: "/mock/toy_tiles.png" },
-    { id: 3, name: "স্টেশনারি মেগা অফার", price: "৳ ৫০০", oldPrice: "৳ ৭০০", img: "/mock/stationery_set.png" },
-    { id: 4, name: "আর্ট ও ক্রাফট প্যাক", price: "৳ ১,৮০০", oldPrice: "৳ ২,১০০", img: "/mock/stationery_set.png" },
-    { id: 5, name: "খেলনা ও পাজল গিফট", price: "৳ ১,৪০০", oldPrice: "৳ ১,৬০০", img: "/mock/toy_tiles.png" },
-    { id: 6, name: "নবজাতক উপহার সেট", price: "৳ ২,৫০০", oldPrice: "৳ ৩,০০০", img: "/mock/baby_bag.png" },
+    { id: 1001, name: "নন-স্টপ বেবি কেয়ার কম্বো", price: "৳ ১,৫৮০", oldPrice: "৳ ১,৯৫০", img: "/mock/baby_bag.png" },
+    { id: 301, name: "এসটিইএম লার্নিং কিট ডিল", price: "৳ ১,২০০", oldPrice: "৳ ১,৫০০", img: "/mock/toy_tiles.png" },
+    { id: 202, name: "মাস্টারপিস আর্ট মেগা প্যাক", price: "৳ ৯৫০", oldPrice: "৳ ১,২৮০", img: "/mock/stationery_set.png" },
+    { id: 1002, name: "কিডস স্কুল রেডি বান্ডেল", price: "৳ ২,৪০০", oldPrice: "৳ ৩,১০০", img: "/mock/stationery_set.png" },
+    { id: 102, name: "ম্যাগনেটিক পাজল গিফট সেট", price: "৳ ১,৮৫০", oldPrice: "৳ ২,২০০", img: "/mock/toy_tiles.png" },
+    { id: 401, name: "নিউবর্ন প্রিমিয়াম গিফট বক্স", price: "৳ ৩,৫০০", oldPrice: "৳ ৪,২০০", img: "/mock/baby_bag.png" },
+    { id: 201, name: "সুপার ডায়াপার মান্থলি প্যাক", price: "৳ ৪,২০০", oldPrice: "৳ ৫,০০০", img: "/mock/baby_bag.png" },
+    { id: 1003, name: "ডিজিটাল রাইটিং অ্যান্ড ড্রয়িং", price: "৳ ৮৯০", oldPrice: "৳ ১,১৫০", img: "/mock/toy_tiles.png" },
+    { id: 1004, name: "উডেন ব্লকস আর্কিটেক্ট সেট", price: "৳ ১,৬৫০", oldPrice: "৳ ২,০০০", img: "/mock/toy_tiles.png" },
+    { id: 302, name: "বেবি হাইজিন কিট প্রো", price: "৳ ১,৩৫০", oldPrice: "৳ ১,৬০০", img: "/mock/baby_bag.png" },
+    { id: 303, name: "ক্রিয়েটিভ কালারিং আলটিমেট", price: "৳ ৪৫০", oldPrice: "৳ ৬০০", img: "/mock/stationery_set.png" },
+    { id: 1005, name: "কালারফুল প্লে-ডো সেট", price: "৳ ১২০০", oldPrice: "৳ ১৫০০", img: "/mock/toy_tiles.png" },
   ];
 
   const popularBrands: BrandItem[] = [
@@ -256,12 +262,14 @@ export default function Home() {
       <section className="py-4 sm:py-8 md:py-6 max-w-[1480px] mx-auto px-3 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
           <PromoMiddleBanner 
-            href="/shop?category=toys"
-            imageUrl="/mock/promo_toys_banner.png"
+            categoryName="Playground"
+            imageUrl="/promo_toys_banner_1777417968994.png"
+            alt="Toys Collection"
           />
           <PromoMiddleBanner 
-            href="/shop?category=baby-care"
-            imageUrl="https://images.unsplash.com/photo-1555252333-9f8e92e65df9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80"
+            categoryName="Baby Hygiene"
+            imageUrl="/promo_baby_banner_1777417982592.png"
+            alt="Baby Care Collection"
           />
         </div>
       </section>
@@ -338,12 +346,14 @@ export default function Home() {
       <section className="py-4 sm:py-8 md:py-6 max-w-[1480px] mx-auto px-3 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
           <PromoMiddleBanner 
-            href="/shop?category=toys"
-            imageUrl="/mock/promo_toys_banner.png"
+            categoryName="Wooden Toys"
+            imageUrl="/promo_toys_banner_1777417968994.png"
+            alt="Wooden Toys"
           />
           <PromoMiddleBanner 
-            href="/shop?category=baby-care"
-            imageUrl="/mock/promo_baby_banner.png"
+            categoryName="Baby Care"
+            imageUrl="/promo_baby_banner_1777417982592.png"
+            alt="Newborn Care"
           />
         </div>
       </section>

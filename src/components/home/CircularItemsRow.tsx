@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingBag, Star } from 'lucide-react';
@@ -19,7 +20,32 @@ interface ComboOffersRowProps {
 }
 
 export default function ComboOffersRow({ title, items }: ComboOffersRowProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const colors = useColors();
+
+  // Auto-slide effect
+  useEffect(() => {
+    if (isPaused || items.length <= 1) return;
+
+    const interval = setInterval(() => {
+      const container = scrollContainerRef.current;
+      if (container) {
+        const { scrollLeft, scrollWidth, clientWidth } = container;
+        // Check if we've reached the end (with a 5px buffer for safety)
+        const isAtEnd = scrollLeft + clientWidth >= scrollWidth - 5;
+
+        if (isAtEnd) {
+          container.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          // One item width + gap is roughly 240-280px
+          container.scrollBy({ left: 280, behavior: 'smooth' });
+        }
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isPaused, items.length]);
 
   return (
     <section className="py-12 md:py-16 bg-white dark:bg-slate-900 overflow-hidden">
@@ -47,7 +73,14 @@ export default function ComboOffersRow({ title, items }: ComboOffersRowProps) {
         </div>
 
         {/* Combos Row */}
-        <div className="flex pt-5 overflow-x-auto hide-scrollbar gap-6 sm:gap-8 pb-4 sm:mx-0 sm:px-0 snap-x">
+        <div 
+          ref={scrollContainerRef}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setIsPaused(false)}
+          className="flex pt-5 overflow-x-auto hide-scrollbar gap-6 sm:gap-8 pb-4 sm:mx-0 sm:px-0 scroll-smooth"
+        >
           {items.map((item) => (
             <Link 
               key={item.id} 

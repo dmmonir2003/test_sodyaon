@@ -1,21 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Phone, Mail, Lock, User, ArrowRight, Package, CheckCircle2,  } from "lucide-react";
 import { useRegisterProfileMutation } from "@/store/user/profile/profileApi";
 import { useAppDispatch } from "@/store/hooks";
 import { setCredentials } from "@/store/user/profile/profileSlice";
 import { FaFacebook } from "react-icons/fa";
 
-export default function RegisterPage() {
+function RegisterContent() {
   const [registerMethod, setRegisterMethod] = useState<"phone" | "email">("phone");
   const [name, setName] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const [registerProfile, { isLoading }] = useRegisterProfileMutation();
 
@@ -29,7 +30,9 @@ export default function RegisterPage() {
       const response = await registerProfile(payload).unwrap();
       // Auto-login after register
       dispatch(setCredentials({ user: response.user, token: response.token }));
-      router.push("/profile");
+      
+      const redirectUrl = searchParams.get("redirect") || "/profile";
+      router.push(redirectUrl);
     } catch (err) {
       console.error("রেজিস্ট্রেশন ব্যর্থ হয়েছে", err);
       alert("রেজিস্ট্রেশন করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
@@ -40,7 +43,9 @@ export default function RegisterPage() {
     try {
       const response = await registerProfile({ name: `Social User`, email: `social_${provider}@dummy.com`, password: "social_dummy" }).unwrap();
       dispatch(setCredentials({ user: response.user, token: response.token }));
-      router.push("/profile");
+      
+      const redirectUrl = searchParams.get("redirect") || "/profile";
+      router.push(redirectUrl);
     } catch (err) {
       console.error("সোশ্যাল রেজিস্ট্রেশন ব্যর্থ হয়েছে", err);
     }
@@ -193,11 +198,25 @@ export default function RegisterPage() {
           </form>
 
           <p className="text-center text-slate-500 font-medium">
-            আগে থেকেই একাউন্ট আছে? <Link href="/login" className="text-primary-600 font-bold underline ml-1">লগইন করুন</Link>
+            আগে থেকেই একাউন্ট আছে? 
+            <Link 
+              href={`/login${searchParams.get("redirect") ? `?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : ""}`} 
+              className="text-primary-600 font-bold underline ml-1"
+            >
+              লগইন করুন
+            </Link>
           </p>
 
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 border-2 border-primary-500 rounded-full w-12 h-12 border-t-transparent animate-spin mx-auto mt-20"></div>}>
+      <RegisterContent />
+    </Suspense>
   );
 }

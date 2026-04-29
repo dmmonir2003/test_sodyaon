@@ -33,7 +33,7 @@ export default function HomeProductGridSlider({
 
   return (
     <section className={`py-8 md:py-12 border-b border-slate-200 dark:border-slate-800 ${bgColor}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 relative">
         
         {/* Header - Matches Desktop Layout */}
         <div className="flex justify-between items-center mb-4 md:mb-6 border-b border-slate-200 dark:border-slate-800 pb-2">

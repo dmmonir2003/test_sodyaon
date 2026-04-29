@@ -1,17 +1,32 @@
-import { Star, Package, ArrowRight } from "lucide-react";
+"use client";
+
+import { Star, Package, ArrowRight, ShoppingCart } from "lucide-react";
 import Link from "next/link";
+import { useAppDispatch } from "@/store/hooks";
+import { addItem, setCartOpen } from "@/store/user/cart/cartSlice";
+
+/** Parse a price string like "৳ 900" or "৳ ১,২০০" into a number */
+function parsePrice(priceStr: string | number): number {
+  if (typeof priceStr === 'number') return priceStr;
+  const cleaned = priceStr.replace(/[^\d.]/g, '');
+  return parseFloat(cleaned) || 0;
+}
 
 export default function ProductCard({
+  id,
   name,
   price,
   img,
   link,
 }: {
+  id?: number | string;
   name: string;
   price: string | number;
   img: string;
   link?: string;
 }) {
+  const dispatch = useAppDispatch();
+
   let finalLink = link;
   if (!finalLink || finalLink === "/shop/products/1") {
     const defaultId = 101 + (name.length % 12);
@@ -28,6 +43,18 @@ export default function ProductCard({
 
   // Fallback if finalLink is undefined for some reason, though it shouldn't be
   const resolvedLink = finalLink || "/shop/products/101";
+
+  const handleAddToCart = () => {
+    const productId = id?.toString() || (101 + (name.length % 12)).toString();
+    dispatch(addItem({
+      id: productId,
+      name,
+      price: parsePrice(price),
+      quantity: 1,
+      image: img.startsWith('bg-') ? undefined : img,
+    }));
+    dispatch(setCartOpen(true));
+  };
   
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-lg transition-all group flex flex-col h-full overflow-hidden">
@@ -67,12 +94,13 @@ export default function ProductCard({
         {/* Price and Button */}
         <div className="flex justify-between items-center mt-auto pt-3 sm:pt-4 border-t border-slate-50 dark:border-slate-700/50">
           <span className="font-bold text-lg sm:text-lg text-primary-600">{price}</span>
-          <Link
-            href={resolvedLink}
-            className="p-2 bg-slate-100 dark:bg-slate-700 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white rounded-full transition-colors cursor-pointer"
+          <button
+            onClick={handleAddToCart}
+            className="p-2 bg-slate-100 dark:bg-slate-700 hover:bg-primary-600 dark:hover:bg-primary-600 hover:text-white rounded-full transition-colors cursor-pointer active:scale-95"
+            title="কার্টে যোগ করুন"
           >
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+            <ShoppingCart className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>

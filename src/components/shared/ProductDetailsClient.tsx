@@ -1448,7 +1448,7 @@ export default function ProductDetailsClient({
                         name: MOCK_PRODUCT.name,
                         price: MOCK_PRODUCT.price,
                         quantity: quantity,
-                        img: MOCK_PRODUCT.images[0]
+                        image: MOCK_PRODUCT.images[0]
                       }));
                       dispatch(setCartOpen(true));
                     }}
@@ -2156,7 +2156,7 @@ export default function ProductDetailsClient({
             name: MOCK_PRODUCT.name,
             price: MOCK_PRODUCT.price,
             quantity: quantity,
-            img: MOCK_PRODUCT.images[0]
+            image: MOCK_PRODUCT.images[0]
           }));
           dispatch(setCartOpen(true));
         }}
@@ -2178,7 +2178,7 @@ export default function ProductDetailsClient({
                 name: MOCK_PRODUCT.name,
                 price: MOCK_PRODUCT.price,
                 quantity: quantity,
-                img: MOCK_PRODUCT.images[0]
+                image: MOCK_PRODUCT.images[0]
               }));
               dispatch(setCartOpen(true));
             }}

@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import { useColors } from "@/hooks/useColors";
+import { useAppDispatch } from "@/store/hooks";
+import { addItem, setCartOpen } from "@/store/user/cart/cartSlice";
 
 export interface QuickDealProductProps {
   id: number;
@@ -16,6 +18,12 @@ export interface QuickDealProductProps {
   soldCount?: string;
   stockCount?: number;
   totalStock?: number;
+}
+
+/** Parse a price string like "৳2,600" into a number */
+function parsePrice(priceStr: string): number {
+  const cleaned = priceStr.replace(/[^\d.]/g, '');
+  return parseFloat(cleaned) || 0;
 }
 
 export default function QuickDealCard({
@@ -31,10 +39,22 @@ export default function QuickDealCard({
   totalStock = 100,
 }: QuickDealProductProps) {
   const colors = useColors();
+  const dispatch = useAppDispatch();
 
   const progress = stockCount 
     ? (stockCount / totalStock) * 100 
     : (parseInt(soldCount || "0") / totalStock) * 100;
+
+  const handleAddToCart = () => {
+    dispatch(addItem({
+      id: id.toString(),
+      name,
+      price: parsePrice(currentPrice),
+      quantity: 1,
+      image: img,
+    }));
+    dispatch(setCartOpen(true));
+  };
 
   return (
     <div className="flex flex-col bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 group h-full border border-slate-100 dark:border-slate-800 relative w-full">
@@ -66,7 +86,10 @@ export default function QuickDealCard({
 
         {/* Desktop Add to Cart Overlay */}
         <div className="hidden md:flex absolute inset-0 bg-white/40 dark:bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center z-30 px-6">
-           <button className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded shadow-lg transition-all duration-300 transform scale-90 group-hover:scale-100">
+           <button 
+             onClick={handleAddToCart}
+             className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded shadow-lg transition-all duration-300 transform scale-90 group-hover:scale-100 active:scale-95"
+           >
              Add to Cart
            </button>
         </div>
@@ -126,7 +149,10 @@ export default function QuickDealCard({
         </div>
 
         {/* Mobile ONLY Persistent Action */}
-        <button className="md:hidden w-full mt-2 bg-primary-600 text-white font-semibold py-1.5 rounded text-[10px] shadow-sm active:scale-95 transition-transform">
+        <button 
+          onClick={handleAddToCart}
+          className="md:hidden w-full mt-2 bg-primary-600 text-white font-semibold py-1.5 rounded text-[10px] shadow-sm active:scale-95 transition-transform"
+        >
           Add to Cart
         </button>
 

@@ -13,7 +13,7 @@ const categories = [
 export default function CategoryNavRow() {
   return (
     <section className="py-6 sm:py-8 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
         <h3 className="sr-only">শপ ক্যাটাগরি</h3>
         <div className="flex overflow-x-auto hide-scrollbar gap-4 sm:gap-6 md:justify-center snap-x pb-2">
           {categories.map((cat) => (

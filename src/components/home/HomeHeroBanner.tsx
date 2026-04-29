@@ -74,10 +74,16 @@ const MOCK_BANNERS = [
 ];
 
 export default function HomeHeroBanner() {
-  const isAuthenticated = useAppSelector((state) => state.profile.isAuthenticated);
+  const isAuthenticatedRaw = useAppSelector((state) => state.profile.isAuthenticated);
   
+  const [mounted, setMounted] = useState(false);
   const [currentTool, setCurrentTool] = useState(0);
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  // Only trust isAuthenticated after mount (avoids server/client mismatch)
+  const isAuthenticated = mounted && isAuthenticatedRaw;
 
   // Auto-scroll logic for the authenticated AI Tools Carousel
   useEffect(() => {
@@ -232,7 +238,7 @@ export default function HomeHeroBanner() {
                   </p>
                   
                   <Link
-                    href="/auth/login"
+                    href="/login"
                     className="group relative inline-flex items-center justify-center gap-2 bg-slate-900 dark:bg-primary-600 text-white font-bold py-3 px-8 rounded-full hover:scale-105 transition-all shadow-xl hover:shadow-primary-500/30 w-full max-w-[240px]"
                   >
                     <ScanFace className="w-5 h-5 group-hover:text-primary-300 transition-colors" />
@@ -305,7 +311,7 @@ export default function HomeHeroBanner() {
                   </div>
                   
                   <Link 
-                    href="/auth/login"
+                    href="/login"
                     className="shrink-0 bg-primary-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-md hover:bg-primary-700 transition"
                   >
                     লগইন

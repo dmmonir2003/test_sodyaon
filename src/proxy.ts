@@ -8,8 +8,7 @@ export function proxy(request: NextRequest) {
   // If no auth token is found, redirect to login page
   if (!authToken) {
     const loginUrl = new URL("/login", request.url);
-    // Optional: add ?callbackUrl parameter to redirect back after login
-    // loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
+    loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 

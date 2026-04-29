@@ -127,9 +127,9 @@ export default function CartDrawer() {
                   </button>
 
                   <div className={`w-20 h-20 rounded-xl bg-slate-100 dark:bg-slate-700 shrink-0 border border-slate-200 dark:border-slate-600 flex items-center justify-center overflow-hidden`}>
-                    {/* Simulated image if item.img is a class vs actual URL */}
-                    {item.img && item.img.startsWith('bg-') ? (
-                       <div className={`w-full h-full ${item.img}`} />
+                    {/* Simulated image if item.image is a class vs actual URL */}
+                    {item.image && item.image.startsWith('bg-') ? (
+                       <div className={`w-full h-full ${item.image}`} />
                     ) : (
                        <span className="text-2xl">📦</span>
                     )}

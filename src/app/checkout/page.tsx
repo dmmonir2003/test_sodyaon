@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { useAppSelector } from "@/store/hooks";
 import { 
   ChevronRight, 
   Trash2, 
@@ -17,12 +19,52 @@ import {
   Lock,
   User,
   Phone,
-  MessageSquare
+  MessageSquare,
+  ArrowRight,
+  Gift,
+  ArrowLeftRight,
+  Baby,
+  BrainCircuit,
+  ScanFace,
+  Sparkles
 } from "lucide-react";
 import { SEMANTIC_COLORS } from "@/config/colors";
 import CustomSelect from "@/components/shared/CustomSelect";
 
 // --- Mock Data ---
+const AI_TOOLS = [
+  {
+    id: 1,
+    title1: "এআই দ্বারা",
+    title2: "উপহার খুঁজুন",
+    subtitle: "যেকোনো বয়সের বাচ্চার জন্য নিখুঁত উপহার খুঁজে বের করুন আমাদের এআই-এর সাথে।",
+    linkText: "গিফট ফাইন্ডার",
+    href: "/ai-tools/gift-finder",
+    icon: <Gift className="w-8 h-8 text-rose-500" />,
+    mobileIcon: <Gift className="w-6 h-6 text-rose-500" />
+  },
+  {
+    id: 2,
+    title1: "এআই প্রডাক্ট",
+    title2: "তুলনামূলক বিশ্লেষণ",
+    subtitle: "একাধিক খেলনা বা পণ্যের মধ্যে তুলনা করে সেরাটি বেছে নিন।",
+    linkText: "প্রডাক্ট কম্পেয়ার",
+    href: "/ai-tools/compare",
+    icon: <ArrowLeftRight className="w-8 h-8 text-sky-500" />,
+    mobileIcon: <ArrowLeftRight className="w-6 h-6 text-sky-500" />
+  },
+  {
+    id: 3,
+    title1: "স্মার্ট এআই",
+    title2: "প্যারেন্টিং অ্যাসিস্ট্যান্ট",
+    subtitle: "সন্তান লালন-পালনের যেকোনো প্রশ্নের উত্তর জানুন আমাদের এআই চ্যাটবট থেকে।",
+    linkText: "অ্যাসিস্ট্যান্ট",
+    href: "/ai-tools/parenting-assistant",
+    icon: <Baby className="w-8 h-8 text-amber-500" />,
+    mobileIcon: <Baby className="w-6 h-6 text-amber-500" />
+  }
+];
+
 const MOCK_CART_ITEMS = [
   {
     id: "1",
@@ -34,6 +76,18 @@ const MOCK_CART_ITEMS = [
 ];
 
 export default function CheckoutPage() {
+  const pathname = usePathname();
+  const isAuthenticated = useAppSelector((state) => state.profile.isAuthenticated);
+  const [currentTool, setCurrentTool] = useState(0);
+  
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const interval = setInterval(() => {
+      setCurrentTool((prev) => (prev + 1) % AI_TOOLS.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
   const [items, setItems] = useState(MOCK_CART_ITEMS);
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [useSameAddress, setUseSameAddress] = useState(true);
@@ -78,22 +132,145 @@ export default function CheckoutPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
         {/* Login Promotion Section */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-4 md:p-6 mb-6 md:mb-10 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-amber-50 dark:bg-amber-900/20 rounded-full flex items-center justify-center shrink-0">
-              <User className="w-5 h-5 md:w-6 md:h-6 text-amber-600" />
+        {/* ========================================= */}
+        {/* DESKTOP: Login Promotion / AI Tools Section */}
+        {/* ========================================= */}
+        <div className="hidden lg:block mb-10">
+          {!isAuthenticated ? (
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-indigo-50 via-white to-primary-50 dark:from-indigo-900/20 dark:via-slate-800 dark:to-primary-900/20 border border-primary-100 dark:border-primary-800/30 shadow-sm p-6 flex items-center justify-between gap-6 animate-in fade-in zoom-in-95 duration-500">
+              {/* Background Decorations */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary-200/50 dark:bg-primary-700/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-200/50 dark:bg-indigo-700/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
+              
+              <div className="relative z-10 flex items-center gap-6">
+                <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl shadow-md border-b-4 border-primary-500 flex items-center justify-center shrink-0 animate-bounce-slow">
+                   <BrainCircuit className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black font-heading text-slate-800 dark:text-white mb-1.5">
+                    স্মার্ট শপিং <span className="text-primary-600">এআই অ্যাসিস্ট্যান্ট</span>
+                  </h3>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400 max-w-xl">
+                    লগইন করুন এবং আপনার সন্তানের বয়স ও পছন্দ অনুযায়ী সুপার ফার্স্ট প্রোডাক্ট সাজেশান পান!
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative z-10 flex gap-4 shrink-0">
+                <Link
+                  href={pathname !== "/" ? `/login?redirect=${encodeURIComponent(pathname)}` : "/login"}
+                  className="group relative inline-flex items-center justify-center gap-2 bg-slate-900 dark:bg-primary-600 text-white font-bold py-3 px-8 rounded-full hover:scale-105 transition-all shadow-xl hover:shadow-primary-500/30"
+                >
+                  <ScanFace className="w-5 h-5 group-hover:text-primary-300 transition-colors" />
+                  লগইন করুন
+                  <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-yellow-400 animate-pulse" />
+                </Link>
+                <Link
+                  href={pathname !== "/" ? `/register?redirect=${encodeURIComponent(pathname)}` : "/register"}
+                  className="group relative inline-flex items-center justify-center gap-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 font-bold py-3 px-8 rounded-full hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
+                >
+                  রেজিস্টার
+                </Link>
+              </div>
             </div>
-            <p className="text-sm md:text-base font-medium text-slate-700 dark:text-slate-300">
-              Have any account? please login or register
-            </p>
-          </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <button className="flex-1 md:flex-none px-6 md:px-8 py-2 md:py-2.5 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm">
-              Login
-            </button>
-            <button className="flex-1 md:flex-none px-6 md:px-8 py-2 md:py-2.5 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 shadow-md transition-colors text-sm">
-              Register
-            </button>
+          ) : (
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-50 via-white to-primary-50 dark:from-indigo-900/20 dark:via-slate-800 dark:to-primary-900/20 border border-primary-100 dark:border-primary-800/30 shadow-sm p-6 animate-in fade-in zoom-in-95 duration-500">
+               {/* Background Decorations */}
+               <div className="absolute top-0 right-0 w-32 h-32 bg-primary-200/50 dark:bg-primary-700/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+               <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-200/50 dark:bg-indigo-700/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
+
+               <div key={currentTool} className="relative z-10 flex items-center justify-between gap-6 w-full animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="flex items-center gap-6">
+                     <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl shadow-md border-b-4 border-primary-500 flex items-center justify-center shrink-0 animate-bounce-short">
+                        {AI_TOOLS[currentTool].icon}
+                     </div>
+                     <div className="flex flex-col">
+                        <h3 className="text-xl font-black font-heading text-slate-800 dark:text-white mb-1.5 shadow-sm">
+                          {AI_TOOLS[currentTool].title1} <span className="text-primary-600">{AI_TOOLS[currentTool].title2}</span>
+                        </h3>
+                        <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                          {AI_TOOLS[currentTool].subtitle}
+                        </p>
+                     </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-8 shrink-0">
+                    <div className="flex gap-2">
+                       {AI_TOOLS.map((_, i) => (
+                          <button 
+                             key={i} 
+                             onClick={() => setCurrentTool(i)}
+                             className={`w-2.5 h-2.5 rounded-full transition-all ${i === currentTool ? 'bg-primary-600 w-5' : 'bg-slate-300 dark:bg-slate-600 hover:bg-primary-400'}`} 
+                          />
+                       ))}
+                    </div>
+
+                    <Link 
+                      href={AI_TOOLS[currentTool].href}
+                      className="group relative inline-flex items-center justify-center gap-2 bg-primary-600 text-white font-bold py-3 px-8 rounded-full hover:scale-105 transition-all shadow-xl hover:shadow-primary-500/30"
+                    >
+                      {AI_TOOLS[currentTool].linkText}
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-yellow-400 animate-pulse" />
+                    </Link>
+                  </div>
+               </div>
+            </div>
+          )}
+        </div>
+
+        {/* ========================================= */}
+        {/* MOBILE: Login Promotion / AI Tools Section  */}
+        {/* ========================================= */}
+        <div className="block lg:hidden mb-6">
+           <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900 border border-primary-100 dark:border-slate-700 shadow-sm animate-in fade-in zoom-in-95 duration-500">
+             {/* Decor */}
+             <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary-100 dark:from-primary-900/30 to-transparent"></div>
+             
+             <div className="flex items-center justify-between p-3.5 relative z-10 w-full">
+                {!isAuthenticated ? (
+                  <>
+                    <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full shadow-sm flex items-center justify-center shrink-0">
+                          <BrainCircuit className="w-5 h-5 text-primary-600" />
+                       </div>
+                       <div className="flex flex-col">
+                          <span className="text-sm font-bold text-slate-800 dark:text-white leading-none mb-1 shadow-sm">স্মার্ট এআই অ্যাসিস্ট্যান্ট</span>
+                          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-none">লগইন করে স্মার্ট সাজেশান পান</span>
+                       </div>
+                    </div>
+                    <Link 
+                      href={pathname !== "/" ? `/login?redirect=${encodeURIComponent(pathname)}` : "/login"} 
+                      className="shrink-0 bg-primary-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-md hover:bg-primary-700 transition"
+                    >
+                      লগইন
+                    </Link>
+                  </>
+                ) : (
+                  <div key={currentTool} className="flex items-center justify-between w-full animate-in fade-in slide-in-from-right-2 duration-300">
+                    <div className="flex items-center gap-3">
+                       <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full shadow-sm flex items-center justify-center shrink-0">
+                          {AI_TOOLS[currentTool].mobileIcon}
+                       </div>
+                       <div className="flex flex-col">
+                          <span className="text-sm font-bold text-slate-800 dark:text-white leading-none mb-1 shadow-sm">
+                            {AI_TOOLS[currentTool].title2}
+                          </span>
+                          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-none">
+                            {AI_TOOLS[currentTool].linkText}
+                          </span>
+                       </div>
+                    </div>
+                    <Link 
+                      href={AI_TOOLS[currentTool].href}
+                      className="shrink-0 bg-primary-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-md hover:bg-primary-700 transition flex items-center gap-1"
+                    >
+                      শুরু করুন
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                )}
+             </div>
           </div>
         </div>
 

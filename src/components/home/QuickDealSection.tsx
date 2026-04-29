@@ -86,13 +86,23 @@ export default function QuickDealSection({
   return (
     <section className="relative overflow-x-hidden py-10 md:py-16">
       {/* Background with Pattern */}
+      {/* Background with Pattern - LIGHT MODE DIV */}
       <div 
-        className={`absolute inset-0 z-0 ${colors.mode === 'dark' ? 'opacity-40' : 'opacity-100'}`}
+        className="absolute inset-0 z-0 opacity-100 dark:hidden"
         style={{ 
-          backgroundColor: colors.modeColor(colors.warning[50], colors.dark.backgroundSecondary),
-          backgroundImage: colors.mode === 'light' 
-            ? (bgPattern ? `url('${bgPattern}')` : 'none')
-            : (bgPatternDark ? `url('${bgPatternDark}')` : 'none'),
+          backgroundColor: '#FFFBEB', // colors.warning[50]
+          backgroundImage: bgPattern ? `url('${bgPattern}')` : 'none',
+          backgroundSize: '300px',
+          backgroundRepeat: 'repeat'
+        }}
+      />
+      
+      {/* Background with Pattern - DARK MODE DIV */}
+      <div 
+        className="absolute inset-0 z-0 opacity-40 hidden dark:block"
+        style={{ 
+          backgroundColor: '#1E293B', // colors.dark.backgroundSecondary
+          backgroundImage: bgPatternDark ? `url('${bgPatternDark}')` : 'none',
           backgroundSize: '300px',
           backgroundRepeat: 'repeat'
         }}

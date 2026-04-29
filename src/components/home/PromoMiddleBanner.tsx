@@ -2,39 +2,46 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 interface PromoMiddleBannerProps {
-  href: string;
+  href?: string;
+  categoryName?: string;
   imageUrl: string;
   alt?: string;
 }
 
 export default function PromoMiddleBanner({
   href,
+  categoryName,
   imageUrl,
   alt = "Promotion Banner"
 }: PromoMiddleBannerProps) {
   
- 
-
+  // Construct destination URL: prioritize explicit href, fallback to category search
+  const destination = href || (categoryName ? `/shop?category=${encodeURIComponent(categoryName)}` : "/shop");
+  
   return (
-    <div className="w-full">
+    <div className="flex justify-center xl:block">
       <Link 
-        href={href} 
-        className="block w-full h-[90px] sm:h-32 md:h-48 lg:h-[220px] relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.05)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.2)] bg-slate-300 dark:bg-slate-700 flex items-center justify-center group hover:shadow-md transition-all border border-slate-200 dark:border-slate-800"
+        href={destination} 
+        className="promo-banner-link block relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-sm hover:shadow-xl transition-all duration-500 group border border-slate-100 dark:border-slate-800 w-[169.5px] h-[94.906px] lg:w-[818.663px] lg:h-[457.014px] max-w-full"
       >
-         {/* If image 404s, the bg-slate-300 shows behind it. */}
-         <Image 
-           src={imageUrl} 
-           alt={alt} 
-           fill 
-           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 40vw, 600px"
-           className="object-cover group-hover:scale-105 transition-transform duration-700 z-0" 
-         />
-         {/* Subtle overlay on hover */}
-         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors z-10 duration-300 pointer-events-none"></div>
-         {/* Debugging Text - Only shows if image is transparent or missing */}
-         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-10 transition-opacity">
-            <span className="text-white text-xs font-bold uppercase tracking-widest">{alt}</span>
-         </div>
+        <div className="absolute inset-0 bg-slate-200 dark:bg-slate-800 animate-pulse -z-10" />
+        
+        <Image 
+          src={imageUrl} 
+          alt={alt} 
+          fill 
+          priority
+          sizes="(max-width: 768px) 170px, 820px"
+          className="object-cover group-hover:scale-105 transition-transform duration-1000 ease-out z-0" 
+        />
+        
+        {/* Sleek Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
+        
+        {/* Glow effect on hover */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none z-20">
+          <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/10 to-transparent mix-blend-overlay" />
+        </div>
       </Link>
     </div>
   );

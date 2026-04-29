@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Package, ShoppingCart, Plus } from 'lucide-react';
 import { useColors } from '@/hooks/useColors';
+import { useAppDispatch } from '@/store/hooks';
+import { addItem, setCartOpen } from '@/store/user/cart/cartSlice';
 
 export type CompactProduct = {
   id: number;
@@ -21,6 +23,24 @@ export type ListColumnInfo = {
 export default function MultiListSection({ columns }: { columns: ListColumnInfo[] }) {
   const [activeTab, setActiveTab] = useState(0);
   const colors = useColors();
+  const dispatch = useAppDispatch();
+
+  /** Parse a price string like "৳ 900" into a number */
+  const parsePrice = (priceStr: string): number => {
+    const cleaned = priceStr.replace(/[^\d.]/g, '');
+    return parseFloat(cleaned) || 0;
+  };
+
+  const handleAddToCart = (item: CompactProduct) => {
+    dispatch(addItem({
+      id: item.id.toString(),
+      name: item.name,
+      price: parsePrice(item.price),
+      quantity: 1,
+      image: item.img.startsWith('bg-') ? undefined : item.img,
+    }));
+    dispatch(setCartOpen(true));
+  };
 
   // A helper component to render the list of items consistently
   const RenderListColumn = ({ col }: { col: ListColumnInfo }) => (
@@ -33,7 +53,7 @@ export default function MultiListSection({ columns }: { columns: ListColumnInfo[
       </h3>
 
       {/* Items List - Scrollable vertically */}
-      <div className="flex flex-col gap-4 max-h-[420px] overflow-y-auto hide-scrollbar sm:pr-2">
+      <div className="flex flex-col gap-2 sm:gap-4 h-[225px] md:h-auto md:max-h-[420px] overflow-y-auto hide-scrollbar pr-1 sm:pr-2">
         {col.items.map((item) => (
           <div 
             key={item.id} 
@@ -45,7 +65,7 @@ export default function MultiListSection({ columns }: { columns: ListColumnInfo[
               className="flex items-center gap-3 flex-grow min-w-0"
             >
               {/* Item Thumbnail */}
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex-shrink-0 relative overflow-hidden bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 transition-transform group-hover:scale-[1.05] flex items-center justify-center">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-lg flex-shrink-0 relative overflow-hidden bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 transition-transform group-hover:scale-[1.05] flex items-center justify-center">
                  {item.img.startsWith('bg-') ? (
                     <div className={`w-full h-full ${item.img} flex items-center justify-center`}>
                       <Package className="w-6 h-6 text-slate-300 dark:text-slate-600" />
@@ -73,10 +93,11 @@ export default function MultiListSection({ columns }: { columns: ListColumnInfo[
 
             {/* Direct Add to Cart Button */}
             <button 
-              className="flex-shrink-0 bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-sm hover:shadow active:scale-95 transition-all flex items-center gap-2 group/btn"
+              onClick={() => handleAddToCart(item)}
+              className="flex-shrink-0 bg-primary-600 hover:bg-primary-700 text-white px-2 py-1 sm:px-4 sm:py-2 rounded-lg shadow-sm hover:shadow active:scale-95 transition-all flex items-center gap-1 sm:gap-2 group/btn"
               title="কার্টে যোগ করুন"
             >
-              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="text-[11px] sm:text-xs font-bold whitespace-nowrap">কার্টে যোগ করুন</span>
             </button>
           </div>
@@ -87,7 +108,7 @@ export default function MultiListSection({ columns }: { columns: ListColumnInfo[
 
   return (
     <section className="py-8 md:py-12 bg-slate-50 dark:bg-slate-800/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* MOBILE VIEW: Tab System */}
         <div className="block md:hidden">

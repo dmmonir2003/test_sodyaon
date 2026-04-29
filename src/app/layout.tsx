@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Hind_Siliguri, Noto_Serif_Bengali } from "next/font/google";
 import "./globals.css";
 import Analytics from "@/components/shared/Analytics";
@@ -11,6 +10,8 @@ import StoreProvider from "@/store/StoreProvider";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import CartDrawer from "@/components/shared/CartDrawer";
 import MobileSearchDrawer from "@/components/shared/MobileSearchDrawer";
+import ScrollToTop from "@/components/shared/ScrollToTop";
+import ThemeInitializer from "@/components/shared/ThemeInitializer";
 
 const inter = Hind_Siliguri({
   variable: "--font-inter",
@@ -50,33 +51,8 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                let theme = localStorage.getItem('preferred-theme') || 'ocean-explorer';
-                document.documentElement.setAttribute('data-theme', theme);
-                
-                let bgTheme = localStorage.getItem('bg-theme');
-                if (!bgTheme) {
-                  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  bgTheme = isDark ? 'dark' : 'light';
-                }
-                
-                document.documentElement.setAttribute('data-bg', bgTheme);
-                
-                if (['dark', 'dim', 'midnight'].includes(bgTheme)) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
-              } catch (e) {}
-            `,
-          }}
-        />
-      </head>
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
+        <ThemeInitializer />
         <StoreProvider>
           <Analytics />
           <Navbar />
@@ -88,8 +64,10 @@ export default function RootLayout({
           <ExitIntentPopup />
           <CartDrawer />
           <MobileSearchDrawer />
+          <ScrollToTop />
         </StoreProvider>
       </body>
     </html>
   );
 }
+
