@@ -30,7 +30,7 @@ export default function FeaturesPage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 font-bold text-sm mb-6 border border-primary-200 dark:border-primary-800">
-            <Sparkles className="w-4 h-4" /> প্লেটাইমের ভিন্নতা
+            <Sparkles className="w-4 h-4" /> সদায়নের ভিন্নতা
           </div>
           <h1 className="text-5xl md:text-7xl font-black font-heading tracking-tight text-slate-900 dark:text-white mb-8">
             শুধু একটি খেলনার দোকান নয়।
@@ -258,7 +258,7 @@ export default function FeaturesPage() {
               &apos;ওয়ান-ফর-ওয়ান&apos; প্রোগ্রাম
             </h3>
             <p className="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
-              প্লেটাইম থেকে কেনা প্রতি ১০টি খেলনার জন্য, আমরা সুবিধাবঞ্চিত
+              সদায়ন থেকে কেনা প্রতি ১০টি খেলনার জন্য, আমরা সুবিধাবঞ্চিত
               শিশুদের এতিমখানা এবং হাসপাতালে একটি করে শিক্ষামূলক খেলনা দান করি।
               আপনার কেনাকাটা সরাসরি শিশুদের মুখে হাসি ফোটায়।
             </p>

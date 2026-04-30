@@ -3,7 +3,8 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Phone, Mail, Lock, User, ArrowRight, Package, CheckCircle2,  } from "lucide-react";
+import { Phone, Mail, Lock, User, ArrowRight, CheckCircle2,  } from "lucide-react";
+import AnimatedLogo from "@/components/shared/AnimatedLogo";
 import { useRegisterProfileMutation } from "@/store/user/profile/profileApi";
 import { useAppDispatch } from "@/store/hooks";
 import { setCredentials } from "@/store/user/profile/profileSlice";
@@ -58,12 +59,10 @@ function RegisterContent() {
       <div className="hidden lg:flex w-1/2 bg-secondary-50 dark:bg-slate-800 relative overflow-hidden flex-col justify-center p-12 lg:p-24 border-r border-slate-200 dark:border-slate-800">
         <div className="absolute inset-0 bg-secondary-400 dark:bg-secondary-900 opacity-20 blur-3xl transform -rotate-12 scale-150 -translate-y-1/2"></div>
         
-        <Link href="/" className="flex items-center gap-2 mb-16 relative z-10 hover-lift">
-          <div className="bg-primary-500 text-white p-1.5 rounded-xl shadow-md rotate-3">
-            <Package className="h-6 w-6" />
-          </div>
+        <Link href="/" className="flex items-center gap-2 mb-16 relative z-10 hover-lift group">
+          <AnimatedLogo className="h-10 w-10 md:h-12 md:w-12" />
           <span className="font-heading font-bold text-2xl tracking-tight text-slate-900 dark:text-white">
-            Play<span className="text-primary-600">Time</span>
+            সদা<span className="text-primary-600">য়ন</span>
           </span>
         </Link>
 
@@ -89,7 +88,7 @@ function RegisterContent() {
         <div className="max-w-md w-full mx-auto">
           
           <h1 className="text-3xl md:text-4xl font-black font-heading mb-2">রেজিস্টার করুন</h1>
-          <p className="text-slate-500 mb-8">প্লেটাইমে আপনার ফ্রী একাউন্ট তৈরি করুন।</p>
+          <p className="text-slate-500 mb-8">সদায়ন-এ আপনার ফ্রী একাউন্ট তৈরি করুন।</p>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <button 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Package } from "lucide-react";
+import StaticLogo from "@/components/shared/StaticLogo";
 
 export default function Footer() {
   return (
@@ -8,12 +8,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
           
           <div className="lg:col-span-2 space-y-4">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="bg-primary-500 text-white p-1 rounded-lg">
-                <Package className="h-6 w-6" />
-              </div>
-              <span className="font-heading font-bold text-2xl text-white">
-                Soday<span className="text-primary-500">on</span>
+            <Link href="/" className="flex items-center  mb-4">
+              <StaticLogo className="w-8 h-8 md:w-14 md:h-14" />
+              <span className="font-heading font-bold md:text-3xl text-xl  text-white">
+                সদা<span className="text-primary-500">য়ন</span>
               </span>
             </Link>
             <p className="text-slate-400 text-sm max-w-sm leading-relaxed">

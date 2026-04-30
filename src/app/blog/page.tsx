@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Calendar, Clock, Sparkles, Send, User } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "ব্লগ এবং প্লে আইডিয়াস | প্লেটাইম এডুকেশনাল ইনসাইটস",
+  title: "ব্লগ এবং প্লে আইডিয়াস | সদায়ন এডুকেশনাল ইনসাইটস",
   description: "আপনার সন্তানের মেধা ও দক্ষতা বিকাশে সাহায্য করার জন্য চাইল্ড ডেভেলপমেন্ট, ক্রিয়েটিভ প্লে আইডিয়াস এবং খেলনার নির্দেশিকা নিয়ে বিশেষজ্ঞদের লেখা আর্টিকেল পড়ুন।",
 };
 

@@ -7,7 +7,7 @@ export default function ParentingAssistant() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "ai", text: "হ্যালো! আমি আপনার প্লেটাইম প্যারেন্টিং অ্যাসিস্ট্যান্ট। আমি খেলনার নিরাপত্তা নির্দেশিকা, বাচ্চাদের বিকাশ এবং বৃষ্টির দিনে ঘরে খেলার মজার আইডিয়া দিতে সাহায্য করতে পারি। আজ আপনাকে কীভাবে সাহায্য করতে পারি?" }
+    { role: "ai", text: "হ্যালো! আমি আপনার সদায়ন প্যারেন্টিং অ্যাসিস্ট্যান্ট। আমি খেলনার নিরাপত্তা নির্দেশিকা, বাচ্চাদের বিকাশ এবং বৃষ্টির দিনে ঘরে খেলার মজার আইডিয়া দিতে সাহায্য করতে পারি। আজ আপনাকে কীভাবে সাহায্য করতে পারি?" }
   ]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -70,7 +70,7 @@ export default function ParentingAssistant() {
         {/* Chat Header */}
         <div className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-800/50 backdrop-blur-md flex items-center justify-center px-4">
           <h2 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-             প্লেটাইম প্যারেন্টিং অ্যাসিস্ট্যান্ট <span className="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full">ভিটা</span>
+             সদায়ন প্যারেন্টিং অ্যাসিস্ট্যান্ট <span className="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full">ভিটা</span>
           </h2>
         </div>
 

@@ -3,12 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Phone, Mail, Lock, ArrowRight, Package } from "lucide-react";
+import { Phone, Mail, Lock, ArrowRight } from "lucide-react";
+import AnimatedLogo from "@/components/shared/AnimatedLogo";
 import { useLoginProfileMutation } from "@/store/user/profile/profileApi";
 
 import { setCredentials } from "@/store/user/profile/profileSlice";
 import { useAppDispatch } from "@/store/hooks";
 import { FaFacebook } from "react-icons/fa";
+import StaticLogo from "../shared/StaticLogo";
 
 export default function LoginForm() {
   const [loginMethod, setLoginMethod] = useState<"phone" | "email">("phone");
@@ -57,20 +59,18 @@ export default function LoginForm() {
       {/* Left Form Side */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24 py-12">
         <div className="max-w-md w-full mx-auto">
-          <Link href="/" className="flex items-center gap-2 mb-12 hover-lift">
-            <div className="bg-primary-500 text-white p-1.5 rounded-xl shadow-md rotate-3">
-              <Package className="h-6 w-6" />
-            </div>
-            <span className="font-heading font-bold text-2xl text-slate-800 dark:text-white tracking-tight">
-              Play<span className="text-primary-600">Time</span>
-            </span>
+          <Link href="/" className="flex items-center  mb-12 hover-lift group">
+            <StaticLogo className="w-8 h-8 md:w-14 md:h-14" />
+                          <span className="font-heading font-bold md:text-3xl text-xl  dark:text-white">
+                            সদা<span className="text-primary-500">য়ন</span>
+                          </span>
           </Link>
 
           <h1 className="text-3xl md:text-4xl font-black font-heading mb-2">
             স্বাগতম!
           </h1>
           <p className="text-slate-500 mb-8">
-            প্লেটাইমে আবার ফিরে আসার জন্য ধন্যবাদ। আপনার অ্যাকাউন্টে লগইন করুন।
+            সদায়ন-এ আবার ফিরে আসার জন্য ধন্যবাদ। আপনার অ্যাকাউন্টে লগইন করুন।
           </p>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
@@ -213,7 +213,7 @@ export default function LoginForm() {
             চাইল্ড প্রোফাইল তৈরি করুন
           </h2>
           <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-            প্লেটাইম একাউন্ট তৈরি করলে আপনি এআই গিফট ফাইন্ডার এক্সেস পাবেন।
+            সদায়ন একাউন্ট তৈরি করলে আপনি এআই গিফট ফাইন্ডার এক্সেস পাবেন।
             আপনার সন্তানের বয়স এবং পছন্দের বিষয় সংরক্ষণ করুন, আর
             স্বয়ংক্রিয়ভাবে প্রতিটি জন্মদিনে দারুণ খেলনার সুপারিশ পান।
           </p>

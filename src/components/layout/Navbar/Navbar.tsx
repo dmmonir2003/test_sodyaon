@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   Search,
   ShoppingCart,
@@ -21,6 +22,7 @@ import { setCartOpen } from "@/store/user/cart/cartSlice";
 import ThemeSwitcher from "@/components/shared/ThemeSwitcher";
 import BgThemeSwitcher from "@/components/shared/BgThemeSwitcher";
 import UserDropdown from "../UserDropdown";
+import AnimatedLogo from "@/components/shared/AnimatedLogo";
 
 import ShopMegaMenu from "./ShopMegaMenu";
 import MobileNavLink from "./MobileNavLink";
@@ -41,6 +43,27 @@ export default function Navbar() {
   const isMobileSearchOpen = useAppSelector((state) => state.ui.isMobileSearchOpen);
   const cartItems = useAppSelector((state) => state.cart.items);
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  // Animation variants for the text "সদায়ন"
+  const textContainerVariants = {
+    hidden: { opacity: 1 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 4.5, // Starts just as the AnimatedLogo finishes its sequence
+      }
+    }
+  };
+
+  const letterVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { type: "spring" as const, stiffness: 200, damping: 10 }
+    }
+  };
 
   // Prevent scrolling when mobile sidebar is open
   useEffect(() => {
@@ -77,27 +100,39 @@ export default function Navbar() {
             >
               <Menu className="h-6 w-6" />
             </button>
-            <Link href="/" className="flex items-center gap-2 hover-lift -ml-1">
-              <div className="bg-primary-500 text-white p-1 rounded-lg shadow-sm rotate-3">
-                <Package className="h-5 w-5" />
-              </div>
-              <span className="font-heading font-bold text-xl text-slate-800 dark:text-white tracking-tight">
-                Soday<span className="text-primary-600">on</span>
-              </span>
+            <Link href="/" className="flex items-center gap-1 hover-lift -ml-1">
+              <AnimatedLogo className="w-8 h-8 md:w-14 md:h-14" />
+              <motion.span 
+                className="font-heading font-bold  text-slate-800 dark:text-white tracking-tight flex -ml-1 md:text-3xl text-xl"
+                variants={textContainerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.span variants={letterVariants}>স</motion.span>
+                <motion.span variants={letterVariants}>দা</motion.span>
+                <motion.span variants={letterVariants} className="text-primary-600">য়</motion.span>
+                <motion.span variants={letterVariants} className="text-primary-600">ন</motion.span>
+              </motion.span>
             </Link>
           </div>
 
           {/* Desktop Logo - visible on md and above */}
           <Link
             href="/"
-            className="hidden md:flex items-center gap-2 hover-lift"
+            className="hidden md:flex items-center gap-1 hover-lift"
           >
-            <div className="bg-primary-500 text-white p-1.5 rounded-xl shadow-md">
-              <Package className="h-6 w-6" />
-            </div>
-            <span className="font-heading font-bold text-2xl text-slate-800 dark:text-white tracking-tight">
-              Soday<span className="text-primary-600">on</span>
-            </span>
+            <AnimatedLogo className="w-8 h-8 md:w-14 md:h-14" />
+              <motion.span 
+                className="font-heading font-bold  text-slate-800 dark:text-white tracking-tight flex -ml-1 md:text-3xl text-xl"
+                variants={textContainerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.span variants={letterVariants}>স</motion.span>
+                <motion.span variants={letterVariants}>দা</motion.span>
+                <motion.span variants={letterVariants} className="text-primary-600">য়</motion.span>
+                <motion.span variants={letterVariants} className="text-primary-600">ন</motion.span>
+              </motion.span>
           </Link>
 
           {/* Center/Left: Logo + Theme Switchers (Mobile) */}
@@ -180,10 +215,29 @@ export default function Navbar() {
                   </span>
                 )}
               </button>
+
+               <a
+              href="https://m.me/sodayon26?ref=website_navbar"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 transition-colors p-1.5 sm:p-2 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-full"
+              title="আমাদের সাথে মেসেঞ্জারে কথা বলুন"
+            >
+              <svg 
+                className="w-5 h-5 sm:w-6 sm:h-6" 
+                viewBox="0 0 24 24" 
+                fill="currentColor" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12 2C6.477 2 2 6.14 2 11.25C2 14.155 3.536 16.745 5.922 18.39V22L9.27 20.158C10.143 20.384 11.055 20.5 12 20.5C17.523 20.5 22 16.36 22 11.25C22 6.14 17.523 2 12 2ZM12.983 14.398L10.368 11.603L5.322 14.398L10.9 8.472L13.627 11.267L18.56 8.472L12.983 14.398Z"/>
+              </svg>
+            </a>
             </div>
 
-            {/* Desktop & Mobile: User Auth Dropdown */}
-            <div className="flex items-center">
+           
+
+            {/* Desktop: User Auth Dropdown (Hidden on Mobile) */}
+            <div className="hidden md:flex items-center">
               <UserDropdown />
             </div>
           </div>
