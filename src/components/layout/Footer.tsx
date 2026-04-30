@@ -30,7 +30,7 @@ export default function Footer() {
               <li><Link href="/shop" className="hover:text-primary-400 transition-colors">সব দেখুন</Link></li>
               <li><Link href="/shop/categories" className="hover:text-primary-400 transition-colors">ক্যাটাগরি</Link></li>
               <li><Link href="/deals" className="hover:text-primary-400 transition-colors">ফ্ল্যাশ ডিল</Link></li>
-              <li><Link href="/bundles" className="hover:text-primary-400 transition-colors">খেলনার বান্ডেল</Link></li>
+              <li><Link href="/combo" className="hover:text-primary-400 transition-colors">কম্বো অফার</Link></li>
             </ul>
           </div>
 

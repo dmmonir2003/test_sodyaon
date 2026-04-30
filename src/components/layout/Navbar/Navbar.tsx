@@ -320,7 +320,7 @@ export default function Navbar() {
                         href: "/deals",
                         isHighlighted: true,
                       },
-                      { label: "বান্ডেল ডিল", href: "/bundles" },
+                      { label: "কম্বো অফার", href: "/combo" },
                     ],
                   },
 

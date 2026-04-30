@@ -64,7 +64,7 @@ export default function ComboOffersRow({ title, items }: ComboOffersRowProps) {
           </div>
           
           <Link 
-            href="/bundles" 
+            href="/combo" 
             className="inline-flex items-center gap-2 text-slate-500 hover:text-primary-600 font-bold transition-colors text-sm sm:text-base border-b-2 border-transparent hover:border-primary-600 pb-1"
           >
             সবগুলো দেখুন

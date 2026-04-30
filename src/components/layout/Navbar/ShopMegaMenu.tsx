@@ -58,10 +58,10 @@ export default function ShopMegaMenu() {
                 </li>
                 <li>
                   <Link
-                    href="/bundles"
+                    href="/combo"
                     className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
                   >
-                    বান্ডেল ডিল
+                    কম্বো অফার
                   </Link>
                 </li>
               </ul>
