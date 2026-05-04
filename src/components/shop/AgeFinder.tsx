@@ -37,12 +37,12 @@ export default function AgeFinder() {
   return (
     <div className="bg-slate-50 dark:bg-slate-900 min-h-screen pb-24">
       {/* Page Header */}
-      <div className="bg-primary-600 text-white py-12">
+      <div className="bg-primary-600 text-white py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl md:text-5xl font-bold font-heading mb-4">
+          <h1 className="text-2xl md:text-5xl font-bold font-heading mb-3 md:mb-4">
             Find The Perfect Toy By Age
           </h1>
-          <p className="text-primary-100 max-w-2xl mx-auto">
+          <p className="text-primary-100 text-sm md:text-base max-w-2xl mx-auto">
             Children&lsquo;s brains develop rapidly. Filtering toys by the
             precise age stage ensures max safety and fun. Select an age below to
             filter the catalog.
@@ -51,10 +51,38 @@ export default function AgeFinder() {
       </div>
 
       {/* Age Group Navigation Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10 mb-12">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="max-w-7xl mx-auto px-2 md:px-4 -mt-6 md:-mt-8 relative z-10 mb-8 md:mb-12">
+        {/* Mobile View: Single Row Navigation */}
+        <div className="md:hidden flex flex-row justify-between items-center gap-1">
           {AGES.map((age) => {
-            console.log(age.id === activeAge.id, "sdfsdfsfdfdsfdafdsa");
+            const isActive = activeAge.id === age.id;
+            return (
+              <button
+                key={age.id}
+                onClick={() => handleAgeChange(age.id)}
+                className={`transition-all duration-300 flex flex-col items-center justify-center cursor-pointer
+                  ${isActive 
+                    ? "bg-gradient-to-br from-primary-500 to-primary-700 text-white scale-110 shadow-lg shadow-primary-500/50 border-white/20" 
+                    : "bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border-transparent hover:border-primary-300 dark:text-slate-200 text-slate-700 shadow-sm"}
+                  w-[15%] aspect-square rounded-full border-2 md:w-auto md:h-auto md:aspect-auto md:p-6 md:rounded-2xl`}
+              >
+                <span className={`font-bold transition-all ${isActive ? "text-sm" : "text-xs"} md:text-2xl mb-0 md:mb-1 leading-none`}>
+                  {age.id}
+                </span>
+                <span className={`hidden md:block text-xs font-medium uppercase tracking-wider ${isActive ? "text-primary-100" : "text-slate-500 dark:text-slate-400"}`}>
+                  {age.label}
+                </span>
+                <span className={`md:hidden text-[6px] font-bold uppercase tracking-tighter ${isActive ? "text-primary-100" : "text-slate-400"}`}>
+                  {age.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Desktop View: Original Grid Layout */}
+        <div className="hidden md:grid md:grid-cols-6 gap-4">
+          {AGES.map((age) => {
             const isActive = activeAge.id === age.id;
             return (
               <button
@@ -74,20 +102,20 @@ export default function AgeFinder() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white hidden md:block">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-white">
             Toys for {activeAge.range}
           </h2>
           <div className="flex items-center gap-3 w-full md:w-auto">
             <button 
               onClick={() => setFilterOpen(true)}
-              className="md:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-medium hover:bg-slate-50 transition-colors"
+              className="md:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
             >
               <SlidersHorizontal className="w-4 h-4" /> ফিল্টার
             </button>
             <button
               onClick={() => setSortOpen(true)}
-              className="md:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-xl bg-white text-sm font-medium hover:bg-slate-50 transition-colors"
+              className="md:hidden flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
             >
               সর্ট
             </button>
