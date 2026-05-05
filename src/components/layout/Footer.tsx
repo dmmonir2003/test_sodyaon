@@ -1,9 +1,19 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import StaticLogo from "@/components/shared/StaticLogo";
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  // Only hide on mobile for Parenting Assistant page
+  const footerClasses = pathname === '/ai-tools/parenting-assistant' 
+    ? "bg-slate-900 text-slate-300 pt-16 pb-8 border-t border-slate-800 hidden md:block"
+    : "bg-slate-900 text-slate-300 pt-16 pb-8 border-t border-slate-800";
+
   return (
-    <footer className="bg-slate-900 text-slate-300 pt-16 pb-8 border-t border-slate-800">
+    <footer className={footerClasses}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 mb-12">
           
