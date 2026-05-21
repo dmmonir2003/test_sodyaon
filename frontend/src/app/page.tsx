@@ -65,7 +65,7 @@ export default function Home() {
       oldPrice: "৳450", 
       currentPrice: "৳199", 
       discountBadge: "56% OFF", 
-      img: "https://images.unsplash.com/photo-1581557991964-159c381c8ab7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+      img: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
       soldCount: "85",
       totalStock: 150
     },
@@ -308,7 +308,7 @@ export default function Home() {
             oldPrice: "৳1,500", 
             currentPrice: "৳999", 
             discountBadge: "33% OFF", 
-            img: "https://images.unsplash.com/photo-1581557991964-159c381c8ab7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+            img: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
             soldCount: "67",
             totalStock: 100
           },
