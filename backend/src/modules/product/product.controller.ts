@@ -76,7 +76,7 @@ export const createProduct = catchAsync(async (req: Request, res: Response, next
   // Find highest numericId to auto-increment if not provided
   if (!req.body.numericId) {
     const lastProduct = await Product.findOne().sort('-numericId');
-    req.body.numericId = lastProduct ? lastProduct.numericId + 1 : 1000;
+    req.body.numericId = (lastProduct && lastProduct.numericId) ? lastProduct.numericId + 1 : 1000;
   }
 
   const product = await Product.create(req.body);
