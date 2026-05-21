@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Package } from "lucide-react";
 import { useColors } from "@/hooks/useColors";
 import { useAppDispatch } from "@/store/hooks";
 import { addItem, setCartOpen } from "@/store/user/cart/cartSlice";
@@ -74,14 +74,20 @@ export default function QuickDealCard({
 
         {/* Product Image: Fixed size, identical for all cards */}
         <Link href={`/shop/products/${id}`} className="block w-full h-full relative">
-          <Image
-            src={img}
-            alt={name}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 30vw, 300px"
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
-            priority={id === 601 || id === 602}
-          />
+          {!img.startsWith('bg-') && (img.startsWith('/') || img.startsWith('http')) ? (
+            <Image
+              src={img}
+              alt={name}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 30vw, 300px"
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              priority={id === 601 || id === 602}
+            />
+          ) : (
+            <div className="flex items-center justify-center w-full h-full bg-slate-50 dark:bg-slate-800 text-slate-300 dark:text-slate-600">
+              <Package className="w-12 h-12" />
+            </div>
+          )}
         </Link>
 
         {/* Desktop Add to Cart Overlay */}
