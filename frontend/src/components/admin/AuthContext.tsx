@@ -105,7 +105,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, pass: string) => {
     setIsLoading(true);
     
-    // Simulate network latency
+    try {
+      // 1. Try real login request to the Sodayon Backend Server
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password: pass }),
+      });
+
+      const resData = await res.json();
+      
+      if (res.ok && resData.success && resData.data?.token) {
+        const token = resData.data.token;
+        const dbUser = resData.data.user;
+
+        // Set Auth JWT Cookie for subsequent RTK Query calls
+        if (typeof document !== "undefined") {
+          document.cookie = `auth_token=${encodeURIComponent(token)}; path=/; max-age=604800; SameSite=Lax`;
+        }
+
+        const assignedRole = dbUser.role as Role;
+        localStorage.setItem("admin-auth-token", assignedRole);
+
+        setUser({
+          id: dbUser.id || dbUser._id,
+          name: dbUser.name,
+          role: assignedRole,
+          permissions: defaultPermissions[assignedRole] || defaultPermissions.SUPER_ADMIN,
+        });
+
+        setIsLoading(false);
+        return true;
+      }
+    } catch (error) {
+      console.warn("Backend API login offline, running local mock fallback...");
+    }
+
+    // 2. Local Fallback simulation for offline frontend building / styling
     await new Promise(resolve => setTimeout(resolve, 800));
 
     if (pass !== "admin123") {
@@ -138,6 +174,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem("admin-auth-token");
+    if (typeof document !== "undefined") {
+      document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    }
     setUser(null);
   };
 
