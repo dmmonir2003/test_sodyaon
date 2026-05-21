@@ -17,6 +17,9 @@ import dealsRouter from './modules/content/deals/deals.route';
 import aiRouter from './modules/ai/ai.route';
 import financeRouter from './modules/finance/finance.route';
 import uploadRouter from './modules/upload/upload.route';
+import categoryRouter from './modules/category/category.route';
+import uiSectionRouter from './modules/content/landing/uisection.route';
+import campaignRouter from './modules/campaign/campaign.route';
 
 // Import error handler
 import { errorHandler } from './middleware/errorHandler';
@@ -74,6 +77,9 @@ app.use('/api/content/deals', dealsRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/admin/finance', financeRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/categories', categoryRouter);
+app.use('/api/content/ui-sections', uiSectionRouter);
+app.use('/api/campaigns', campaignRouter);
 
 // 8. 404 handler for unmatched routes
 app.use((req, res, next) => {
