@@ -1,9 +1,39 @@
 import { ChevronDown, Package } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useGetCategoriesQuery } from "@/store/admin/adminContentApi";
 
-export default function ShopMegaMenu() {
+interface ShopMegaMenuProps {
+  title: string;
+  childItems: any[];
+}
+
+export default function ShopMegaMenu({ title, childItems = [] }: ShopMegaMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Fetch categories from DB
+  const { data: catData } = useGetCategoriesQuery({ tree: true });
+  const dbCategories = catData?.data || [];
+
+  // Find baby care category and its subcategories
+  const babyCareCat = dbCategories.find((c: any) => c.slug === 'baby-care');
+  const babySubcategories = babyCareCat?.children || [];
+
+  // Find other categories and their subcategories
+  const otherCats = dbCategories.filter((c: any) => c.slug !== 'baby-care');
+  const topSubcategories = otherCats.flatMap((c: any) => c.children || []);
+
+  // Group childItems by group field
+  const quickLinks = childItems
+    .filter((item) => item.group === "quick-links")
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const topCategories = childItems
+    .filter((item) => item.group === "top-categories")
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const babyProducts = childItems
+    .filter((item) => item.group === "baby-products")
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const promoCard = childItems.find((item) => item.group === "promo-card");
 
   return (
     <div
@@ -15,7 +45,7 @@ export default function ShopMegaMenu() {
         href="/shop"
         className="flex items-center space-x-1 font-bold text-sm lg:text-base text-primary-600 dark:text-primary-400 transition-colors py-1"
       >
-        <span>শপ</span>
+        <span>{title}</span>
         <ChevronDown
           className={`h-4 w-4 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
         />
@@ -32,38 +62,19 @@ export default function ShopMegaMenu() {
                 কুইক লিংক
               </h3>
               <ul className="space-y-4">
-                <li>
-                  <Link
-                    href="/shop"
-                    className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                  >
-                    সব খেলনা দেখুন
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/shop/age"
-                    className="text-sm font-bold text-primary-600 dark:text-primary-400"
-                  >
-                    বয়স-ভিত্তিক ফাইন্ডার
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/deals"
-                    className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                  >
-                    ফ্ল্যাশ ডিল
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/combo"
-                    className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                  >
-                    কম্বো অফার
-                  </Link>
-                </li>
+                {quickLinks.map((sub: any) => (
+                  <li key={sub._id}>
+                    <Link
+                      href={sub.url}
+                      className={`text-sm ${sub.titleEn === 'Age Finder' || sub.titleBn === 'বয়স-ভিত্তিক ফাইন্ডার' ? 'font-bold text-primary-600 dark:text-primary-400' : 'font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}
+                    >
+                      {sub.titleBn}
+                    </Link>
+                  </li>
+                ))}
+                {quickLinks.length === 0 && (
+                  <li className="text-sm text-slate-400">কোন লিংক নেই।</li>
+                )}
               </ul>
             </div>
 
@@ -72,46 +83,32 @@ export default function ShopMegaMenu() {
                 শীর্ষ ক্যাটাগরি
               </h3>
               <ul className="space-y-4">
-                <li>
-                  <Link
-                    href="/shop/categories/action-figures"
-                    className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                  >
-                    অ্যাকশন ফিগার
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/shop/categories/building-sets"
-                    className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                  >
-                    বিল্ডিং সেট
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/shop/categories/educational"
-                    className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                  >
-                    শিক্ষামূলক
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/shop/categories/dolls"
-                    className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                  >
-                    পুতুল ও ফিগার
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/shop/categories/outdoor"
-                    className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                  >
-                    আউটডোর প্লে
-                  </Link>
-                </li>
+                {topSubcategories.length > 0 ? (
+                  topSubcategories.map((sub: any) => (
+                    <li key={sub._id || sub.id}>
+                      <Link
+                        href={`/shop?category=${sub._id || sub.id}`}
+                        className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
+                      >
+                        {sub.nameBn}
+                      </Link>
+                    </li>
+                  ))
+                ) : (
+                  topCategories.map((sub: any) => (
+                    <li key={sub._id}>
+                      <Link
+                        href={sub.url}
+                        className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
+                      >
+                        {sub.titleBn}
+                      </Link>
+                    </li>
+                  ))
+                )}
+                {topSubcategories.length === 0 && topCategories.length === 0 && (
+                  <li className="text-sm text-slate-400">কোন ক্যাটাগরি নেই।</li>
+                )}
               </ul>
             </div>
 
@@ -120,59 +117,80 @@ export default function ShopMegaMenu() {
                 শিশু পণ্য
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                <Link
-                  href="/shop/baby-food"
-                  className="text-sm px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-center font-medium text-slate-700 dark:text-slate-300"
-                >
-                  শিশু খাবার
-                </Link>
-                <Link
-                  href="/shop/baby-bags"
-                  className="text-sm px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-center font-bold text-primary-600 dark:text-primary-400"
-                >
-                  শিশু ব্যাগ
-                </Link>
-                <Link
-                  href="/shop/diapers"
-                  className="text-sm px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-center font-medium text-slate-700 dark:text-slate-300"
-                >
-                  ডায়াপার
-                </Link>
-                <Link
-                  href="/shop/baby-clothes"
-                  className="text-sm px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-center font-medium text-slate-700 dark:text-slate-300"
-                >
-                  শিশু পোশাক
-                </Link>
-                <Link
-                  href="/shop/baby-care"
-                  className="text-sm px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-center font-medium text-slate-700 dark:text-slate-300"
-                >
-                  শিশু যত্ন পণ্য
-                </Link>
+                {babySubcategories.length > 0 ? (
+                  babySubcategories.map((sub: any) => (
+                    <Link
+                      key={sub._id || sub.id}
+                      href={`/shop?category=${sub._id || sub.id}`}
+                      className={`text-sm px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-center font-medium text-slate-700 dark:text-slate-300`}
+                    >
+                      {sub.nameBn}
+                    </Link>
+                  ))
+                ) : (
+                  babyProducts.map((sub: any) => (
+                    <Link
+                      key={sub._id}
+                      href={sub.url}
+                      className={`text-sm px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-center ${sub.titleEn === 'Baby Bags' || sub.titleBn === 'শিশু ব্যাগ' ? 'font-bold text-primary-600 dark:text-primary-400' : 'font-medium text-slate-700 dark:text-slate-300'}`}
+                    >
+                      {sub.titleBn}
+                    </Link>
+                  ))
+                )}
+                {babySubcategories.length === 0 && babyProducts.length === 0 && (
+                  <div className="text-sm text-slate-400 col-span-2">কোন পণ্য নেই।</div>
+                )}
               </div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-6 relative overflow-hidden flex flex-col justify-center">
-              <div className="absolute right-0 top-0 opacity-5">
-                <Package className="w-48 h-48 transform translate-x-1/4 -translate-y-1/4" />
+            {promoCard ? (
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-6 relative overflow-hidden flex flex-col justify-center">
+                <div className="absolute right-0 top-0 opacity-5">
+                  <Package className="w-48 h-48 transform translate-x-1/4 -translate-y-1/4" />
+                </div>
+                {promoCard.badgeBn && (
+                  <span className="text-xs font-bold uppercase tracking-wider text-cyan-500 mb-2 relative z-10">
+                    {promoCard.badgeBn}
+                  </span>
+                )}
+                <h3 className="font-bold text-2xl text-slate-900 dark:text-white mb-2 relative z-10 leading-snug">
+                  {promoCard.titleBn}
+                </h3>
+                {promoCard.descriptionBn && (
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 relative z-10 leading-relaxed">
+                    {promoCard.descriptionBn}
+                  </p>
+                )}
+                <Link
+                  href={promoCard.url}
+                  className="inline-flex items-center justify-center w-full max-w-xs px-6 py-3 bg-primary-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-primary-700 transition-colors relative z-10"
+                >
+                  {promoCard.ctaBn || "শপ নাও"}
+                </Link>
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-cyan-500 mb-2 relative z-10">
-                সীমিত সময়
-              </span>
-              <h3 className="font-bold text-2xl text-slate-900 dark:text-white mb-2 relative z-10">
-                স্টেম খেলনায় ২০% ছাড়
-              </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 relative z-10 leading-relaxed">
-                আমাদের নতুন শিক্ষামূলক টুলকিট অন্বেষণ করুন।
-              </p>
-              <Link
-                href="/shop/categories/educational"
-                className="inline-flex items-center justify-center w-full max-w-xs px-6 py-3 bg-primary-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-primary-700 transition-colors relative z-10"
-              >
-                শপ নাও
-              </Link>
-            </div>
+            ) : (
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-6 relative overflow-hidden flex flex-col justify-center">
+                <div className="absolute right-0 top-0 opacity-5">
+                  <Package className="w-48 h-48 transform translate-x-1/4 -translate-y-1/4" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-cyan-500 mb-2 relative z-10">
+                  সীমিত সময়
+                </span>
+                <h3 className="font-bold text-2xl text-slate-900 dark:text-white mb-2 relative z-10 leading-snug">
+                  স্টেম খেলনায় ২০% ছাড়
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 relative z-10 leading-relaxed">
+                  আমাদের নতুন শিক্ষামূলক টুলকিট অন্বেষণ করুন।
+                </p>
+                <Link
+                  href="/shop/categories/educational"
+                  className="inline-flex items-center justify-center w-full max-w-xs px-6 py-3 bg-primary-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-primary-700 transition-colors relative z-10"
+                >
+                  শপ নাও
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
+import 'dotenv/config';
 import app from './app';
 import { connectDB } from './config/db';
-import dotenv from 'dotenv';
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err: Error) => {
@@ -9,7 +9,6 @@ process.on('uncaughtException', (err: Error) => {
   process.exit(1);
 });
 
-dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 

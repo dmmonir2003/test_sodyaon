@@ -110,15 +110,13 @@ jobs:
 
       # Example step: Deploying Frontend to Vercel (or similar hosting)
       # You can configure your deployment tokens in GitHub Secrets!
-      - name: Deploy Frontend to Production
-        run: |
-          echo "Deploying Next.js frontend application..."
-          # Example command (uncomment and customize when ready):
-          # npx vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes
+      # Step 1: Deploy Fullstack Application to Hostinger VPS
+      - name: SSH Deploy to Hostinger KVM 2 VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOSTINGER_VPS_HOST }}
+          username: ${{ secrets.HOSTINGER_VPS_USER || 'root' }}
+          key: ${{ secrets.HOSTINGER_VPS_SSH_KEY }}
+          passphrase: ${{ secrets.HOSTINGER_VPS_PASSPHRASE }}
+          script: bash /var/www/sodayon/deploy-hostinger.sh
 
-      # Example step: Triggering Backend redeploy on hosting services like Render
-      - name: Deploy Backend to Production
-        run: |
-          echo "Deploying Node.js backend API..."
-          # Example command using Render Webhook (uncomment and customize when ready):
-          # curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}

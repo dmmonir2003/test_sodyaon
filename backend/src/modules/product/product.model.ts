@@ -1,5 +1,30 @@
 import { Schema, model, Document } from 'mongoose';
 
+// Interface for embedded Product Videos
+export interface IProductVideo {
+  youtubeUrl: string;
+  titleBn?: string;
+  thumbnailUrl?: string;
+  channelName?: string;
+  duration?: string;
+  tabType?: string; // 'demo' | 'review' etc.
+  sortOrder?: number;
+}
+
+// Interface for embedded Trust Badges (e.g. Free Shipping, Kids Safe)
+export interface ITrustBadge {
+  icon: string;
+  labelEn: string;
+  labelBn: string;
+  sortOrder?: number;
+}
+
+// Interface for Related/Suggested Products
+export interface IRelatedProduct {
+  relatedId: Schema.Types.ObjectId;
+  relationType: 'cross-sell' | 'up-sell' | 'similar';
+}
+
 // Interface for embedded Product Variant matrix
 export interface IProductVariant {
   sku: string;
@@ -7,9 +32,18 @@ export interface IProductVariant {
   nameBn: string;
   price: number;
   originalPrice?: number; // Strike-through original price
+  priceOverride?: number; // Variant price override
   stock: number;
+  stockQty?: number; // ERD compliance compatibility
   images: string[];
   options: Record<string, string>; // e.g. { color: "Blue", size: "M" }
+  
+  // Specific ERD Variational columns
+  colorName?: string;
+  colorHex?: string;
+  sizeLabel?: string;
+  ageGroup?: string;
+  isDefault?: boolean;
 }
 
 export interface IProduct {
@@ -32,7 +66,15 @@ export interface IProduct {
   // Multi-Media paths
   images: string[];
   image: string; // Backward compatibility (main thumbnail)
-  videoUrl?: string;
+  videoUrl?: string; // Backward compatibility
+  videos: IProductVideo[]; // Structured video array
+  
+  // Dynamic badge labels, CTAs, status and metadata
+  status: 'active' | 'out_of_stock' | 'draft';
+  isFeatured: boolean;
+  badgeLabel?: string; // Custom banner badge (e.g., "15% OFF", "Save 200 BDT")
+  viewCount: number; // View counts tracking
+  whatsappNumber?: string; // Instant ordering/click-to-chat CTA
 
   // Pricing (Master level - can fall back to variant prices)
   price: number;
@@ -63,13 +105,44 @@ export interface IProduct {
   specifications?: Record<string, any>;
 
   // Relations
+  brand?: Schema.Types.ObjectId; // Brand collection link
   categories: Schema.Types.ObjectId[];
-  categoryId?: number; // Legacy numeric category linkage compatibility
+  categoryId?: any; // Legacy numeric or Category ObjectId link
+  subcategoryId?: Schema.Types.ObjectId;
   tags: string[];
   features?: string[];
+  
+  // Trust Badges & Cross-Sells
+  trustBadges: ITrustBadge[];
+  relatedProducts: IRelatedProduct[];
 
   // SKU Variational Matrix
   variants: IProductVariant[];
+
+  // Specialized dynamic visual blocks
+  playPersonality?: {
+    labelEn: string;
+    labelBn: string;
+    descEn: string;
+    descBn: string;
+  };
+  benefits?: {
+    icon: string;
+    titleEn: string;
+    titleBn: string;
+    descEn: string;
+    descBn: string;
+  }[];
+  packageItems?: {
+    count: string;
+    textEn: string;
+    textBn: string;
+    detailsEn?: string;
+    detailsBn?: string;
+  }[];
+  directionsEn?: string;
+  directionsBn?: string;
+  dealEndsAt?: Date;
 }
 
 export interface IProductDocument extends IProduct, Document {
@@ -77,6 +150,40 @@ export interface IProductDocument extends IProduct, Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// Sub-document schema for videos
+const ProductVideoSchema = new Schema<IProductVideo>(
+  {
+    youtubeUrl: { type: String, required: true },
+    titleBn: { type: String },
+    thumbnailUrl: { type: String },
+    channelName: { type: String },
+    duration: { type: String },
+    tabType: { type: String, default: 'demo' },
+    sortOrder: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
+// Sub-document schema for trust badges
+const TrustBadgeSchema = new Schema<ITrustBadge>(
+  {
+    icon: { type: String, required: true },
+    labelEn: { type: String, required: true },
+    labelBn: { type: String, required: true },
+    sortOrder: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
+// Sub-document schema for related items
+const RelatedProductSchema = new Schema<IRelatedProduct>(
+  {
+    relatedId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    relationType: { type: String, enum: ['cross-sell', 'up-sell', 'similar'], default: 'similar' },
+  },
+  { _id: false }
+);
 
 // Sub-document schema for SKU variants
 const ProductVariantSchema = new Schema<IProductVariant>(
@@ -107,10 +214,18 @@ const ProductVariantSchema = new Schema<IProductVariant>(
       type: Number,
       min: 0,
     },
+    priceOverride: {
+      type: Number,
+      min: 0,
+    },
     stock: {
       type: Number,
       required: true,
       default: 0,
+      min: 0,
+    },
+    stockQty: {
+      type: Number,
       min: 0,
     },
     images: [{ type: String }],
@@ -119,8 +234,45 @@ const ProductVariantSchema = new Schema<IProductVariant>(
       required: true,
       default: {},
     },
+    colorName: { type: String },
+    colorHex: { type: String },
+    sizeLabel: { type: String },
+    ageGroup: { type: String },
+    isDefault: { type: Boolean, default: false },
   },
   { _id: true }
+);
+
+const PlayPersonalitySchema = new Schema(
+  {
+    labelEn: { type: String, trim: true },
+    labelBn: { type: String, trim: true },
+    descEn: { type: String, trim: true },
+    descBn: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
+const BenefitSchema = new Schema(
+  {
+    icon: { type: String, trim: true },
+    titleEn: { type: String, trim: true },
+    titleBn: { type: String, trim: true },
+    descEn: { type: String, trim: true },
+    descBn: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
+const PackageItemSchema = new Schema(
+  {
+    count: { type: String, trim: true },
+    textEn: { type: String, trim: true },
+    textBn: { type: String, trim: true },
+    detailsEn: { type: String, trim: true },
+    detailsBn: { type: String, trim: true },
+  },
+  { _id: false }
 );
 
 const ProductSchema = new Schema<IProductDocument>(
@@ -159,6 +311,11 @@ const ProductSchema = new Schema<IProductDocument>(
       type: String,
       required: true,
       trim: true,
+    },
+    brand: {
+      type: Schema.Types.ObjectId,
+      ref: 'Brand',
+      index: true,
     },
     nameEn: {
       type: String,
@@ -207,6 +364,31 @@ const ProductSchema = new Schema<IProductDocument>(
       type: String,
       trim: true,
     },
+    videos: [ProductVideoSchema],
+    status: {
+      type: String,
+      enum: ['active', 'out_of_stock', 'draft'],
+      default: 'active',
+      index: true,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    badgeLabel: {
+      type: String,
+      trim: true,
+    },
+    viewCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    whatsappNumber: {
+      type: String,
+      trim: true,
+    },
     price: {
       type: Number,
       required: true,
@@ -221,6 +403,10 @@ const ProductSchema = new Schema<IProductDocument>(
     discount: {
       type: Number,
       min: 0,
+    },
+    dealEndsAt: {
+      type: Date,
+      index: true,
     },
     isPublished: {
       type: Boolean,
@@ -293,7 +479,12 @@ const ProductSchema = new Schema<IProductDocument>(
       index: true,
     }],
     categoryId: {
-      type: Number,
+      type: Schema.Types.Mixed,
+      index: true,
+    },
+    subcategoryId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Category',
       index: true,
     },
     tags: [{
@@ -303,7 +494,14 @@ const ProductSchema = new Schema<IProductDocument>(
     features: [{
       type: String,
     }],
+    trustBadges: [TrustBadgeSchema],
+    relatedProducts: [RelatedProductSchema],
     variants: [ProductVariantSchema],
+    playPersonality: { type: PlayPersonalitySchema },
+    benefits: [BenefitSchema],
+    packageItems: [PackageItemSchema],
+    directionsEn: { type: String, trim: true },
+    directionsBn: { type: String, trim: true },
   },
   {
     timestamps: true,
@@ -320,6 +518,7 @@ const ProductSchema = new Schema<IProductDocument>(
 // High-performance compounding index for age range queries
 ProductSchema.index({ ageMonthsMin: 1, ageMonthsMax: 1 });
 ProductSchema.index({ price: 1, isPublished: 1 });
+ProductSchema.index({ status: 1, discount: -1, price: 1 });
 
 export const Product = model<IProductDocument>('Product', ProductSchema);
 export default Product;

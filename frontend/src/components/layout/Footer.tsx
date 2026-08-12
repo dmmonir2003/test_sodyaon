@@ -3,9 +3,58 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import StaticLogo from "@/components/shared/StaticLogo";
+import { useGetMenuItemsQuery } from "@/store/user/menu/menuApi";
 
 export default function Footer() {
   const pathname = usePathname();
+  const { data: menuData } = useGetMenuItemsQuery();
+  const dbFooterItems = menuData?.data?.filter((item: any) => item.type === 'footer') || [];
+
+  // Define footer groups and fallback mock links
+  const columns = [
+    {
+      title: "খেলনা কিনুন",
+      group: "quick-links",
+      defaultLinks: [
+        { titleBn: "সব দেখুন", url: "/shop" },
+        { titleBn: "ক্যাটাগরি", url: "/shop/categories" },
+        { titleBn: "ফ্ল্যাশ ডিল", url: "/deals" },
+        { titleBn: "কম্বো অফার", url: "/combo" }
+      ]
+    },
+    {
+      title: "শিশু পণ্য",
+      group: "baby-products",
+      defaultLinks: [
+        { titleBn: "শিশু খাবার", url: "/shop/baby-food" },
+        { titleBn: "শিশু ব্যাগ", url: "/shop/baby-bags" },
+        { titleBn: "ডায়াপার", url: "/shop/diapers" },
+        { titleBn: "শিশু পোশাক", url: "/shop/baby-clothes" },
+        { titleBn: "শিশু যত্ন পণ্য", url: "/shop/baby-care" }
+      ]
+    },
+    {
+      title: "এআই ফিচারসমূহ",
+      group: "ai-features",
+      defaultLinks: [
+        { titleBn: "এআই গিফট ফাইন্ডার", url: "/ai-tools/gift-finder" },
+        { titleBn: "খেলনা রিকমেন্ডেশন", url: "/ai-tools/recommendations" },
+        { titleBn: "সেফটি চেকার", url: "/ai-tools/safety" },
+        { titleBn: "প্যারেন্টিং অ্যাসিস্ট্যান্ট", url: "/ai-tools/parenting" }
+      ]
+    },
+    {
+      title: "সাপোর্ট",
+      group: "support",
+      defaultLinks: [
+        { titleBn: "আমার অ্যাকাউন্ট", url: "/profile" },
+        { titleBn: "অর্ডার ট্র্যাক করুন", url: "/track-order" },
+        { titleBn: "শিপিং ও রিটার্ন", url: "/shipping" },
+        { titleBn: "সাধারণ জিজ্ঞাসা", url: "/faq" },
+        { titleBn: "যোগাযোগ করুন", url: "/contact" }
+      ]
+    }
+  ];
 
   // Only hide on mobile for Parenting Assistant page
   const footerClasses = pathname === '/ai-tools/parenting-assistant' 
@@ -34,47 +83,31 @@ export default function Footer() {
             </div>
           </div>
 
-          <div>
-            <h3 className="font-semibold text-white mb-4">খেলনা কিনুন</h3>
-            <ul className="space-y-3 text-sm">
-              <li><Link href="/shop" className="hover:text-primary-400 transition-colors">সব দেখুন</Link></li>
-              <li><Link href="/shop/categories" className="hover:text-primary-400 transition-colors">ক্যাটাগরি</Link></li>
-              <li><Link href="/deals" className="hover:text-primary-400 transition-colors">ফ্ল্যাশ ডিল</Link></li>
-              <li><Link href="/combo" className="hover:text-primary-400 transition-colors">কম্বো অফার</Link></li>
-            </ul>
-          </div>
+          {columns.map((col) => {
+            const dbLinks = dbFooterItems.filter((item: any) => item.group === col.group);
+            const activeLinks = dbLinks.length > 0 ? dbLinks : col.defaultLinks;
 
-          <div>
-            <h3 className="font-semibold text-white mb-4">শিশু পণ্য</h3>
-            <ul className="space-y-3 text-sm">
-              <li><Link href="/shop/baby-food" className="hover:text-primary-400 transition-colors">শিশু খাবার</Link></li>
-              <li><Link href="/shop/baby-bags" className="hover:text-primary-400 transition-colors">শিশু ব্যাগ</Link></li>
-              <li><Link href="/shop/diapers" className="hover:text-primary-400 transition-colors">ডায়াপার</Link></li>
-              <li><Link href="/shop/baby-clothes" className="hover:text-primary-400 transition-colors">শিশু পোশাক</Link></li>
-              <li><Link href="/shop/baby-care" className="hover:text-primary-400 transition-colors">শিশু যত্ন পণ্য</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-white mb-4">এআই ফিচারসমূহ</h3>
-            <ul className="space-y-3 text-sm">
-              <li><Link href="/ai-tools/gift-finder" className="hover:text-primary-400 transition-colors text-secondary-400">এআই গিফট ফাইন্ডার</Link></li>
-              <li><Link href="/ai-tools/recommendations" className="hover:text-primary-400 transition-colors">খেলনা রিকমেন্ডেশন</Link></li>
-              <li><Link href="/ai-tools/safety" className="hover:text-primary-400 transition-colors">সেফটি চেকার</Link></li>
-              <li><Link href="/ai-tools/parenting" className="hover:text-primary-400 transition-colors">প্যারেন্টিং অ্যাসিস্ট্যান্ট</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold text-white mb-4">সাপোর্ট</h3>
-            <ul className="space-y-3 text-sm">
-              <li><Link href="/account" className="hover:text-primary-400 transition-colors">আমার অ্যাকাউন্ট</Link></li>
-              <li><Link href="/track-order" className="hover:text-primary-400 transition-colors">অর্ডার ট্র্যাক করুন</Link></li>
-              <li><Link href="/shipping" className="hover:text-primary-400 transition-colors">শিপিং ও রিটার্ন</Link></li>
-              <li><Link href="/faq" className="hover:text-primary-400 transition-colors">সাধারণ জিজ্ঞাসা</Link></li>
-              <li><Link href="/contact" className="hover:text-primary-400 transition-colors">যোগাযোগ করুন</Link></li>
-            </ul>
-          </div>
+            return (
+              <div key={col.group}>
+                <h3 className="font-semibold text-white mb-4">{col.title}</h3>
+                <ul className="space-y-3 text-sm">
+                  {activeLinks.map((link: any, idx: number) => {
+                    const isAiFinder = link.url === '/ai-tools/gift-finder';
+                    const linkClasses = isAiFinder 
+                      ? "hover:text-primary-400 transition-colors text-secondary-400 font-medium"
+                      : "hover:text-primary-400 transition-colors";
+                    return (
+                      <li key={link._id || idx}>
+                        <Link href={link.url} className={linkClasses}>
+                          {link.titleBn}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
 
         </div>
 

@@ -7,7 +7,7 @@ import Link from "next/link";
 import { 
   LayoutGrid, ShoppingCart, Heart, Ticket, MapPin, 
   CreditCard, Star, MessageCircle, Settings, Calendar, 
-  Key, Trash2, LogOut, ArrowRight, Baby, UserCircle, X
+  Key, Trash2, LogOut, ArrowRight, Baby, UserCircle, X, ShieldAlert
 } from "lucide-react";
 import { logout } from "@/store/user/profile/profileSlice";
 
@@ -103,6 +103,28 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 
   return (
     <div className="relative min-h-screen bg-slate-50 dark:bg-slate-900 pb-16 overflow-x-clip">
+      
+      {/* SECURITY NOTIFICATION BANNER */}
+      {user?.hasDefaultPassword && (
+        <div className="relative z-50 bg-rose-50 border-b border-rose-200 dark:bg-rose-500/20 dark:border-rose-500/30 px-4 py-3 shadow-sm">
+          <div className="container mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 bg-rose-100 dark:bg-rose-500/30 rounded-full shrink-0">
+                <ShieldAlert className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+              </div>
+              <p className="text-sm font-medium text-rose-800 dark:text-rose-200">
+                <strong>Account Security Notice:</strong> You are using a default auto-generated password. Please update your password immediately to secure your account.
+              </p>
+            </div>
+            <Link 
+              href="/profile/change-password" 
+              className="whitespace-nowrap px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors w-full sm:w-auto text-center"
+            >
+              Change Password Now
+            </Link>
+          </div>
+        </div>
+      )}
       
       {/* Mobile Sticky Profile Button */}
       <div className="lg:hidden fixed right-0 top-1/2 -translate-y-1/2 z-40">

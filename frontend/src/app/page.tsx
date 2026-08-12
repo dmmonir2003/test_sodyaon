@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useGetAdminProductsQuery, useGetCategoriesQuery } from "@/store/admin/adminContentApi";
+import { useGetAdminProductsQuery, useGetCategoriesQuery, useGetSpecialOffersQuery } from "@/store/admin/adminContentApi";
 import HomeHeroBanner from "@/components/home/HomeHeroBanner";
 import CategoryNavRow from "@/components/home/CategoryNavRow";
 import HomeProductGridSlider from "@/components/home/HomeProductGridSlider";
@@ -19,7 +19,12 @@ export default function Home() {
   const { data: prodData, isLoading: prodsLoading } = useGetAdminProductsQuery({ limit: 50 });
   const { data: catData } = useGetCategoriesQuery({ tree: true });
 
+  // High-performance dynamic Quick Deals query!
+  const { data: dealsData } = useGetSpecialOffersQuery({ limit: 10 });
+  console.log("dealsData", dealsData);
+
   const dbProducts = prodData?.data || [];
+  const dbDeals = dealsData?.data || [];
 
   // ---------------------------------------------------------
   // MOCK FALLBACKS (Used to keep design premium when DB is empty)
@@ -61,42 +66,108 @@ export default function Home() {
   // ---------------------------------------------------------
   // LIVE DYNAMIC MAPPINGS
   // ---------------------------------------------------------
-  
+  const calculateDiscountPercent = (price: number, originalPrice?: number, discountField?: number) => {
+    if (originalPrice && originalPrice > price) {
+      return Math.round(((originalPrice - price) / originalPrice) * 100);
+    }
+    return discountField || 0;
+  };
+
   // 1. Dynamic Quick Deals Slider
-  const mappedQuickDeals: QuickDealProductProps[] = dbProducts.map((p: any) => ({
-    id: p.id || p._id,
-    name: p.nameEn || p.name,
-    brand: p.brandEn || "Sodayon Selection",
-    oldPrice: p.originalPrice ? `৳${p.originalPrice}` : `৳${p.price}`,
-    currentPrice: `৳${p.price}`,
-    discountBadge: p.discount ? `${p.discount}% OFF` : "",
-    img: p.image || "https://sodayon.com/default-product.jpg",
-    soldCount: String(p.totalSold || 0),
-    totalStock: 100
-  }));
+  const quickDealsSource = dbDeals.length > 0 ? dbDeals : dbProducts;
+
+  const mappedQuickDeals: QuickDealProductProps[] = quickDealsSource.map((p: any) => {
+    const discountPct = calculateDiscountPercent(p.price, p.originalPrice, p.discount);
+    return {
+      id: p.slug || p.id || p._id,
+      name: p.nameEn || p.name,
+      brand: p.brandEn || "Sodayon Selection",
+      oldPrice: p.originalPrice && p.originalPrice > p.price ? `৳${p.originalPrice}` : `৳${p.price}`,
+      currentPrice: `৳${p.price}`,
+      discountBadge: discountPct > 0 ? `${discountPct}% OFF` : "",
+      img: p.image || "https://sodayon.com/default-product.jpg",
+      soldCount: String(p.totalSold || 0),
+      totalStock: 100
+    };
+  });
 
   const activeQuickDeals = mappedQuickDeals.length > 0 ? mappedQuickDeals : mockQuickDeals;
 
+  // Helper mapper to ensure standard card formats
+  const toHomeProductCard = (p: any): HomeProductCardProps => {
+    const discountPct = calculateDiscountPercent(p.price, p.originalPrice, p.discount);
+    return {
+      id: p.slug || p.id || p._id,
+      name: p.nameEn || p.name,
+      brand: p.brandEn || "Sodayon Selection",
+      oldPrice: p.originalPrice > p.price ? `৳ ${p.originalPrice}` : undefined,
+      currentPrice: `৳ ${p.price}`,
+      discountBadge: discountPct > 0 ? `${discountPct}% OFF` : undefined,
+      badgeColor: discountPct > 20 ? "red" : "yellow",
+      img: p.image || "https://sodayon.com/default-product.jpg",
+      rating: p.avgRating || 5,
+      reviewCount: p.reviews || 0,
+      inStock: true
+    };
+  };
+
   // 2. Dynamic Product Cards
-  const mappedHomeProducts: HomeProductCardProps[] = dbProducts.map((p: any) => ({
-    id: p.id || p._id,
-    name: p.nameEn || p.name,
-    brand: p.brandEn || "Sodayon Selection",
-    oldPrice: p.originalPrice > p.price ? `৳ ${p.originalPrice}` : undefined,
-    currentPrice: `৳ ${p.price}`,
-    discountBadge: p.discount ? `${p.discount}% OFF` : undefined,
-    badgeColor: p.discount > 20 ? "red" : "yellow",
-    img: p.image || "https://sodayon.com/default-product.jpg",
-    rating: p.avgRating || 5,
-    reviewCount: p.reviews || 0,
-    inStock: true
-  }));
+  // Retrieve baby category tree info
+  const dbCategories = catData?.data || [];
+  const babyCareCategory = dbCategories.find((c: any) => c.slug === 'baby-care');
+  const babyCareId = babyCareCategory?._id || babyCareCategory?.id;
+  const babySubcategoryIds = babyCareCategory?.children?.map((sub: any) => sub._id || sub.id) || [];
 
-  const activeBabyEssentials = mappedHomeProducts.length > 0 ? mappedHomeProducts : mockBabyEssentials;
-  const activeStationeryDeals = mappedHomeProducts.length > 0 ? mappedHomeProducts : mockStationeryDeals;
+  // Baby Care Essentials
+  const babyDbProducts = dbProducts.filter((p: any) => {
+    const hasBabyCareCategory = p.categories?.some((cat: any) => {
+      const id = typeof cat === 'string' ? cat : (cat?._id || cat?.id || cat);
+      return id === babyCareId || babySubcategoryIds.includes(id);
+    });
+    const isBabyCategoryId = p.categoryId === babyCareId || babySubcategoryIds.includes(p.categoryId);
+    const isBabySubcategoryId = p.subcategoryId === babyCareId || babySubcategoryIds.includes(p.subcategoryId);
+    const isLegacyBaby = p.categoryId >= 10;
 
-  // 3. Category Tree map
-  const activeCategoriesCount = catData?.data?.length || 0;
+    return hasBabyCareCategory || isBabyCategoryId || isBabySubcategoryId || isLegacyBaby;
+  });
+  const mappedBabyEssentials = babyDbProducts.map(toHomeProductCard);
+  const activeBabyEssentials = mappedBabyEssentials.length > 0 ? mappedBabyEssentials : mockBabyEssentials;
+
+  // Toys, Art & Educational (not baby care)
+  const toyDbProducts = dbProducts.filter((p: any) => {
+    const hasBabyCareCategory = p.categories?.some((cat: any) => {
+      const id = typeof cat === 'string' ? cat : (cat?._id || cat?.id || cat);
+      return id === babyCareId || babySubcategoryIds.includes(id);
+    });
+    const isBabyCategoryId = p.categoryId === babyCareId || babySubcategoryIds.includes(p.categoryId);
+    const isBabySubcategoryId = p.subcategoryId === babyCareId || babySubcategoryIds.includes(p.subcategoryId);
+    const isLegacyBaby = p.categoryId >= 10;
+
+    const isBaby = hasBabyCareCategory || isBabyCategoryId || isBabySubcategoryId || isLegacyBaby;
+    return !isBaby;
+  });
+  const mappedStationeryDeals = toyDbProducts.map(toHomeProductCard);
+  const activeStationeryDeals = mappedStationeryDeals.length > 0 ? mappedStationeryDeals : mockStationeryDeals;
+
+  // 3. Combo / Package filtering
+  const comboDbProducts = dbProducts.filter((p: any) => {
+    const isComboTag = p.tags?.some((t: string) => 
+      t.toLowerCase().includes("combo") || 
+      t.toLowerCase().includes("package") || 
+      t.toLowerCase().includes("bundle")
+    );
+    const isComboName = 
+      p.nameEn?.toLowerCase().includes("combo") || 
+      p.nameEn?.toLowerCase().includes("package") || 
+      p.nameEn?.toLowerCase().includes("bundle") ||
+      p.nameBn?.includes("কম্বো") ||
+      p.nameBn?.includes("প্যাকেজ") ||
+      p.name?.toLowerCase().includes("combo") ||
+      p.name?.toLowerCase().includes("package");
+    const hasPackageItems = p.packageItems && p.packageItems.length > 0;
+    
+    return isComboTag || isComboName || hasPackageItems;
+  });
 
   const combos = [
     { id: 1001, name: "নন-স্টপ বেবি কেয়ার কম্বো", price: "৳ ১,৫৮০", oldPrice: "৳ ১,৯৫০", img: "/mock/baby_bag.png" },
@@ -104,58 +175,79 @@ export default function Home() {
     { id: 202, name: "মাস্টারপিস আর্ট মেগা প্যাক", price: "৳ ৯৫০", oldPrice: "৳ ১,২৮০", img: "/mock/stationery_set.png" }
   ];
 
+  const mappedCombos = comboDbProducts.map((p: any) => ({
+    id: p.slug || p.id || p._id,
+    name: p.nameBn || p.name,
+    price: `৳ ${p.price}`,
+    oldPrice: p.originalPrice > p.price ? `৳ ${p.originalPrice}` : undefined,
+    img: p.image || "https://sodayon.com/default-product.jpg"
+  }));
+  const activeCombos = mappedCombos.length > 0 ? mappedCombos : combos;
+
   const popularBrands: BrandItem[] = [
     { id: 1, name: "NeoCare", logo: "/mock/baby_bag.png", category: "Premium Diapers" },
     { id: 2, name: "Fisher-Price", logo: "/mock/toy_tiles.png", category: "Educational Toys" },
     { id: 3, name: "Faber-Castell", logo: "/mock/stationery_set.png", category: "Art & Stationery" }
   ];
 
+  // Dynamic sorting logic
+  const sortedBestSellers = dbProducts.length > 0 
+    ? [...dbProducts].sort((a, b) => (b.totalSold || b.salesCount || 0) - (a.totalSold || a.salesCount || 0)).slice(0, 4) 
+    : [];
+  const bestSellersSource = sortedBestSellers.length > 0 ? sortedBestSellers : dbProducts.slice(0, 4);
+
+  const sortedNewArrivals = dbProducts.length > 0 
+    ? [...dbProducts].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 4) 
+    : [];
+  const newArrivalsSource = sortedNewArrivals.length > 0 ? sortedNewArrivals : dbProducts.slice(4, 8);
+
+  const sortedTrending = dbProducts.length > 0 
+    ? [...dbProducts].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)).slice(0, 4) 
+    : [];
+  const trendingSource = sortedTrending.length > 0 ? sortedTrending : dbProducts.slice(8, 12);
+
+  const toMultiListItem = (p: any) => ({
+    id: p.slug || p.id || p._id,
+    name: p.nameEn || p.name,
+    price: `৳ ${p.price}`,
+    img: p.image || "https://sodayon.com/default-product.jpg"
+  });
+
   const multiLists = [
     {
       title: "বেস্ট সেলিং",
-      items: dbProducts.slice(0, 4).map((p: any) => ({
-        id: p.id || p._id,
-        name: p.nameEn || p.name,
-        price: `৳ ${p.price}`,
-        img: p.image || "https://sodayon.com/default-product.jpg"
-      })).concat([
-        { id: 301, name: "বেবি স্কিন কেয়ার সেট", price: "৳ 900", img: "/mock/baby_bag.png" },
-        { id: 302, name: "উডেন এবিসি পাজল", price: "৳ 450", img: "/mock/toy_tiles.png" }
-      ])
+      items: bestSellersSource.map(toMultiListItem)
     },
     {
       title: "নতুন এসেছে",
-      items: dbProducts.slice(4, 8).map((p: any) => ({
-        id: p.id || p._id,
-        name: p.nameEn || p.name,
-        price: `৳ ${p.price}`,
-        img: p.image || "https://sodayon.com/default-product.jpg"
-      })).concat([
-        { id: 304, name: "স্মার্ট রিমোট কন্ট্রোল কার", price: "৳ 2100", img: "/mock/toy_tiles.png" },
-        { id: 305, name: "বেবি ফিডিং বোটল সেট", price: "৳ 1200", img: "/mock/baby_bag.png" }
-      ])
+      items: newArrivalsSource.map(toMultiListItem)
     },
     {
       title: "ট্রেন্ডিং",
-      items: dbProducts.slice(8, 12).map((p: any) => ({
-        id: p.id || p._id,
-        name: p.nameEn || p.name,
-        price: `৳ ${p.price}`,
-        img: p.image || "https://sodayon.com/default-product.jpg"
-      })).concat([
-        { id: 307, name: "কিডস কীবোর্ড পিয়ানো", price: "৳ 1650", img: "/mock/toy_tiles.png" },
-        { id: 308, name: "বেবি স্লিপিং ব্যাগ", price: "৳ 1400", img: "/mock/baby_bag.png" }
-      ])
+      items: trendingSource.map(toMultiListItem)
     }
   ];
+
+  const diaperSub = babyCareCategory?.children?.find((sub: any) => sub.slug === 'baby-diapers');
+  const diaperLinkId = diaperSub?._id || diaperSub?.id || 'diapers';
+
+  const magneticSub = dbCategories
+    .flatMap((c: any) => c.children || [])
+    .find((sub: any) => sub.slug === 'magnetic-blocks');
+  const magneticLinkId = magneticSub?._id || magneticSub?.id || 'toys';
+
+  const roboticSub = dbCategories
+    .flatMap((c: any) => c.children || [])
+    .find((sub: any) => sub.slug === 'robotic-stem');
+  const roboticLinkId = roboticSub?._id || roboticSub?.id || 'stem';
 
   const categoryCollections: CollectionBlock[] = [
     {
       id: 1,
       title: "বেবি কেয়ার সামগ্রী",
-      seeMoreLink: "/shop?collection=baby-care",
+      seeMoreLink: `/shop?category=${babyCareId || 'baby-care'}`,
       items: [
-        { name: "ডায়াপার", img: "/mock/baby_bag.png", link: "/shop?category=diapers" },
+        { name: "ডায়াপার", img: "/mock/baby_bag.png", link: `/shop?category=${diaperLinkId}` },
         { name: "বেবি লোশন", img: "/mock/baby_bag.png", link: "/shop?category=skincare" },
         { name: "ফিডিং বোতল", img: "/mock/baby_bag.png", link: "/shop?category=feeding" }
       ]
@@ -163,11 +255,11 @@ export default function Home() {
     {
       id: 2,
       title: "শিক্ষণীয় খেলনা",
-      seeMoreLink: "/shop?collection=educational-toys",
+      seeMoreLink: `/shop?category=${magneticSub?.parentId || 'educational-toys'}`,
       items: [
-        { name: "বিল্ডিং ব্লকস", img: "/mock/toy_tiles.png", link: "/shop?category=toys" },
+        { name: "বিল্ডিং ব্লকস", img: "/mock/toy_tiles.png", link: `/shop?category=${magneticLinkId}` },
         { name: "পাজল গেম", img: "/mock/toy_tiles.png", link: "/shop?category=puzzles" },
-        { name: "সায়েন্স কিট", img: "/mock/toy_tiles.png", link: "/shop?category=stem" }
+        { name: "সায়েন্স কিট", img: "/mock/toy_tiles.png", link: `/shop?category=${roboticLinkId}` }
       ]
     }
   ];
@@ -190,7 +282,7 @@ export default function Home() {
       {/* 4. Combo Offers Row */}
       <ComboOffersRow 
         title="স্পেশাল কম্বো অফার" 
-        items={combos} 
+        items={activeCombos} 
       />
 
       {/* 5. Baby Care Essentials Slider */}

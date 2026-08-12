@@ -1,0 +1,724 @@
+
+<style>
+#wrap { padding: 8px 0; }
+.tab-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.tab-btn {
+  padding: 5px 12px; border-radius: 20px; border: 1px solid var(--color-border-secondary);
+  background: var(--color-background-secondary); color: var(--color-text-secondary);
+  font-size: 11px; cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.tab-btn.active { background: var(--color-text-primary); color: var(--color-background-primary); border-color: transparent; }
+.section-label {
+  font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 6px; letter-spacing: 0.04em;
+  text-transform: uppercase; font-weight: 500;
+}
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--color-border-tertiary); }
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--color-text-secondary); }
+.leg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+#erd-container { min-height: 200px; }
+</style>
+
+<div id="wrap">
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="show('full')">Full Schema</button>
+    <button class="tab-btn" onclick="show('category')">Category + Filters</button>
+    <button class="tab-btn" onclick="show('product')">Product + Variants</button>
+    <button class="tab-btn" onclick="show('commerce')">Orders + Deals</button>
+    <button class="tab-btn" onclick="show('content')">Reviews + Q&A + Videos</button>
+    <button class="tab-btn" onclick="show('user')">Users + Combos + AI</button>
+  </div>
+  <div id="erd-container"></div>
+  <div class="legend">
+    <span class="leg-item"><span class="leg-dot" style="background:#7F77DD"></span>Category system</span>
+    <span class="leg-item"><span class="leg-dot" style="background:#1D9E75"></span>Filter EAV engine</span>
+    <span class="leg-item"><span class="leg-dot" style="background:#D85A30"></span>Product core</span>
+    <span class="leg-item"><span class="leg-dot" style="background:#3B8BD4"></span>Orders &amp; deals</span>
+    <span class="leg-item"><span class="leg-dot" style="background:#D4537E"></span>UGC: reviews, Q&amp;A, videos</span>
+    <span class="leg-item"><span class="leg-dot" style="background:#BA7517"></span>Users, combos, AI tools</span>
+  </div>
+</div>
+
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '11px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+    primaryColor: dark ? '#3C3489' : '#EEEDFE',
+    primaryTextColor: dark ? '#CECBF6' : '#26215C',
+    primaryBorderColor: dark ? '#534AB7' : '#7F77DD',
+  },
+});
+
+const diagrams = {
+
+full: `erDiagram
+  CATEGORIES {
+    uuid id PK
+    uuid parent_id FK
+    varchar name_bn
+    varchar name_en
+    varchar slug UK
+    int level
+    varchar image_url
+    boolean is_active
+    int sort_order
+  }
+  BRANDS {
+    uuid id PK
+    varchar name_bn
+    varchar name_en
+    varchar slug UK
+    varchar logo_url
+    varchar tag_label
+    boolean is_featured
+  }
+  FILTER_ATTRIBUTES {
+    uuid id PK
+    varchar name_en
+    varchar name_bn
+    varchar input_type
+    boolean is_universal
+    int sort_order
+  }
+  CATEGORY_FILTERS {
+    uuid category_id FK
+    uuid attribute_id FK
+    boolean inherit_to_children
+    int sort_order
+  }
+  FILTER_OPTIONS {
+    uuid id PK
+    uuid attribute_id FK
+    varchar value_en
+    varchar value_bn
+    varchar color_hex
+    int sort_order
+  }
+  PRODUCTS {
+    uuid id PK
+    uuid category_id FK
+    uuid brand_id FK
+    varchar name_bn
+    varchar name_en
+    varchar slug UK
+    decimal base_price
+    decimal sale_price
+    varchar status
+    boolean is_featured
+    varchar badge_label
+    int view_count
+  }
+  PRODUCT_VARIANTS {
+    uuid id PK
+    uuid product_id FK
+    varchar sku UK
+    decimal price_override
+    varchar color_name
+    varchar color_hex
+    varchar size_label
+    varchar age_group
+    int stock_qty
+    boolean is_default
+  }
+  PRODUCT_IMAGES {
+    uuid id PK
+    uuid product_id FK
+    uuid variant_id FK
+    varchar url
+    int sort_order
+    boolean is_primary
+  }
+  PRODUCT_FILTER_VALUES {
+    uuid id PK
+    uuid product_id FK
+    uuid attribute_id FK
+    uuid option_id FK
+    varchar custom_value
+  }
+  PRODUCT_VIDEOS {
+    uuid id PK
+    uuid product_id FK
+    varchar youtube_url
+    varchar title_bn
+    varchar thumbnail_url
+    varchar channel_name
+    varchar duration
+    int sort_order
+  }
+  PRODUCT_QA {
+    uuid id PK
+    uuid product_id FK
+    uuid user_id FK
+    uuid answered_by FK
+    text question
+    text answer
+    timestamp asked_at
+    timestamp answered_at
+    boolean is_visible
+  }
+  REVIEWS {
+    uuid id PK
+    uuid product_id FK
+    uuid user_id FK
+    uuid order_item_id FK
+    int rating
+    text body
+    boolean is_verified
+    timestamp created_at
+    int helpful_count
+  }
+  TRUST_BADGES {
+    uuid id PK
+    uuid product_id FK
+    varchar icon
+    varchar label_bn
+    varchar label_en
+    int sort_order
+  }
+  RELATED_PRODUCTS {
+    uuid id PK
+    uuid product_id FK
+    uuid related_id FK
+    varchar relation_type
+  }
+  FLASH_DEALS {
+    uuid id PK
+    uuid product_id FK
+    uuid variant_id FK
+    decimal deal_price
+    decimal original_price
+    int save_percent
+    timestamp starts_at
+    timestamp ends_at
+    int stock_limit
+    boolean is_live
+  }
+  COMBO_TEMPLATES {
+    uuid id PK
+    varchar title_bn
+    varchar title_en
+    int min_items
+    int max_items
+    decimal discount_pct
+    boolean is_active
+  }
+  COMBO_ORDERS {
+    uuid id PK
+    uuid user_id FK
+    uuid template_id FK
+    decimal total_price
+    decimal discount_applied
+    varchar status
+    timestamp created_at
+  }
+  COMBO_ITEMS {
+    uuid id PK
+    uuid combo_order_id FK
+    uuid product_id FK
+    uuid variant_id FK
+    int quantity
+    decimal unit_price
+  }
+  USERS {
+    uuid id PK
+    varchar phone
+    varchar name
+    varchar email
+    varchar role
+    boolean is_active
+    timestamp created_at
+  }
+  ORDERS {
+    uuid id PK
+    uuid user_id FK
+    varchar status
+    decimal subtotal
+    decimal discount
+    decimal delivery_fee
+    decimal total
+    varchar payment_method
+    varchar delivery_address
+    timestamp placed_at
+  }
+  ORDER_ITEMS {
+    uuid id PK
+    uuid order_id FK
+    uuid product_id FK
+    uuid variant_id FK
+    int quantity
+    decimal unit_price
+    decimal total_price
+  }
+  WISHLISTS {
+    uuid id PK
+    uuid user_id FK
+    uuid product_id FK
+    uuid variant_id FK
+    timestamp added_at
+  }
+  RECENTLY_VIEWED {
+    uuid id PK
+    uuid user_id FK
+    uuid product_id FK
+    timestamp viewed_at
+  }
+  AI_GIFT_SESSIONS {
+    uuid id PK
+    uuid user_id FK
+    int child_age
+    varchar gender
+    varchar interests
+    decimal budget_min
+    decimal budget_max
+    jsonb recommended_ids
+    timestamp created_at
+  }
+  SPECIAL_COLLECTIONS {
+    uuid id PK
+    varchar title_bn
+    varchar title_en
+    varchar badge_label
+    varchar banner_url
+    timestamp starts_at
+    timestamp ends_at
+    boolean is_active
+  }
+  COLLECTION_ITEMS {
+    uuid id PK
+    uuid collection_id FK
+    uuid product_id FK
+    int sort_order
+  }
+  COUPONS {
+    uuid id PK
+    varchar code UK
+    varchar discount_type
+    decimal discount_value
+    decimal min_order_value
+    timestamp expires_at
+    int usage_limit
+    int used_count
+  }
+  CATEGORIES ||--o{ CATEGORIES : "parent_id (self-ref)"
+  CATEGORIES ||--o{ PRODUCTS : "category"
+  CATEGORIES ||--o{ CATEGORY_FILTERS : "scoped filters"
+  BRANDS ||--o{ PRODUCTS : "manufactures"
+  FILTER_ATTRIBUTES ||--o{ CATEGORY_FILTERS : "used in"
+  FILTER_ATTRIBUTES ||--o{ FILTER_OPTIONS : "options"
+  FILTER_ATTRIBUTES ||--o{ PRODUCT_FILTER_VALUES : "values"
+  FILTER_OPTIONS ||--o{ PRODUCT_FILTER_VALUES : "selected"
+  PRODUCTS ||--o{ PRODUCT_VARIANTS : "variants"
+  PRODUCTS ||--o{ PRODUCT_IMAGES : "images"
+  PRODUCTS ||--o{ PRODUCT_FILTER_VALUES : "attributes"
+  PRODUCTS ||--o{ PRODUCT_VIDEOS : "videos"
+  PRODUCTS ||--o{ PRODUCT_QA : "Q&A"
+  PRODUCTS ||--o{ REVIEWS : "reviews"
+  PRODUCTS ||--o{ TRUST_BADGES : "badges"
+  PRODUCTS ||--o{ RELATED_PRODUCTS : "related"
+  PRODUCTS ||--o{ FLASH_DEALS : "deals"
+  PRODUCT_VARIANTS ||--o{ FLASH_DEALS : "variant deal"
+  PRODUCTS ||--o{ COMBO_ITEMS : "in combos"
+  USERS ||--o{ ORDERS : "places"
+  USERS ||--o{ REVIEWS : "writes"
+  USERS ||--o{ PRODUCT_QA : "asks"
+  USERS ||--o{ WISHLISTS : "saves"
+  USERS ||--o{ RECENTLY_VIEWED : "viewed"
+  USERS ||--o{ COMBO_ORDERS : "creates"
+  USERS ||--o{ AI_GIFT_SESSIONS : "AI sessions"
+  ORDERS ||--o{ ORDER_ITEMS : "contains"
+  ORDER_ITEMS ||--o{ REVIEWS : "verified review"
+  COMBO_TEMPLATES ||--o{ COMBO_ORDERS : "template"
+  COMBO_ORDERS ||--o{ COMBO_ITEMS : "items"
+  SPECIAL_COLLECTIONS ||--o{ COLLECTION_ITEMS : "products"
+  COLLECTION_ITEMS ||--|| PRODUCTS : "product"
+`,
+
+category: `erDiagram
+  CATEGORIES {
+    uuid id PK
+    uuid parent_id FK
+    varchar name_bn
+    varchar name_en
+    varchar slug UK
+    int level
+    varchar image_url
+    boolean is_active
+    int sort_order
+    varchar meta_title
+  }
+  FILTER_ATTRIBUTES {
+    uuid id PK
+    varchar name_en
+    varchar name_bn
+    varchar input_type
+    boolean is_universal
+    int sort_order
+  }
+  CATEGORY_FILTERS {
+    uuid category_id FK
+    uuid attribute_id FK
+    boolean is_required
+    boolean inherit_to_children
+    int sort_order
+  }
+  FILTER_OPTIONS {
+    uuid id PK
+    uuid attribute_id FK
+    varchar value_en
+    varchar value_bn
+    varchar color_hex
+    int sort_order
+  }
+  PRODUCT_FILTER_VALUES {
+    uuid id PK
+    uuid product_id FK
+    uuid attribute_id FK
+    uuid option_id FK
+    varchar custom_value
+  }
+  CATEGORIES ||--o{ CATEGORIES : "self-ref parent_id (infinite depth)"
+  CATEGORIES ||--o{ CATEGORY_FILTERS : "defines sidebar filters"
+  FILTER_ATTRIBUTES ||--o{ CATEGORY_FILTERS : "assigned to category"
+  FILTER_ATTRIBUTES ||--o{ FILTER_OPTIONS : "selectable options"
+  FILTER_ATTRIBUTES ||--o{ PRODUCT_FILTER_VALUES : "product values"
+  FILTER_OPTIONS ||--o{ PRODUCT_FILTER_VALUES : "chosen option"
+`,
+
+product: `erDiagram
+  PRODUCTS {
+    uuid id PK
+    uuid category_id FK
+    uuid brand_id FK
+    varchar name_bn
+    varchar name_en
+    varchar slug UK
+    decimal base_price
+    decimal sale_price
+    text description_bn
+    text description_en
+    varchar status
+    varchar badge_label
+    boolean is_featured
+    int view_count
+    varchar whatsapp_number
+  }
+  PRODUCT_VARIANTS {
+    uuid id PK
+    uuid product_id FK
+    varchar sku UK
+    decimal price_override
+    varchar color_name
+    varchar color_hex
+    varchar size_label
+    varchar age_group
+    int stock_qty
+    boolean is_default
+  }
+  PRODUCT_IMAGES {
+    uuid id PK
+    uuid product_id FK
+    uuid variant_id FK
+    varchar url
+    int sort_order
+    boolean is_primary
+  }
+  PRODUCT_VIDEOS {
+    uuid id PK
+    uuid product_id FK
+    varchar youtube_url
+    varchar title_bn
+    varchar thumbnail_url
+    varchar channel_name
+    varchar duration
+    int sort_order
+  }
+  TRUST_BADGES {
+    uuid id PK
+    uuid product_id FK
+    varchar icon
+    varchar label_bn
+    varchar label_en
+    int sort_order
+  }
+  RELATED_PRODUCTS {
+    uuid id PK
+    uuid product_id FK
+    uuid related_id FK
+    varchar relation_type
+  }
+  RECENTLY_VIEWED {
+    uuid id PK
+    uuid user_id FK
+    uuid product_id FK
+    timestamp viewed_at
+  }
+  PRODUCTS ||--o{ PRODUCT_VARIANTS : "color + size + age variants"
+  PRODUCTS ||--o{ PRODUCT_IMAGES : "gallery (variant-aware)"
+  PRODUCT_VARIANTS ||--o{ PRODUCT_IMAGES : "variant image"
+  PRODUCTS ||--o{ PRODUCT_VIDEOS : "demo + channel videos"
+  PRODUCTS ||--o{ TRUST_BADGES : "free delivery, return etc"
+  PRODUCTS ||--o{ RELATED_PRODUCTS : "suggested similar"
+  PRODUCTS ||--o{ RECENTLY_VIEWED : "user history"
+`,
+
+commerce: `erDiagram
+  FLASH_DEALS {
+    uuid id PK
+    uuid product_id FK
+    uuid variant_id FK
+    decimal deal_price
+    decimal original_price
+    int save_percent
+    timestamp starts_at
+    timestamp ends_at
+    int stock_limit
+    int sold_count
+    boolean is_live
+  }
+  SPECIAL_COLLECTIONS {
+    uuid id PK
+    varchar title_bn
+    varchar title_en
+    varchar badge_label
+    varchar banner_url
+    timestamp starts_at
+    timestamp ends_at
+    boolean is_active
+  }
+  COLLECTION_ITEMS {
+    uuid id PK
+    uuid collection_id FK
+    uuid product_id FK
+    int sort_order
+  }
+  COUPONS {
+    uuid id PK
+    varchar code UK
+    varchar discount_type
+    decimal discount_value
+    decimal min_order_value
+    timestamp expires_at
+    int usage_limit
+    int used_count
+    boolean is_active
+  }
+  ORDERS {
+    uuid id PK
+    uuid user_id FK
+    uuid coupon_id FK
+    varchar status
+    decimal subtotal
+    decimal discount
+    decimal delivery_fee
+    decimal total
+    varchar payment_method
+    text delivery_address
+    varchar channel
+    timestamp placed_at
+  }
+  ORDER_ITEMS {
+    uuid id PK
+    uuid order_id FK
+    uuid product_id FK
+    uuid variant_id FK
+    int quantity
+    decimal unit_price
+    decimal total_price
+  }
+  COMBO_TEMPLATES {
+    uuid id PK
+    varchar title_bn
+    int min_items
+    int max_items
+    decimal discount_pct
+    boolean is_active
+  }
+  COMBO_ORDERS {
+    uuid id PK
+    uuid user_id FK
+    uuid template_id FK
+    uuid order_id FK
+    decimal total_price
+    decimal discount_applied
+    varchar status
+  }
+  COMBO_ITEMS {
+    uuid id PK
+    uuid combo_order_id FK
+    uuid product_id FK
+    uuid variant_id FK
+    int quantity
+    decimal unit_price
+  }
+  FLASH_DEALS ||--o{ ORDER_ITEMS : "deal purchase"
+  SPECIAL_COLLECTIONS ||--o{ COLLECTION_ITEMS : "curated items"
+  ORDERS ||--o{ ORDER_ITEMS : "line items"
+  COUPONS ||--o{ ORDERS : "applied coupon"
+  COMBO_TEMPLATES ||--o{ COMBO_ORDERS : "used template"
+  COMBO_ORDERS ||--o{ COMBO_ITEMS : "chosen toys"
+  COMBO_ORDERS ||--|| ORDERS : "converts to order"
+`,
+
+content: `erDiagram
+  REVIEWS {
+    uuid id PK
+    uuid product_id FK
+    uuid user_id FK
+    uuid order_item_id FK
+    int rating
+    text body
+    boolean is_verified
+    timestamp created_at
+    int helpful_count
+    varchar status
+  }
+  REVIEW_IMAGES {
+    uuid id PK
+    uuid review_id FK
+    varchar url
+    int sort_order
+  }
+  PRODUCT_QA {
+    uuid id PK
+    uuid product_id FK
+    uuid user_id FK
+    uuid answered_by FK
+    text question
+    text answer
+    timestamp asked_at
+    timestamp answered_at
+    boolean is_visible
+    int helpful_count
+  }
+  PRODUCT_VIDEOS {
+    uuid id PK
+    uuid product_id FK
+    varchar youtube_url
+    varchar title_bn
+    varchar thumbnail_url
+    varchar channel_name
+    varchar duration
+    varchar tab_type
+    int sort_order
+  }
+  TRUST_BADGES {
+    uuid id PK
+    uuid product_id FK
+    varchar icon
+    varchar label_bn
+    varchar label_en
+    int sort_order
+  }
+  REVIEWS ||--o{ REVIEW_IMAGES : "photo reviews"
+  PRODUCT_QA ||--|| PRODUCT_QA : "answered_by staff"
+  REVIEWS }o--|| PRODUCT_QA : "per product"
+`,
+
+user: `erDiagram
+  USERS {
+    uuid id PK
+    varchar phone
+    varchar name
+    varchar email
+    varchar role
+    boolean is_active
+    timestamp created_at
+    varchar referral_code
+  }
+  WISHLISTS {
+    uuid id PK
+    uuid user_id FK
+    uuid product_id FK
+    uuid variant_id FK
+    timestamp added_at
+  }
+  RECENTLY_VIEWED {
+    uuid id PK
+    uuid user_id FK
+    uuid product_id FK
+    timestamp viewed_at
+  }
+  AI_GIFT_SESSIONS {
+    uuid id PK
+    uuid user_id FK
+    int child_age
+    varchar gender
+    varchar interests
+    varchar occasion
+    decimal budget_min
+    decimal budget_max
+    jsonb recommended_ids
+    varchar ai_reasoning
+    timestamp created_at
+  }
+  COMBO_ORDERS {
+    uuid id PK
+    uuid user_id FK
+    uuid template_id FK
+    uuid order_id FK
+    decimal total_price
+    decimal discount_applied
+    varchar status
+    timestamp created_at
+  }
+  COMBO_ITEMS {
+    uuid id PK
+    uuid combo_order_id FK
+    uuid product_id FK
+    uuid variant_id FK
+    int quantity
+    decimal unit_price
+  }
+  USERS ||--o{ WISHLISTS : "saves products"
+  USERS ||--o{ RECENTLY_VIEWED : "browsing history"
+  USERS ||--o{ AI_GIFT_SESSIONS : "AI gift finder"
+  USERS ||--o{ COMBO_ORDERS : "custom combos"
+  COMBO_ORDERS ||--o{ COMBO_ITEMS : "selected toys"
+`
+};
+
+const tabs = {full:'Full Schema',category:'Category + Filters',product:'Product + Variants',commerce:'Orders + Deals',content:'Reviews + Q&A + Videos',user:'Users + Combos + AI'};
+
+window.show = async function(key) {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === tabs[key]);
+  });
+  await render(key);
+};
+
+async function render(key) {
+  const c = document.getElementById('erd-container');
+  c.innerHTML = '<div style="color:var(--color-text-tertiary);font-size:12px;padding:24px 0">Rendering diagram…</div>';
+  try {
+    const id = 'erd-' + key + '-' + Date.now();
+    const { svg } = await mermaid.render(id, diagrams[key]);
+    c.innerHTML = svg;
+    c.querySelectorAll('.node').forEach(node => {
+      const fp = node.querySelector('path[d]');
+      if (!fp) return;
+      const nums = fp.getAttribute('d').match(/-?[\d.]+/g)?.map(Number);
+      if (!nums || nums.length < 8) return;
+      const xs = [nums[0],nums[2],nums[4],nums[6]], ys = [nums[1],nums[3],nums[5],nums[7]];
+      const x=Math.min(...xs),y=Math.min(...ys),w=Math.max(...xs)-x,h=Math.max(...ys)-y;
+      const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('rx','8');
+      for(const a of['fill','stroke','stroke-width','class','style'])if(fp.hasAttribute(a))r.setAttribute(a,fp.getAttribute(a));
+      fp.replaceWith(r);
+    });
+    c.querySelectorAll('.row-rect-odd path,.row-rect-even path').forEach(p=>p.setAttribute('stroke','none'));
+  } catch(e) {
+    c.innerHTML = '<div style="color:var(--color-text-danger);font-size:12px;padding:12px">Render error: '+e.message+'</div>';
+  }
+}
+
+await render('full');
+</script>

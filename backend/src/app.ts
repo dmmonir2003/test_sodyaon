@@ -21,6 +21,18 @@ import categoryRouter from './modules/category/category.route';
 import uiSectionRouter from './modules/content/landing/uisection.route';
 import campaignRouter from './modules/campaign/campaign.route';
 
+// Import newly added ERD routers
+import brandRouter from './modules/brand/brand.route';
+import filterRouter from './modules/filter/filter.route';
+import couponRouter from './modules/order/coupon.route';
+import campaignDealsRouter from './modules/campaign/deals.route';
+import reviewRouter from './modules/review/review.route';
+import qaRouter from './modules/qa/qa.route';
+import userActivityRouter from './modules/userActivity/userActivity.route';
+import comboRouter from './modules/campaign/combo.route';
+import menuRouter from './modules/menu/menu.route';
+import marketingSettingsRouter from './modules/marketingSettings/marketingSettings.route';
+
 // Import error handler
 import { errorHandler } from './middleware/errorHandler';
 import { ApiError } from './utils/ApiError';
@@ -73,13 +85,25 @@ app.use('/api/cart', cartRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/content/landing', landingRouter);
 app.use('/api/content/blog', blogRouter);
-app.use('/api/content/deals', dealsRouter);
+app.use('/api/content/deals', dealsRouter); // Legacy content deals
 app.use('/api/ai', aiRouter);
 app.use('/api/admin/finance', financeRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/content/ui-sections', uiSectionRouter);
 app.use('/api/campaigns', campaignRouter);
+
+// Upgraded ERD Routes mount
+app.use('/api/brands', brandRouter);
+app.use('/api/filters', filterRouter);
+app.use('/api/coupons', couponRouter);
+app.use('/api/campaign-deals', campaignDealsRouter);
+app.use('/api/reviews', reviewRouter);
+app.use('/api/qa', qaRouter);
+app.use('/api/user-activities', userActivityRouter);
+app.use('/api/combos', comboRouter);
+app.use('/api/menus', menuRouter);
+app.use('/api/settings/marketing', marketingSettingsRouter);
 
 // 8. 404 handler for unmatched routes
 app.use((req, res, next) => {

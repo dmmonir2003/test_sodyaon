@@ -8,7 +8,7 @@ import { addItem } from "@/store/user/cart/cartSlice";
 import { setCartOpen } from "@/store/user/cart/cartSlice";
 
 export type HomeProductCardProps = {
-  id: number;
+  id: string | number;
   name: string;
   brand: string;
   oldPrice?: string;

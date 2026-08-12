@@ -6,6 +6,7 @@ export interface Profile {
   address?: string;
   role?: string;
   avatar?: string;
+  hasDefaultPassword?: boolean;
 }
 
 export interface ProfileState {

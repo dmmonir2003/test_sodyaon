@@ -19,12 +19,12 @@ const UserSchema = new Schema<IUserDocument>(
     name: { type: String, required: true, trim: true },
     email: {
       type: String,
-      required: true,
       unique: true,
       lowercase: true,
       trim: true,
+      sparse: true,
     },
-    phone: { type: String, trim: true },
+    phone: { type: String, trim: true, unique: true, sparse: true },
     password: { type: String, select: false },
     address: { type: String, trim: true },
     role: {
@@ -47,6 +47,10 @@ const UserSchema = new Schema<IUserDocument>(
     otp: { type: String, select: false },
     otpExpiresAt: { type: Date, select: false },
     tempResetToken: { type: String, select: false },
+    googleId: { type: String, unique: true, sparse: true },
+    facebookId: { type: String, unique: true, sparse: true },
+    isPhoneVerified: { type: Boolean, default: false },
+    hasDefaultPassword: { type: Boolean, default: false },
   },
   {
     timestamps: true,

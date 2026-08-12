@@ -13,8 +13,13 @@ import {
   useCreateUISectionMutation,
   useGetFlashSalesQuery,
   useCreateFlashSaleMutation,
-  useUploadMediaMutation
+  useUploadMediaMutation,
+  useCreateMenuItemMutation,
+  useUpdateMenuItemMutation,
+  useDeleteMenuItemMutation,
+  useParseGoogleSheetMutation
 } from "@/store/admin/adminContentApi";
+import { useGetMenuItemsQuery } from "@/store/user/menu/menuApi";
 import {
   ShieldAlert,
   Edit3,
@@ -34,12 +39,17 @@ import {
   Layers,
   Sparkles,
   RefreshCw,
-  Eye
+  Eye,
+  Brain,
+  Lightbulb,
+  Package,
+  Video,
+  FileSpreadsheet
 } from "lucide-react";
 
 export default function ContentPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"products" | "categories" | "ui-sections" | "campaigns">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "categories" | "ui-sections" | "campaigns" | "menus">("products");
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,6 +69,99 @@ export default function ContentPage() {
   const [createCategory, { isLoading: isCreatingCat }] = useCreateCategoryMutation();
   const [createUISection, { isLoading: isCreatingUi }] = useCreateUISectionMutation();
   const [createFlashSale, { isLoading: isCreatingCamp }] = useCreateFlashSaleMutation();
+  const { data: menuData, refetch: refetchMenus } = useGetMenuItemsQuery();
+  const [createMenuItem] = useCreateMenuItemMutation();
+  const [updateMenuItem] = useUpdateMenuItemMutation();
+  const [deleteMenuItem] = useDeleteMenuItemMutation();
+
+  // 5. DYNAMIC MENU FORM STATE
+  const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
+  const [editingMenuId, setEditingMenuId] = useState<string | null>(null);
+  const [menuTitleEn, setMenuTitleEn] = useState("");
+  const [menuTitleBn, setMenuTitleBn] = useState("");
+  const [menuUrl, setMenuUrl] = useState("");
+  const [menuType, setMenuType] = useState<"navbar" | "footer">("navbar");
+  const [menuGroup, setMenuGroup] = useState("");
+  const [menuSortOrder, setMenuSortOrder] = useState(0);
+  const [menuParentId, setMenuParentId] = useState("");
+  const [menuBadgeEn, setMenuBadgeEn] = useState("");
+  const [menuBadgeBn, setMenuBadgeBn] = useState("");
+  const [menuDescEn, setMenuDescEn] = useState("");
+  const [menuDescBn, setMenuDescBn] = useState("");
+  const [menuCtaEn, setMenuCtaEn] = useState("");
+  const [menuCtaBn, setMenuCtaBn] = useState("");
+
+  const handleAddMenuClick = () => {
+    setEditingMenuId(null);
+    setMenuTitleEn("");
+    setMenuTitleBn("");
+    setMenuUrl("");
+    setMenuType("navbar");
+    setMenuGroup("");
+    setMenuSortOrder(0);
+    setMenuParentId("");
+    setMenuBadgeEn("");
+    setMenuBadgeBn("");
+    setMenuDescEn("");
+    setMenuDescBn("");
+    setMenuCtaEn("");
+    setMenuCtaBn("");
+    setIsMenuModalOpen(true);
+  };
+
+  const handleEditMenuClick = (item: any) => {
+    setEditingMenuId(item._id);
+    setMenuTitleEn(item.titleEn);
+    setMenuTitleBn(item.titleBn);
+    setMenuUrl(item.url);
+    setMenuType(item.type);
+    setMenuGroup(item.group || "");
+    setMenuSortOrder(item.sortOrder || 0);
+    setMenuParentId(item.parentId || "");
+    setMenuBadgeEn(item.badgeEn || "");
+    setMenuBadgeBn(item.badgeBn || "");
+    setMenuDescEn(item.descriptionEn || "");
+    setMenuDescBn(item.descriptionBn || "");
+    setMenuCtaEn(item.ctaEn || "");
+    setMenuCtaBn(item.ctaBn || "");
+    setIsMenuModalOpen(true);
+  };
+
+  const handleSubmitMenu = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!menuTitleEn || !menuTitleBn || !menuUrl) {
+      alert("Please enter all mandatory fields.");
+      return;
+    }
+
+    const payload = {
+      titleEn: menuTitleEn,
+      titleBn: menuTitleBn,
+      url: menuUrl,
+      type: menuType,
+      parentId: menuParentId || undefined,
+      group: menuGroup || undefined,
+      sortOrder: Number(menuSortOrder),
+      badgeEn: menuBadgeEn || undefined,
+      badgeBn: menuBadgeBn || undefined,
+      descriptionEn: menuDescEn || undefined,
+      descriptionBn: menuDescBn || undefined,
+      ctaEn: menuCtaEn || undefined,
+      ctaBn: menuCtaBn || undefined,
+    };
+
+    try {
+      if (editingMenuId) {
+        await updateMenuItem({ id: editingMenuId, body: payload }).unwrap();
+      } else {
+        await createMenuItem(payload).unwrap();
+      }
+      refetchMenus();
+      setIsMenuModalOpen(false);
+    } catch (err: any) {
+      alert(err?.data?.message || "Failed to save menu link.");
+    }
+  };
 
   // Modals States
   const [isProdModalOpen, setIsProdModalOpen] = useState(false);
@@ -79,11 +182,126 @@ export default function ContentPage() {
   const [formBrandBn, setFormBrandBn] = useState("");
   const [formPrice, setFormPrice] = useState(0);
   const [formOriginalPrice, setFormOriginalPrice] = useState(0);
+  const [formDealEndsAt, setFormDealEndsAt] = useState("");
+  const [sheetUrl, setSheetUrl] = useState("");
+  const [sheetRow, setSheetRow] = useState<number | "">(2);
+  const [parseGoogleSheet, { isLoading: isAutofilling }] = useParseGoogleSheetMutation();
+  const handleAutofill = async () => {
+    if (!sheetUrl) {
+      alert("Please paste a valid Google Sheets URL first.");
+      return;
+    }
+    try {
+      const res = await parseGoogleSheet({ sheetUrl, row: sheetRow || 2 }).unwrap();
+      if (res.success && res.data) {
+        const d = res.data;
+        if (d.sku) setFormSku(d.sku);
+        if (d.slug) setFormSlug(d.slug);
+        if (d.nameEn) setFormNameEn(d.nameEn);
+        if (d.nameBn) setFormNameBn(d.nameBn);
+        if (d.descriptionEn) setFormDescEn(d.descriptionEn);
+        if (d.descriptionBn) setFormDescBn(d.descriptionBn);
+        if (d.brandEn) setFormBrandEn(d.brandEn);
+        if (d.brandBn) setFormBrandBn(d.brandBn);
+        if (d.price !== undefined) setFormPrice(d.price);
+        if (d.originalPrice !== undefined) setFormOriginalPrice(d.originalPrice);
+        if (d.ageMonthsMin !== undefined) setFormAgeMin(d.ageMonthsMin);
+        if (d.ageMonthsMax !== undefined) setFormAgeMax(d.ageMonthsMax);
+        if (d.safetyScore !== undefined) setFormSafetyScore(d.safetyScore);
+        if (d.tags) setFormTags(d.tags);
+
+        // Multiple Images Bindings
+        if (d.images && d.images.length > 0) {
+          setFormImages(d.images);
+        } else if (d.image) {
+          setFormImages([d.image]);
+        }
+
+        // Auto-match Sodayon categories & subcategories tree by name!
+        let matchedCat: any = null;
+        if (d.categoryName && catData?.data) {
+          matchedCat = catData.data.find((c: any) => 
+            c.nameEn?.toLowerCase() === d.categoryName.toLowerCase() ||
+            c.nameBn?.toLowerCase() === d.categoryName.toLowerCase() ||
+            c.slug?.toLowerCase() === d.categoryName.toLowerCase()
+          );
+          if (matchedCat) {
+            setFormCategory(matchedCat._id || matchedCat.id);
+          }
+        }
+
+        if (d.subcategoryName && matchedCat?.subcategories) {
+          const matchedSub = matchedCat.subcategories.find((s: any) =>
+            s.nameEn?.toLowerCase() === d.subcategoryName.toLowerCase() ||
+            s.nameBn?.toLowerCase() === d.subcategoryName.toLowerCase() ||
+            s.slug?.toLowerCase() === d.subcategoryName.toLowerCase()
+          );
+          if (matchedSub) {
+            setFormSubcategory(matchedSub._id || matchedSub.id);
+          }
+        }
+
+        // Play Personality states
+        if (d.playPersonalityLabelEn) setFormPlayPersonalityLabelEn(d.playPersonalityLabelEn);
+        if (d.playPersonalityLabelBn) setFormPlayPersonalityLabelBn(d.playPersonalityLabelBn);
+        if (d.playPersonalityDescEn) setFormPlayPersonalityDescEn(d.playPersonalityDescEn);
+        if (d.playPersonalityDescBn) setFormPlayPersonalityDescBn(d.playPersonalityDescBn);
+
+        // Directions / Playbook
+        if (d.directionsEn) setFormDirectionsEn(d.directionsEn);
+        if (d.directionsBn) setFormDirectionsBn(d.directionsBn);
+
+        // Developmental Benefits
+        if (d.benefits && d.benefits.length > 0) {
+          setFormBenefits(d.benefits);
+        }
+
+        // Package Items
+        if (d.packageItems && d.packageItems.length > 0) {
+          setFormPackageItems(d.packageItems);
+        }
+
+        // Specifications
+        const parsedSpecs = [
+          { key: "material", val: d.material || "Cotton Canvas" },
+          { key: "dimensions", val: d.dimensions || "120 x 120 x 140 cm" }
+        ];
+        if (d.weight) parsedSpecs.push({ key: "weight", val: d.weight });
+        if (d.battery) parsedSpecs.push({ key: "battery", val: d.battery });
+        setSpecs(parsedSpecs);
+
+        // Multiple Videos Gallery Bindings
+        if (d.videos && d.videos.length > 0) {
+          setFormVideos(d.videos);
+        } else if (d.youtubeUrl) {
+          setFormVideos([
+            {
+              youtubeUrl: d.youtubeUrl,
+              titleBn: "প্লে টিউটোরিয়াল",
+              channelName: "Sodayon TV",
+              duration: "১০:০০"
+            }
+          ]);
+        }
+
+        // Multiple Variation Matrix Bindings
+        if (d.variants && d.variants.length > 0) {
+          setVariants(d.variants);
+        }
+
+        alert("Modal fields successfully pre-populated from Google Sheet!");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.data?.message || "Failed to fetch and parse Google Sheet. Make sure 'Anyone with the link can view' is enabled.");
+    }
+  };
   const [formAgeMin, setFormAgeMin] = useState(12);
   const [formAgeMax, setFormAgeMax] = useState(48);
   const [formSafetyScore, setFormSafetyScore] = useState(9);
   const [formImages, setFormImages] = useState<string[]>([]);
   const [formCategory, setFormCategory] = useState("");
+  const [formSubcategory, setFormSubcategory] = useState("");
   const [formTags, setFormTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [specs, setSpecs] = useState<{ key: string; val: string }[]>([
@@ -93,6 +311,20 @@ export default function ContentPage() {
   const [variants, setVariants] = useState<{ sku: string; nameEn: string; nameBn: string; price: number; stock: number; color: string }[]>([
     { sku: "", nameEn: "", nameBn: "", price: 0, stock: 10, color: "" }
   ]);
+
+  // Dynamic visual/specialized fields
+  const [formPlayPersonalityLabelEn, setFormPlayPersonalityLabelEn] = useState("");
+  const [formPlayPersonalityLabelBn, setFormPlayPersonalityLabelBn] = useState("");
+  const [formPlayPersonalityDescEn, setFormPlayPersonalityDescEn] = useState("");
+  const [formPlayPersonalityDescBn, setFormPlayPersonalityDescBn] = useState("");
+
+  const [formBenefits, setFormBenefits] = useState<{ icon: string; titleEn: string; titleBn: string; descEn: string; descBn: string }[]>([]);
+  const [formPackageItems, setFormPackageItems] = useState<{ count: string; textEn: string; textBn: string; detailsEn?: string; detailsBn?: string }[]>([]);
+  
+  const [formDirectionsEn, setFormDirectionsEn] = useState("");
+  const [formDirectionsBn, setFormDirectionsBn] = useState("");
+
+  const [formVideos, setFormVideos] = useState<{ youtubeUrl: string; titleBn?: string; channelName?: string; duration?: string }[]>([]);
 
   // 2. CATEGORY FORM STATE
   const [catSlug, setCatSlug] = useState("");
@@ -173,11 +405,28 @@ export default function ContentPage() {
     setFormBrandBn(p.brandBn || "");
     setFormPrice(p.price || 0);
     setFormOriginalPrice(p.originalPrice || p.price || 0);
+    setFormDealEndsAt(p.dealEndsAt ? new Date(p.dealEndsAt).toISOString().slice(0, 16) : "");
     setFormAgeMin(p.ageMonthsMin || 12);
     setFormAgeMax(p.ageMonthsMax || 48);
     setFormSafetyScore(p.safetyScore || 9);
     setFormImages(p.images || [p.image] || []);
-    setFormCategory(p.categories?.[0] || "");
+
+    // Hierarchical parsing for Category and Subcategory
+    const selectedCats = p.categories || [];
+    const flatCategories = catData?.data || [];
+    const parentCat = selectedCats.find((catId: string) => {
+      const cat = flatCategories.find((c: any) => (c._id === catId || c.id === catId));
+      return cat && !cat.parentId;
+    }) || selectedCats[0] || "";
+
+    const subCat = selectedCats.find((catId: string) => {
+      const cat = flatCategories.find((c: any) => (c._id === catId || c.id === catId));
+      return cat && cat.parentId;
+    }) || "";
+
+    setFormCategory(parentCat);
+    setFormSubcategory(subCat);
+
     setFormTags(p.tags || []);
     
     // Load specifications
@@ -203,6 +452,18 @@ export default function ContentPage() {
       setVariants([{ sku: "", nameEn: "", nameBn: "", price: 0, stock: 10, color: "" }]);
     }
 
+    // Load dynamic visual components
+    setFormPlayPersonalityLabelEn(p.playPersonality?.labelEn || "");
+    setFormPlayPersonalityLabelBn(p.playPersonality?.labelBn || "");
+    setFormPlayPersonalityDescEn(p.playPersonality?.descEn || "");
+    setFormPlayPersonalityDescBn(p.playPersonality?.descBn || "");
+
+    setFormBenefits(p.benefits || []);
+    setFormPackageItems(p.packageItems || []);
+    setFormDirectionsEn(p.directionsEn || "");
+    setFormDirectionsBn(p.directionsBn || "");
+    setFormVideos(p.videos || []);
+
     setIsProdModalOpen(true);
   };
 
@@ -219,17 +480,31 @@ export default function ContentPage() {
     setFormBrandBn("");
     setFormPrice(0);
     setFormOriginalPrice(0);
+    setFormDealEndsAt("");
     setFormAgeMin(12);
     setFormAgeMax(48);
     setFormSafetyScore(9);
     setFormImages([]);
     setFormCategory("");
+    setFormSubcategory("");
     setFormTags([]);
     setSpecs([
       { key: "material", val: "Cotton Canvas" },
       { key: "dimensions", val: "120 x 120 x 140 cm" }
     ]);
     setVariants([{ sku: "", nameEn: "", nameBn: "", price: 0, stock: 10, color: "" }]);
+
+    // Reset dynamic visual components
+    setFormPlayPersonalityLabelEn("");
+    setFormPlayPersonalityLabelBn("");
+    setFormPlayPersonalityDescEn("");
+    setFormPlayPersonalityDescBn("");
+    setFormBenefits([]);
+    setFormPackageItems([]);
+    setFormDirectionsEn("");
+    setFormDirectionsBn("");
+    setFormVideos([]);
+
     setIsProdModalOpen(true);
   };
 
@@ -258,6 +533,8 @@ export default function ContentPage() {
         options: { color: v.color }
       }));
 
+    const categoriesArray = [formCategory, formSubcategory].filter(Boolean);
+
     const finalPayload = {
       sku: formSku,
       slug: formSlug || formNameEn.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
@@ -272,6 +549,7 @@ export default function ContentPage() {
       price: formPrice,
       originalPrice: formOriginalPrice || formPrice,
       discount: formOriginalPrice ? Math.round(((formOriginalPrice - formPrice) / formOriginalPrice) * 100) : 0,
+      dealEndsAt: formDealEndsAt ? new Date(formDealEndsAt).toISOString() : undefined,
       image: formImages[0] || "https://sodayon.com/default-product.jpg",
       images: formImages.length > 0 ? formImages : ["https://sodayon.com/default-product.jpg"],
       ageMonthsMin: formAgeMin,
@@ -279,9 +557,20 @@ export default function ContentPage() {
       ageRange: `${Math.floor(formAgeMin/12)}-${Math.floor(formAgeMax/12)}`,
       safetyScore: formSafetyScore,
       tags: formTags,
-      categories: formCategory ? [formCategory] : [],
+      categories: categoriesArray,
       specifications: specificationsObj,
-      variants: cleanedVariants
+      variants: cleanedVariants,
+      playPersonality: {
+        labelEn: formPlayPersonalityLabelEn,
+        labelBn: formPlayPersonalityLabelBn,
+        descEn: formPlayPersonalityDescEn,
+        descBn: formPlayPersonalityDescBn
+      },
+      benefits: formBenefits,
+      packageItems: formPackageItems,
+      directionsEn: formDirectionsEn,
+      directionsBn: formDirectionsBn,
+      videos: formVideos
     };
 
     try {
@@ -443,6 +732,15 @@ export default function ContentPage() {
               Schedule Sale
             </button>
           )}
+          {activeTab === "menus" && (
+            <button
+              onClick={handleAddMenuClick}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2"
+            >
+              <PlusCircle className="h-5 w-5" />
+              Add Menu Link
+            </button>
+          )}
         </div>
       </div>
 
@@ -483,6 +781,15 @@ export default function ContentPage() {
         >
           <Calendar className="h-4 w-4" />
           Campaigns
+        </button>
+        <button
+          onClick={() => setActiveTab("menus")}
+          className={`py-3 px-6 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${
+            activeTab === "menus" ? "border-indigo-500 text-indigo-400 bg-slate-900/50" : "border-transparent text-slate-400 hover:text-slate-200"
+          } flex items-center gap-2 rounded-t-xl`}
+        >
+          <Sliders className="h-4 w-4" />
+          Navigation Menus ({menuData?.count || 0})
         </button>
       </div>
 
@@ -727,6 +1034,99 @@ export default function ContentPage() {
       )}
 
       {/* =========================================================
+          TAB 5: DYNAMIC MENUS (NAV & FOOTER LINKS)
+          ========================================================= */}
+      {activeTab === "menus" && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <Sliders className="text-indigo-500 h-5 w-5" />
+            Navigation Items & Footer Links
+          </h2>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
+                  <th className="py-3 px-2">English Title</th>
+                  <th className="py-3 px-2">Bengali Title</th>
+                  <th className="py-3 px-2">Target Href (URL)</th>
+                  <th className="py-3 px-2">Placement Target</th>
+                  <th className="py-3 px-2">Parent Link</th>
+                  <th className="py-3 px-2">Group / Column</th>
+                  <th className="py-3 px-2 text-center">Sort Order</th>
+                  <th className="py-3 px-2 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {menuData?.data?.map((item: any) => (
+                  <tr key={item._id} className="border-b border-slate-850 hover:bg-slate-850/30 transition-colors group">
+                    <td className="py-3 px-2 font-semibold text-white">
+                      {item.titleEn}
+                    </td>
+                    <td className="py-3 px-2 text-slate-200 font-bengali">
+                      {item.titleBn}
+                    </td>
+                    <td className="py-3 px-2 font-mono text-slate-400">
+                      {item.url}
+                    </td>
+                    <td className="py-3 px-2">
+                      <span className={`px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                        item.type === 'navbar' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-400'
+                      }`}>
+                        {item.type}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2">
+                      {item.parentId ? (
+                        <span className="text-slate-300 bg-slate-800 px-2 py-0.5 rounded font-medium">
+                          {menuData?.data?.find((p: any) => p._id === item.parentId)?.titleBn || 'Parent'}
+                        </span>
+                      ) : (
+                        <span className="text-slate-600">—</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-2 text-slate-400">
+                      {item.group || '—'}
+                    </td>
+                    <td className="py-3 px-2 text-center font-bold text-slate-300">
+                      {item.sortOrder}
+                    </td>
+                    <td className="py-3 px-2">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => handleEditMenuClick(item)}
+                          className="text-indigo-500 hover:text-white p-2 hover:bg-indigo-500/10 rounded-lg transition-colors"
+                          title="Edit Menu Link"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (confirm("Delete this menu item permanently?")) {
+                              try {
+                                await deleteMenuItem(item._id).unwrap();
+                                refetchMenus();
+                              } catch (err: any) {
+                                alert("Failed to delete menu item.");
+                              }
+                            }
+                          }}
+                          className="text-red-500 hover:text-white p-2 hover:bg-red-500/10 rounded-lg transition-colors"
+                          title="Delete Menu Link"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================
           MODAL 1: CREATE OR UPDATE PRODUCT
           ========================================================= */}
       {isProdModalOpen && (
@@ -754,7 +1154,56 @@ export default function ContentPage() {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Google Sheets Autofill Bar */}
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
+                    <div className="flex-1">
+                      <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+                        Google Sheets Autofill Integration
+                      </h4>
+                      <p className="text-[11px] text-slate-400">Paste your shared sheet URL to instantly pre-populate all input fields below.</p>
+                    </div>
+                    <div className="flex flex-col md:flex-row items-stretch gap-2.5 md:w-[65%]">
+                      <input
+                        type="text"
+                        value={sheetUrl}
+                        onChange={(e) => setSheetUrl(e.target.value)}
+                        placeholder="Google Sheet shared link"
+                        className="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-amber-500 min-w-0"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          min="2"
+                          value={sheetRow}
+                          onChange={(e) => setSheetRow(e.target.value === "" ? "" : parseInt(e.target.value, 10))}
+                          placeholder="Row (e.g. 2)"
+                          className="w-[95px] bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-xs text-slate-355 text-slate-300 focus:outline-none focus:border-amber-500 text-center"
+                          title="Row number (Row 1 is Header, Row 2 is 1st product, Row 3 is 2nd product, etc.)"
+                        />
+                        <button
+                          type="button"
+                          disabled={isAutofilling}
+                          onClick={handleAutofill}
+                          className="flex-grow md:flex-grow-0 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95 whitespace-nowrap"
+                        >
+                          {isAutofilling ? (
+                            <>
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                              Autofilling...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-3.5 w-3.5 text-yellow-300" />
+                              Autofill
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Master SKU *</label>
                       <input
@@ -776,17 +1225,37 @@ export default function ContentPage() {
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs"
                       />
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Choose Category *</label>
                       <select
                         required
                         value={formCategory}
-                        onChange={(e) => setFormCategory(e.target.value)}
+                        onChange={(e) => {
+                          setFormCategory(e.target.value);
+                          setFormSubcategory("");
+                        }}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs"
                       >
                         <option value="">Select Category</option>
-                        {catData?.data?.map((c: any) => (
-                          <option key={c.id || c._id} value={c.id || c._id}>{c.nameEn}</option>
+                        {catData?.data?.filter((c: any) => !c.parentId).map((c: any) => (
+                          <option key={c.id || c._id} value={c.id || c._id}>{c.nameEn} ({c.nameBn})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Choose Subcategory</label>
+                      <select
+                        value={formSubcategory}
+                        onChange={(e) => setFormSubcategory(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs"
+                        disabled={!formCategory}
+                      >
+                        <option value="">Select Subcategory</option>
+                        {catData?.data?.filter((c: any) => c.parentId === formCategory).map((c: any) => (
+                          <option key={c.id || c._id} value={c.id || c._id}>{c.nameEn} ({c.nameBn})</option>
                         ))}
                       </select>
                     </div>
@@ -840,7 +1309,7 @@ export default function ContentPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Brand (English)</label>
                       <input
@@ -878,6 +1347,22 @@ export default function ContentPage() {
                         value={formOriginalPrice}
                         onChange={(e) => setFormOriginalPrice(Number(e.target.value))}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-400 focus:outline-none focus:border-amber-500 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Deal Expiration Timer</label>
+                      <input
+                        type="datetime-local"
+                        value={formDealEndsAt}
+                        onChange={(e) => setFormDealEndsAt(e.target.value)}
+                        onClick={(e) => {
+                          try {
+                            e.currentTarget.showPicker();
+                          } catch (err) {
+                            console.log("showPicker not supported", err);
+                          }
+                        }}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 focus:outline-none focus:border-amber-500 text-xs cursor-pointer hover:border-amber-500/50 transition-all font-mono"
                       />
                     </div>
                   </div>
@@ -1009,9 +1494,7 @@ export default function ContentPage() {
                             placeholder="Specification Key (e.g. material)"
                             value={s.key}
                             onChange={(e) => {
-                              const updated = [...specs];
-                              updated[idx].key = e.target.value;
-                              setSpecs(updated);
+                              setSpecs(specs.map((item, i) => i === idx ? { ...item, key: e.target.value } : item));
                             }}
                             className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 w-1/3"
                           />
@@ -1020,9 +1503,7 @@ export default function ContentPage() {
                             placeholder="Value"
                             value={s.val}
                             onChange={(e) => {
-                              const updated = [...specs];
-                              updated[idx].val = e.target.value;
-                              setSpecs(updated);
+                              setSpecs(specs.map((item, i) => i === idx ? { ...item, val: e.target.value } : item));
                             }}
                             className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 flex-1"
                           />
@@ -1049,15 +1530,13 @@ export default function ContentPage() {
                     <div className="space-y-4">
                       {variants.map((v, idx) => (
                         <div key={idx} className="border-b border-slate-850 pb-3 space-y-2 last:border-0 last:pb-0">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                           <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
                             <input
                               type="text"
                               placeholder="SKU Code"
                               value={v.sku}
                               onChange={(e) => {
-                                const updated = [...variants];
-                                updated[idx].sku = e.target.value;
-                                setVariants(updated);
+                                setVariants(variants.map((item, i) => i === idx ? { ...item, sku: e.target.value } : item));
                               }}
                               className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
                             />
@@ -1066,9 +1545,7 @@ export default function ContentPage() {
                               placeholder="Title (English)"
                               value={v.nameEn}
                               onChange={(e) => {
-                                const updated = [...variants];
-                                updated[idx].nameEn = e.target.value;
-                                setVariants(updated);
+                                setVariants(variants.map((item, i) => i === idx ? { ...item, nameEn: e.target.value } : item));
                               }}
                               className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
                             />
@@ -1077,11 +1554,27 @@ export default function ContentPage() {
                               placeholder="Title (Bengali)"
                               value={v.nameBn}
                               onChange={(e) => {
-                                const updated = [...variants];
-                                updated[idx].nameBn = e.target.value;
-                                setVariants(updated);
+                                setVariants(variants.map((item, i) => i === idx ? { ...item, nameBn: e.target.value } : item));
                               }}
                               className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-bengali"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Price (৳)"
+                              value={v.price}
+                              onChange={(e) => {
+                                setVariants(variants.map((item, i) => i === idx ? { ...item, price: Number(e.target.value) || 0 } : item));
+                              }}
+                              className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-emerald-400 font-bold focus:outline-none focus:border-amber-500"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Stock"
+                              value={v.stock}
+                              onChange={(e) => {
+                                setVariants(variants.map((item, i) => i === idx ? { ...item, stock: Number(e.target.value) || 0 } : item));
+                              }}
+                              className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
                             />
                             <div className="flex gap-2 items-center">
                               <input
@@ -1089,15 +1582,370 @@ export default function ContentPage() {
                                 placeholder="Color Option"
                                 value={v.color}
                                 onChange={(e) => {
-                                  const updated = [...variants];
-                                  updated[idx].color = e.target.value;
-                                  setVariants(updated);
+                                  setVariants(variants.map((item, i) => i === idx ? { ...item, color: e.target.value } : item));
                                 }}
                                 className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 flex-1"
                               />
                               <button type="button" onClick={() => removeVariantRow(idx)} className="text-red-500 hover:text-red-400 p-1">
                                 <Trash2 className="h-4 w-4" />
                               </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dynamic Play Personality Panel */}
+                  <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/40">
+                    <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                      <Brain className="h-5 w-5 text-amber-500" />
+                      Play Personality Match (প্লে পার্সোনালিটি)
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Personality Label (English)</label>
+                        <input
+                          type="text"
+                          value={formPlayPersonalityLabelEn}
+                          onChange={(e) => setFormPlayPersonalityLabelEn(e.target.value)}
+                          placeholder="e.g. Master Builder"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Personality Label (Bengali)</label>
+                        <input
+                          type="text"
+                          value={formPlayPersonalityLabelBn}
+                          onChange={(e) => setFormPlayPersonalityLabelBn(e.target.value)}
+                          placeholder="e.g. মাস্টার বিল্ডার"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs font-bengali"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs text-slate-400 mb-1">Personality Description (English)</label>
+                        <textarea
+                          value={formPlayPersonalityDescEn}
+                          onChange={(e) => setFormPlayPersonalityDescEn(e.target.value)}
+                          placeholder="Why this toy matches this personality..."
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs h-20"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs text-slate-400 mb-1">Personality Description (Bengali)</label>
+                        <textarea
+                          value={formPlayPersonalityDescBn}
+                          onChange={(e) => setFormPlayPersonalityDescBn(e.target.value)}
+                          placeholder="কেন এই খেলনাটি এই পার্সোনালিটির সাথে মিলে..."
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs h-20 font-bengali"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Beneficial Milestones Grid */}
+                  <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/40">
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Lightbulb className="h-5 w-5 text-amber-500" />
+                        Developmental Benefits (খেললে যে উপকারিতা পায়)
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => setFormBenefits([...formBenefits, { icon: "Brain", titleEn: "", titleBn: "", descEn: "", descBn: "" }])}
+                        className="text-xs font-bold text-amber-500 hover:text-amber-400 flex items-center gap-1"
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Add Benefit Card
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {formBenefits.map((b, idx) => (
+                        <div key={idx} className="border border-slate-805 p-4 rounded-xl space-y-3 relative bg-slate-900/60">
+                          <button
+                            type="button"
+                            onClick={() => setFormBenefits(formBenefits.filter((_, i) => i !== idx))}
+                            className="absolute top-2 right-2 text-red-500 hover:text-red-400"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Select Icon</label>
+                              <select
+                                value={b.icon}
+                                onChange={(e) => {
+                                  setFormBenefits(formBenefits.map((item, i) => i === idx ? { ...item, icon: e.target.value } : item));
+                                }}
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                              >
+                                <option value="Brain">Brain (বুদ্ধিবৃত্তিক)</option>
+                                <option value="Lightbulb">Lightbulb (সৃজনশীলতা)</option>
+                                <option value="Smartphone">Smartphone (মোবাইল মুক্তি)</option>
+                                <option value="Gift">Gift (উপহার)</option>
+                                <option value="Smile">Smile (আনন্দ)</option>
+                                <option value="Star">Star (বিশেষত্ব)</option>
+                                <option value="Heart">Heart (যত্ন)</option>
+                                <option value="Shield">Shield (নিরাপত্তা)</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Benefit Title (English)</label>
+                              <input
+                                type="text"
+                                value={b.titleEn || ""}
+                                onChange={(e) => {
+                                  setFormBenefits(formBenefits.map((item, i) => i === idx ? { ...item, titleEn: e.target.value } : item));
+                                }}
+                                placeholder="e.g. Cognitive Growth"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Benefit Title (Bengali)</label>
+                              <input
+                                type="text"
+                                value={b.titleBn || ""}
+                                onChange={(e) => {
+                                  setFormBenefits(formBenefits.map((item, i) => i === idx ? { ...item, titleBn: e.target.value } : item));
+                                }}
+                                placeholder="e.g. বুদ্ধিবৃত্তিক বিকাশ"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-bengali"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Description (English)</label>
+                              <textarea
+                                value={b.descEn || ""}
+                                onChange={(e) => {
+                                  setFormBenefits(formBenefits.map((item, i) => i === idx ? { ...item, descEn: e.target.value } : item));
+                                }}
+                                placeholder="Explain benefit details..."
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 h-16"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Description (Bengali)</label>
+                              <textarea
+                                value={b.descBn || ""}
+                                onChange={(e) => {
+                                  setFormBenefits(formBenefits.map((item, i) => i === idx ? { ...item, descBn: e.target.value } : item));
+                                }}
+                                placeholder="উপকারিতা বিস্তারিত লিখুন..."
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 h-16 font-bengali"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Package Checklist Panel */}
+                  <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/40">
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Package className="h-5 w-5 text-amber-500" />
+                        Package Items Checklist (প্যাকেজে যা যা থাকছে)
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => setFormPackageItems([...formPackageItems, { count: "১x", textEn: "", textBn: "", detailsEn: "", detailsBn: "" }])}
+                        className="text-xs font-bold text-amber-500 hover:text-amber-400 flex items-center gap-1"
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Add Package Item
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {formPackageItems.map((item, idx) => (
+                        <div key={idx} className="border border-slate-805 p-4 rounded-xl space-y-3 relative bg-slate-900/60">
+                          <button
+                            type="button"
+                            onClick={() => setFormPackageItems(formPackageItems.filter((_, i) => i !== idx))}
+                            className="absolute top-2 right-2 text-red-500 hover:text-red-400"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Item Quantity / Count</label>
+                              <input
+                                type="text"
+                                value={item.count || ""}
+                                onChange={(e) => {
+                                  setFormPackageItems(formPackageItems.map((val, i) => i === idx ? { ...val, count: e.target.value } : val));
+                                }}
+                                placeholder="e.g. ৫০x"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Item Name (English)</label>
+                              <input
+                                type="text"
+                                value={item.textEn || ""}
+                                onChange={(e) => {
+                                  setFormPackageItems(formPackageItems.map((val, i) => i === idx ? { ...val, textEn: e.target.value } : val));
+                                }}
+                                placeholder="e.g. Magnetic Triangles"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Item Name (Bengali)</label>
+                              <input
+                                type="text"
+                                value={item.textBn || ""}
+                                onChange={(e) => {
+                                  setFormPackageItems(formPackageItems.map((val, i) => i === idx ? { ...val, textBn: e.target.value } : val));
+                                }}
+                                placeholder="e.g. ম্যাগনেটিক ত্রিভুজ"
+                                className="w-full bg-slate-950 border border-slate-805 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-bengali"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Detailed Explanation (English)</label>
+                              <textarea
+                                value={item.detailsEn || ""}
+                                onChange={(e) => {
+                                  setFormPackageItems(formPackageItems.map((val, i) => i === idx ? { ...val, detailsEn: e.target.value } : val));
+                                }}
+                                placeholder="Detail what is inside..."
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 h-16"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Detailed Explanation (Bengali)</label>
+                              <textarea
+                                value={item.detailsBn || ""}
+                                onChange={(e) => {
+                                  setFormPackageItems(formPackageItems.map((val, i) => i === idx ? { ...val, detailsBn: e.target.value } : val));
+                                }}
+                                placeholder="বিস্তারিত ব্যাখ্যা লিখুন..."
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 h-16 font-bengali"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Directions Panel */}
+                  <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/40">
+                    <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                      <Sliders className="h-5 w-5 text-amber-500" />
+                      Usage Directions (ব্যবহারের নির্দেশনা)
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Directions & Specifications (English)</label>
+                        <textarea
+                          value={formDirectionsEn}
+                          onChange={(e) => setFormDirectionsEn(e.target.value)}
+                          placeholder="Detailed steps of how to play or handle..."
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs h-24"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Directions & Specifications (Bengali)</label>
+                        <textarea
+                          value={formDirectionsBn}
+                          onChange={(e) => setFormDirectionsBn(e.target.value)}
+                          placeholder="খেলার বা ব্যবহারের বিস্তারিত গাইড..."
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs h-24 font-bengali"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* YouTube Videos Playlist Gallery */}
+                  <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/40">
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Video className="h-5 w-5 text-amber-500" />
+                        Dynamic YouTube Video Gallery (ভিডিওসমূহ)
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => setFormVideos([...formVideos, { youtubeUrl: "", titleBn: "", channelName: "Sodayon Toys", duration: "১০:০০" }])}
+                        className="text-xs font-bold text-amber-500 hover:text-amber-400 flex items-center gap-1"
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Add Video
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      {formVideos.map((vid, idx) => (
+                        <div key={idx} className="border border-slate-805 p-4 rounded-xl space-y-3 relative bg-slate-900/60">
+                          <button
+                            type="button"
+                            onClick={() => setFormVideos(formVideos.filter((_, i) => i !== idx))}
+                            className="absolute top-2 right-2 text-red-500 hover:text-red-400"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">YouTube Video URL *</label>
+                              <input
+                                type="text"
+                                required
+                                value={vid.youtubeUrl || ""}
+                                onChange={(e) => {
+                                  setFormVideos(formVideos.map((val, i) => i === idx ? { ...val, youtubeUrl: e.target.value } : val));
+                                }}
+                                placeholder="https://www.youtube.com/watch?v=..."
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Video Title (Bengali) *</label>
+                              <input
+                                type="text"
+                                required
+                                value={vid.titleBn || ""}
+                                onChange={(e) => {
+                                  setFormVideos(formVideos.map((val, i) => i === idx ? { ...val, titleBn: e.target.value } : val));
+                                }}
+                                placeholder="ভিডিওর শিরোনাম বাংলায় লিখুন"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-bengali"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Channel Name (Optional)</label>
+                              <input
+                                type="text"
+                                value={vid.channelName || ""}
+                                onChange={(e) => {
+                                  setFormVideos(formVideos.map((val, i) => i === idx ? { ...val, channelName: e.target.value } : val));
+                                }}
+                                placeholder="e.g. Sodayon Toys"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] text-slate-400 mb-1">Video Duration (e.g. ১০:৪৫)</label>
+                              <input
+                                type="text"
+                                value={vid.duration || ""}
+                                onChange={(e) => {
+                                  setFormVideos(formVideos.map((val, i) => i === idx ? { ...val, duration: e.target.value } : val));
+                                }}
+                                placeholder="e.g. ৮:৪৫"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                              />
                             </div>
                           </div>
                         </div>
@@ -1399,6 +2247,240 @@ export default function ContentPage() {
                 >
                   <Save className="h-4 w-4" />
                   {isCreatingCamp ? "Scheduling..." : "Schedule Campaign"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================
+          MODAL 5: CREATE OR UPDATE DYNAMIC MENU LINK
+          ========================================================= */}
+      {isMenuModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-300 flex flex-col my-8">
+            
+            {/* Header */}
+            <div className="flex justify-between items-center bg-slate-950/80 px-6 py-4 border-b border-slate-800">
+              <h2 className="text-lg font-black text-white flex items-center gap-2">
+                <Sliders className="h-5 w-5 text-indigo-500" />
+                {editingMenuId ? "Modify Menu Link Configuration" : "Add New Dynamic Menu Link"}
+              </h2>
+              <button onClick={() => setIsMenuModalOpen(false)} className="text-slate-400 hover:text-white p-1">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+ 
+            {/* Form */}
+            <form onSubmit={handleSubmitMenu} className="p-6 space-y-6 text-slate-300 text-sm">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Title (English) *</label>
+                  <input
+                    type="text"
+                    required
+                    value={menuTitleEn}
+                    onChange={(e) => setMenuTitleEn(e.target.value)}
+                    placeholder="e.g. Home"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Title (Bengali) *</label>
+                  <input
+                    type="text"
+                    required
+                    value={menuTitleBn}
+                    onChange={(e) => setMenuTitleBn(e.target.value)}
+                    placeholder="e.g. হোম"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">URL Href Path *</label>
+                <input
+                  type="text"
+                  required
+                  value={menuUrl}
+                  onChange={(e) => setMenuUrl(e.target.value)}
+                  placeholder="e.g. /shop or /deals"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Placement Target *</label>
+                  <select
+                    value={menuType}
+                    onChange={(e) => {
+                      const val = e.target.value as "navbar" | "footer";
+                      setMenuType(val);
+                      if (val === 'navbar') {
+                        setMenuGroup("");
+                      }
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs"
+                  >
+                    <option value="navbar">Header Navbar</option>
+                    <option value="footer">Footer</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Sort Weight Order</label>
+                  <input
+                    type="number"
+                    value={menuSortOrder}
+                    onChange={(e) => setMenuSortOrder(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs"
+                  />
+                </div>
+              </div>
+
+              {menuType === 'navbar' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Parent Menu Item (Optional)</label>
+                      <select
+                        value={menuParentId}
+                        onChange={(e) => setMenuParentId(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs"
+                      >
+                        <option value="">No Parent (Top-level Navigation)</option>
+                        {menuData?.data
+                          ?.filter((p: any) => p.type === 'navbar' && !p.parentId && p._id !== editingMenuId)
+                          ?.map((p: any) => (
+                            <option key={p._id} value={p._id}>{p.titleBn} ({p.titleEn})</option>
+                          ))
+                        }
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Mega Menu Column (Optional)</label>
+                      <select
+                        value={menuGroup}
+                        onChange={(e) => setMenuGroup(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs"
+                      >
+                        <option value="">No Column (Simple Dropdown)</option>
+                        <option value="quick-links">কুইক লিংক (quick-links)</option>
+                        <option value="top-categories">শীর্ষ ক্যাটাগরি (top-categories)</option>
+                        <option value="baby-products">শিশু পণ্য (baby-products)</option>
+                        <option value="promo-card">প্রমোশনাল কার্ড (promo-card)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {menuGroup === 'promo-card' && (
+                    <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-850 space-y-4 animate-in fade-in duration-300">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-500 block mb-1">
+                        Promotional Card Content Configuration
+                      </span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 mb-1">Badge text (English)</label>
+                          <input
+                            type="text"
+                            value={menuBadgeEn}
+                            onChange={(e) => setMenuBadgeEn(e.target.value)}
+                            placeholder="e.g. Limited Time"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 mb-1">Badge text (Bengali)</label>
+                          <input
+                            type="text"
+                            value={menuBadgeBn}
+                            onChange={(e) => setMenuBadgeBn(e.target.value)}
+                            placeholder="যেমন: সীমিত সময়"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-xs font-bengali"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 mb-1">Promo Description (English)</label>
+                          <input
+                            type="text"
+                            value={menuDescEn}
+                            onChange={(e) => setMenuDescEn(e.target.value)}
+                            placeholder="e.g. Explore our new educational toolkit"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 mb-1">Promo Description (Bengali)</label>
+                          <input
+                            type="text"
+                            value={menuDescBn}
+                            onChange={(e) => setMenuDescBn(e.target.value)}
+                            placeholder="যেমন: আমাদের নতুন খেলনা সমূহ"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-xs font-bengali"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 mb-1">Button CTA Text (English)</label>
+                          <input
+                            type="text"
+                            value={menuCtaEn}
+                            onChange={(e) => setMenuCtaEn(e.target.value)}
+                            placeholder="e.g. Shop Now"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 mb-1">Button CTA Text (Bengali)</label>
+                          <input
+                            type="text"
+                            value={menuCtaBn}
+                            onChange={(e) => setMenuCtaBn(e.target.value)}
+                            placeholder="যেমন: শপ নাও"
+                            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-xs font-bengali"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {menuType === 'footer' && (
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Footer Group Column</label>
+                  <select
+                    value={menuGroup}
+                    onChange={(e) => setMenuGroup(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs"
+                  >
+                    <option value="">Select Footer Group</option>
+                    <option value="quick-links">খেলনা কিনুন (quick-links)</option>
+                    <option value="baby-products">শিশু পণ্য (baby-products)</option>
+                    <option value="ai-features">এআই ফিচারসমূহ (ai-features)</option>
+                    <option value="support">সাপোর্ট (support)</option>
+                  </select>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsMenuModalOpen(false)}
+                  className="bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold py-2.5 px-6 rounded-xl text-xs transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-6 rounded-xl text-xs transition-all"
+                >
+                  Save Link
                 </button>
               </div>
             </form>
