@@ -84,11 +84,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check local storage for persistent simulated role
+    // Check local storage for persistent user data (with real permissions)
+    const savedUserJson = localStorage.getItem("admin-auth-user");
     const savedRole = localStorage.getItem("admin-auth-token") as Role;
     
     setTimeout(() => {
-      if (savedRole && defaultPermissions[savedRole]) {
+      if (savedUserJson) {
+        try {
+          const savedUser = JSON.parse(savedUserJson) as User;
+          setUser(savedUser);
+        } catch {
+          // Fallback if JSON is corrupted
+          if (savedRole && defaultPermissions[savedRole]) {
+            setUser({
+              id: "demo-user-123",
+              name: savedRole.split("_").join(" "),
+              role: savedRole,
+              permissions: defaultPermissions[savedRole],
+            });
+          } else {
+            setUser(null);
+          }
+        }
+      } else if (savedRole && defaultPermissions[savedRole]) {
         setUser({
           id: "demo-user-123",
           name: savedRole.split("_").join(" "),
@@ -125,15 +143,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const assignedRole = dbUser.role as Role;
-        localStorage.setItem("admin-auth-token", assignedRole);
+        
+        // Use the ACTUAL permissions from the database (admin-customized),
+        // only fall back to role defaults if DB has no permissions stored
+        const actualPermissions: Permissions = dbUser.permissions && Object.keys(dbUser.permissions).length > 0
+          ? {
+              canViewFinances: !!dbUser.permissions.canViewFinances,
+              canEditFinances: !!dbUser.permissions.canEditFinances,
+              canManageMarketing: !!dbUser.permissions.canManageMarketing,
+              canManageOrders: !!dbUser.permissions.canManageOrders,
+              canManageContent: !!dbUser.permissions.canManageContent,
+              canManageTeam: !!dbUser.permissions.canManageTeam,
+            }
+          : (defaultPermissions[assignedRole] || defaultPermissions.SUPER_ADMIN);
 
-        setUser({
+        const loggedInUser: User = {
           id: dbUser.id || dbUser._id,
           name: dbUser.name,
           role: assignedRole,
-          permissions: defaultPermissions[assignedRole] || defaultPermissions.SUPER_ADMIN,
-        });
+          permissions: actualPermissions,
+        };
 
+        // Persist the full user object so page reloads preserve custom permissions
+        localStorage.setItem("admin-auth-token", assignedRole);
+        localStorage.setItem("admin-auth-user", JSON.stringify(loggedInUser));
+
+        setUser(loggedInUser);
         setIsLoading(false);
         return true;
       }
@@ -157,13 +192,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     else if (email === "content@sodayon.com") assignedRole = "CONTENT_MANAGER";
 
     if (assignedRole) {
-      localStorage.setItem("admin-auth-token", assignedRole);
-      setUser({
+      const fallbackUser: User = {
         id: "demo-user-123",
         name: assignedRole.split("_").join(" "),
         role: assignedRole,
         permissions: defaultPermissions[assignedRole],
-      });
+      };
+      localStorage.setItem("admin-auth-token", assignedRole);
+      localStorage.setItem("admin-auth-user", JSON.stringify(fallbackUser));
+      setUser(fallbackUser);
       setIsLoading(false);
       return true;
     }
@@ -174,6 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem("admin-auth-token");
+    localStorage.removeItem("admin-auth-user");
     if (typeof document !== "undefined") {
       document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     }
@@ -183,13 +221,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setRole = (role: Role) => {
     // Used ONLY by the RoleSimulator widget for testing utility. 
     // Usually wouldn't exist in production AuthContext.
-    localStorage.setItem("admin-auth-token", role);
-    setUser({
+    const simUser: User = {
       id: "demo-user-123",
       name: role.split("_").join(" "),
       role,
       permissions: defaultPermissions[role],
-    });
+    };
+    localStorage.setItem("admin-auth-token", role);
+    localStorage.setItem("admin-auth-user", JSON.stringify(simUser));
+    setUser(simUser);
   };
 
   return (

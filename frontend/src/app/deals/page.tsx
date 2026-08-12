@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import ProductCard from "@/components/shared/ProductCard";
 import { Clock, Zap } from "lucide-react";
+import { useGetSpecialOffersQuery } from "@/store/admin/adminContentApi";
 
 export default function DealsPage() {
   const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 32, seconds: 15 });
@@ -28,6 +29,10 @@ export default function DealsPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Dynamic Query from optimized backend MongoDB Deals API!
+  const { data: dealsData, isLoading } = useGetSpecialOffersQuery({ limit: 40 });
+  const dbDeals = dealsData?.data || [];
 
   return (
     <div className="bg-slate-50 dark:bg-slate-900 min-h-screen pb-24">
@@ -58,17 +63,45 @@ export default function DealsPage() {
 
       {/* Grid of Deals */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <DealCard name="Magna-Tiles 100-Piece" oldPrice="$119.99" newPrice="$89.99" img="bg-indigo-100" />
-          <DealCard name="Dinosaur STEM Kit" oldPrice="$34.99" newPrice="$19.99" img="bg-emerald-100" />
-          <DealCard name="Interactive Learning Globe" oldPrice="$59.99" newPrice="$39.99" img="bg-blue-100" />
-          <DealCard name="Wooden Train Set" oldPrice="$89.99" newPrice="$49.99" img="bg-red-100" />
-          
-          <DealCard name="Magic Chemistry Lab" oldPrice="$29.99" newPrice="$14.99" img="bg-purple-100" />
-          <DealCard name="RC Stunt Car 360" oldPrice="$24.99" newPrice="$12.50" img="bg-orange-100" />
-          <DealCard name="Musical Floor Piano" oldPrice="$45.00" newPrice="$22.50" img="bg-yellow-100" />
-          <DealCard name="Giant Teddy Bear" oldPrice="$39.99" newPrice="$25.00" img="bg-pink-100" />
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="animate-pulse bg-white dark:bg-slate-800 rounded-3xl h-96 border border-slate-100 dark:border-slate-700"></div>
+            ))}
+          </div>
+        ) : dbDeals.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {dbDeals.map((prod: any, i: number) => {
+              const oldPrice = prod.originalPrice || prod.price;
+              const newPrice = prod.price;
+              return (
+                <div key={i} className="relative group">
+                  {prod.discount > 0 && (
+                    <div className="absolute top-4 left-4 z-20 bg-red-500 text-white font-black px-3 py-1 rounded-full shadow-lg transform -rotate-3 text-xs uppercase tracking-wider">
+                      SAVE {prod.discount}%
+                    </div>
+                  )}
+                  <ProductCard 
+                    id={prod.id || prod._id}
+                    name={prod.nameEn || prod.name} 
+                    price={`৳${newPrice}`} 
+                    img={prod.image || "bg-indigo-100"} 
+                    link={`/shop/products/${prod.slug || prod.id || prod._id}`}
+                  />
+                  {oldPrice > newPrice && (
+                    <div className="absolute bottom-5 left-4 z-10">
+                      <span className="text-slate-400 dark:text-slate-500 line-through text-xs font-bold mr-2 ml-16 sm:ml-20">৳{oldPrice}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-24 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-3xl">
+            <p className="text-slate-400 font-medium">কোনো ডিসকাউন্ট অফার পাওয়া যায়নি।</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -83,28 +116,6 @@ function TimeBox({ value, label }: { value: number; label: string }) {
         </span>
       </div>
       <span className="text-xs text-secondary-200 font-bold uppercase">{label}</span>
-    </div>
-  );
-}
-
-function DealCard({ name, oldPrice, newPrice, img }: { name: string; oldPrice: string; newPrice: string; img: string }) {
-  // Extract numeric values to calculate percentage
-  const oldNum = parseFloat(oldPrice.replace('$', ''));
-  const newNum = parseFloat(newPrice.replace('$', ''));
-  const discount = Math.round(((oldNum - newNum) / oldNum) * 100);
-
-  return (
-    <div className="relative group">
-      {/* Discount Badge */}
-      <div className="absolute top-4 left-4 z-20 bg-secondary-500 text-white font-black px-3 py-1 rounded-full shadow-lg transform -rotate-3 text-sm">
-        SAVE {discount}%
-      </div>
-      <ProductCard name={name} price={newPrice} img={img} />
-      
-      {/* Cross-out Price Overlay */}
-      <div className="absolute bottom-5 left-4 z-10">
-        <span className="text-slate-400 dark:text-slate-500 line-through text-sm font-bold mr-2 ml-16 sm:ml-20">{oldPrice}</span>
-      </div>
     </div>
   );
 }

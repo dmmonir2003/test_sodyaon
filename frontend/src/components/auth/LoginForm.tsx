@@ -1,69 +1,136 @@
 "use client";
-
+ 
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Phone, Mail, Lock, ArrowRight } from "lucide-react";
-import AnimatedLogo from "@/components/shared/AnimatedLogo";
-import { useLoginProfileMutation } from "@/store/user/profile/profileApi";
-
+import { 
+  useLoginProfileMutation,
+  useSocialLoginMutation
+} from "@/store/user/profile/profileApi";
+ 
 import { setCredentials } from "@/store/user/profile/profileSlice";
 import { useAppDispatch } from "@/store/hooks";
 import { FaFacebook } from "react-icons/fa";
+import { auth, isFirebaseClientEnabled } from "@/config/firebase";
 import StaticLogo from "../shared/StaticLogo";
 
 export default function LoginForm() {
-  const [loginMethod, setLoginMethod] = useState<"phone" | "email">("phone");
+  const [loginMethod, setLoginMethod] = useState<"phone" | "email">("email");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [verificationError, setVerificationError] = useState("");
+ 
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
-
+ 
   const redirectUrl = searchParams.get("redirect") || "/";
+ 
+  const [loginProfile, { isLoading: isEmailLoading }] = useLoginProfileMutation();
+  const [socialLogin, { isLoading: isSocialLoading }] = useSocialLoginMutation();
 
-  const [loginProfile, { isLoading }] = useLoginProfileMutation();
-
+  const handleTabChange = (method: "phone" | "email") => {
+    setLoginMethod(method);
+    setVerificationError("");
+    setIdentifier("");
+    setPassword("");
+  };
+ 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const payload =
-        loginMethod === "phone"
-          ? { phone: identifier, password }
-          : { email: identifier, password };
-
-      const response = await loginProfile(payload).unwrap();
-      dispatch(setCredentials({ user: response.user, token: response.token }));
-      router.push(redirectUrl);
-    } catch (err) {
-      console.error("লগইন ব্যর্থ হয়েছে", err);
-      alert("লগইন করতে সমস্যা হয়েছে। সঠিক তথ্য দিন।");
+    setVerificationError("");
+ 
+    if (loginMethod === "phone") {
+      try {
+        const cleanPhone = identifier.replace(/^(\+880|0)/, '');
+        const formattedPhone = `+880${cleanPhone}`;
+        
+        const response = await loginProfile({ phone: formattedPhone, password }).unwrap();
+        dispatch(setCredentials({ user: response.user, token: response.token }));
+        router.push(redirectUrl);
+        alert("লগইন সফল হয়েছে!");
+      } catch (err: any) {
+        console.error("লগইন ব্যর্থ হয়েছে", err);
+        const serverMessage = err.data?.message || err.message || "লগইন করতে সমস্যা হয়েছে।";
+        setVerificationError(serverMessage);
+        alert(`লগইন ব্যর্থ হয়েছে: ${serverMessage}`);
+      }
+    } else {
+      try {
+        const response = await loginProfile({ email: identifier, password }).unwrap();
+        dispatch(setCredentials({ user: response.user, token: response.token }));
+        router.push(redirectUrl);
+        alert("লগইন সফল হয়েছে!");
+      } catch (err: any) {
+        console.error("লগইন ব্যর্থ হয়েছে", err);
+        const serverMessage = err.data?.message || err.message || "লগইন করতে সমস্যা হয়েছে।";
+        setVerificationError(serverMessage);
+        alert(`লগইন ব্যর্থ হয়েছে: ${serverMessage}`);
+      }
     }
   };
 
+
   const handleSocialLogin = async (provider: string) => {
     try {
-      const response = await loginProfile({
-        email: `social_${provider}@dummy.com`,
-        password: "social_dummy",
+      let realToken = `social_token_${provider}_${Math.random().toString(36).substring(7)}`;
+      let realName = `${provider === 'google' ? 'Google' : 'Facebook'} Customer`;
+      let realEmail = `social_${provider}_${Math.random().toString(36).substring(7)}@example.com`;
+
+      if (isFirebaseClientEnabled && auth) {
+        if (provider === 'google') {
+          const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
+          const providerObj = new GoogleAuthProvider();
+          console.log('[Firebase Social Auth] Launching real Google Popup...');
+          const result = await signInWithPopup(auth, providerObj);
+          const credential = GoogleAuthProvider.credentialFromResult(result);
+          realToken = credential?.idToken || '';
+          realName = result.user.displayName || realName;
+          realEmail = result.user.email || realEmail;
+        } else if (provider === 'facebook') {
+          const { FacebookAuthProvider, signInWithPopup } = await import("firebase/auth");
+          const providerObj = new FacebookAuthProvider();
+          console.log('[Firebase Social Auth] Launching real Facebook Popup...');
+          const result = await signInWithPopup(auth, providerObj);
+          const credential = FacebookAuthProvider.credentialFromResult(result);
+          realToken = credential?.accessToken || '';
+          realName = result.user.displayName || realName;
+          realEmail = result.user.email || realEmail;
+        }
+      }
+
+      console.log(`[Social Login] Dispatching real payload to backend:`, { provider, realEmail });
+      const response = await socialLogin({
+        provider,
+        token: realToken,
+        name: realName,
+        email: realEmail,
       }).unwrap();
+      
       dispatch(setCredentials({ user: response.user, token: response.token }));
       router.push(redirectUrl);
-    } catch (err) {
+      alert(`${provider === 'google' ? 'গুগল' : 'ফেসবুক'} লগইন সফল হয়েছে!`);
+    } catch (err: any) {
       console.error("সোশ্যাল লগইন ব্যর্থ হয়েছে", err);
+      alert("সোশ্যাল লগইন করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     }
   };
 
   return (
     <div className="min-h-screen flex text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900">
+      
+      {/* Invisible Firebase Recaptcha Container */}
+      <div id="recaptcha-container"></div>
+
       {/* Left Form Side */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24 py-12">
         <div className="max-w-md w-full mx-auto">
-          <Link href="/" className="flex items-center  mb-12 hover-lift group">
+          <Link href="/" className="flex items-center mb-12 hover-lift group">
             <StaticLogo className="w-8 h-8 md:w-14 md:h-14" />
-                          <span className="font-heading font-bold md:text-3xl text-xl  dark:text-white">
-                            সদা<span className="text-primary-500">য়ন</span>
-                          </span>
+            <span className="font-heading font-bold md:text-3xl text-xl dark:text-white">
+              সদা<span className="text-primary-500">য়ন</span>
+            </span>
           </Link>
 
           <h1 className="text-3xl md:text-4xl font-black font-heading mb-2">
@@ -76,6 +143,7 @@ export default function LoginForm() {
           <div className="grid grid-cols-2 gap-4 mb-6">
             <button
               onClick={() => handleSocialLogin("google")}
+              disabled={isSocialLoading}
               className="py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center justify-center gap-3"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -100,6 +168,7 @@ export default function LoginForm() {
             </button>
             <button
               onClick={() => handleSocialLogin("facebook")}
+              disabled={isSocialLoading}
               className="py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center justify-center gap-3"
             >
               <FaFacebook
@@ -121,16 +190,16 @@ export default function LoginForm() {
           {/* Method Tabs */}
           <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl mb-6">
             <button
-              onClick={() => setLoginMethod("phone")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all ${loginMethod === "phone" ? "bg-white dark:bg-slate-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-            >
-              <Phone className="w-4 h-4" /> মোবাইল
-            </button>
-            <button
-              onClick={() => setLoginMethod("email")}
+              onClick={() => handleTabChange("email")}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all ${loginMethod === "email" ? "bg-white dark:bg-slate-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
             >
-              <Mail className="w-4 h-4" /> ইমেইল
+              <Mail className="w-4 h-4" /> ইমেইল এড্রেস
+            </button>
+            <button
+              onClick={() => handleTabChange("phone")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all ${loginMethod === "phone" ? "bg-white dark:bg-slate-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            >
+              <Phone className="w-4 h-4" /> মোবাইল নাম্বার
             </button>
           </div>
 
@@ -152,43 +221,57 @@ export default function LoginForm() {
                     loginMethod === "phone" ? "1XXXXXXXXX" : "your@email.com"
                   }
                   value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (loginMethod === "phone") {
+                      const cleaned = value.replace(/^(\+880|0)/, '').replace(/[^0-9]/g, '');
+                      setIdentifier(cleaned);
+                    } else {
+                      setIdentifier(value);
+                    }
+                  }}
                   className={`w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 transition-all outline-none ${loginMethod === "phone" ? "rounded-r-xl" : "rounded-xl"}`}
                 />
               </div>
             </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">
-                  পাসওয়ার্ড
-                </label>
-                <Link
-                  href="/forgot-password"
-                  className="shrink-0 text-sm text-primary-600 font-bold hover:text-primary-800 transition-colors"
-                >
-                  পাসওয়ার্ড ভুলে গেছেন?
-                </Link>
+            {(loginMethod === "email" || loginMethod === "phone") && (
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">
+                    পাসওয়ার্ড
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    className="shrink-0 text-sm text-primary-600 font-bold hover:text-primary-800 transition-colors"
+                  >
+                    পাসওয়ার্ড ভুলে গেছেন?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 transition-all outline-none"
+                  />
+                </div>
               </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 transition-all outline-none"
-                />
-              </div>
-            </div>
+            )}
+
+            {verificationError && (
+              <p className="text-red-500 text-xs font-bold mt-2">{verificationError}</p>
+            )}
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isEmailLoading}
               className="w-full flex items-center justify-center gap-2 py-3.5 mt-6 bg-primary-600 text-white font-bold rounded-xl shadow-md hover:bg-primary-700 hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:hover:translate-y-0"
             >
-              {isLoading ? "অপেক্ষা করুন..." : "লগইন করুন"}{" "}
+              লগইন করুন{" "}
               <ArrowRight className="w-5 h-5" />
             </button>
           </form>
@@ -213,7 +296,7 @@ export default function LoginForm() {
             চাইল্ড প্রোফাইল তৈরি করুন
           </h2>
           <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-            সদায়ন একাউন্ট তৈরি করলে আপনি এআই গিফট ফাইন্ডার এক্সেস পাবেন।
+            সদায়ন একাওন্ট তৈরি করলে আপনি এআই গিফট ফাইন্ডার এক্সেস পাবেন।
             আপনার সন্তানের বয়স এবং পছন্দের বিষয় সংরক্ষণ করুন, আর
             স্বয়ংক্রিয়ভাবে প্রতিটি জন্মদিনে দারুণ খেলনার সুপারিশ পান।
           </p>
@@ -233,6 +316,7 @@ export default function LoginForm() {
           </div>
         </div>
       </div>
+
     </div>
   );
 }

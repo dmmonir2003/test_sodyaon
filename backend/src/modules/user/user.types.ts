@@ -19,7 +19,7 @@ export interface IPermissions {
 
 export interface IUser {
   name: string;
-  email: string;
+  email?: string;
   phone?: string;
   password?: string;
   address?: string;
@@ -29,6 +29,10 @@ export interface IUser {
   otp?: string;
   otpExpiresAt?: Date;
   tempResetToken?: string;
+  googleId?: string;
+  facebookId?: string;
+  isPhoneVerified?: boolean;
+  hasDefaultPassword?: boolean;
 }
 
 export interface IUserDocument extends IUser, Document {

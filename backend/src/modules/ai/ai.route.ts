@@ -3,6 +3,7 @@ import {
   getGiftSuggestions,
   askParentingAssistant,
   compareProducts,
+  getAiSessions,
 } from './ai.controller';
 import { protect } from '../../middleware/auth';
 
@@ -12,7 +13,8 @@ const router = Router();
 router.post('/gift-finder', getGiftSuggestions);
 router.post('/compare', compareProducts);
 
-// Protected Parenting assistant (requires authorization as verified by next middleware)
+// Protected routes
 router.post('/parenting-assistant', protect, askParentingAssistant);
+router.get('/sessions', protect, getAiSessions);
 
 export default router;

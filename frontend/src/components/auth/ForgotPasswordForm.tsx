@@ -39,8 +39,13 @@ export default function ForgotPasswordForm() {
     try {
       await forgotPassword({ identifier }).unwrap();
       setStep(2);
-    } catch (err) {
-      setErrorMsg("নেটওয়ার্ক বা সিস্টেমে সমস্যা হয়েছে।");
+    } catch (err: any) {
+      const backendMessage = err?.data?.message;
+      if (backendMessage === 'No user found with that identifier') {
+        setErrorMsg("এই ইমেল বা মোবাইল নাম্বার দিয়ে কোনো অ্যাকাউন্ট পাওয়া যায়নি।");
+      } else {
+        setErrorMsg(backendMessage || "নেটওয়ার্ক বা সিস্টেমে সমস্যা হয়েছে।");
+      }
     }
   };
 
@@ -51,8 +56,13 @@ export default function ForgotPasswordForm() {
       const response = await verifyOtp({ identifier, otp }).unwrap();
       setResetToken(response.token);
       setStep(3);
-    } catch (err) {
-      setErrorMsg("ভুল OTP দিয়েছেন। ডামি OTP হিসেবে '123456' ব্যবহার করুন।");
+    } catch (err: any) {
+      const backendMessage = err?.data?.message;
+      if (backendMessage === 'Invalid or expired OTP') {
+        setErrorMsg("ভুল ওটিপি (OTP) কোড দিয়েছেন অথবা ওটিপি-র মেয়াদ শেষ হয়ে গিয়েছে।");
+      } else {
+        setErrorMsg(backendMessage || "ওটিপি ভেরিফিকেশনে সমস্যা হয়েছে।");
+      }
     }
   };
 
@@ -163,9 +173,6 @@ export default function ForgotPasswordForm() {
                 <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">
                   আমরা <strong>{identifier}</strong> নাম্বারে/ইমেইলে একটি
                   ৬-সংখ্যার কোড পাঠিয়েছি।
-                </p>
-                <p className="text-xs text-primary-600 font-bold mt-2">
-                  (টেস্টিং এর জন্য ডামি OTP: 123456 ব্যবহার করুন)
                 </p>
               </div>
               <div>

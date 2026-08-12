@@ -1,13 +1,29 @@
 "use client";
 
 import { useAppSelector } from "@/store/hooks";
-import { Package, Heart, CreditCard } from "lucide-react";
+import { Package, Heart, CreditCard, Loader2 } from "lucide-react";
+import { useGetMyOrdersQuery } from "@/store/user/orders/ordersApi";
+import OrderHistoryTable from "@/components/profile/order-history/OrderHistoryTable";
 
 export default function ProfilePage() {
   const { data: user } = useAppSelector((state) => state.profile);
+  const { data: response, isLoading } = useGetMyOrdersQuery();
+
+  const rawOrders = response?.data || [];
+  const orders = rawOrders.map((o: any) => {
+    const dateObj = new Date(o.createdAt);
+    return {
+      id: o._id || o.id,
+      date: dateObj.toLocaleDateString('bn-BD', { day: 'numeric', month: 'short', year: 'numeric' }),
+      time: dateObj.toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' }),
+      status: o.status,
+      quantity: o.items.reduce((sum: number, item: any) => sum + item.quantity, 0),
+      amount: `৳ ${o.totalAmount.toLocaleString()}`
+    };
+  });
 
   const stats = [
-    { title: "মোট অর্ডার", value: "১২", icon: <Package className="w-6 h-6 text-primary-500" />, bg: "bg-primary-50 dark:bg-primary-900/20" },
+    { title: "মোট অর্ডার", value: isLoading ? "-" : orders.length.toString(), icon: <Package className="w-6 h-6 text-primary-500" />, bg: "bg-primary-50 dark:bg-primary-900/20" },
     { title: "উইশলিস্ট", value: "৫", icon: <Heart className="w-6 h-6 text-danger-500" />, bg: "bg-danger-50 dark:bg-danger-900/20" },
     { title: "রিওয়ার্ড পয়েন্ট", value: "২৫০", icon: <CreditCard className="w-6 h-6 text-warning-500" />, bg: "bg-warning-50 dark:bg-warning-900/20" },
   ];
@@ -35,11 +51,19 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 p-8">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">সাম্প্রতিক এক্টিভিটি</h2>
-        <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-          <p className="text-slate-500 dark:text-slate-400 font-medium">কোনো সাম্প্রতিক এক্টিভিটি নেই</p>
-        </div>
+      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 p-8 overflow-hidden">
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">সাম্প্রতিক এক্টিভিটি (Recent Orders)</h2>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+          </div>
+        ) : orders.length > 0 ? (
+          <OrderHistoryTable orders={orders.slice(0, 5)} />
+        ) : (
+          <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+            <p className="text-slate-500 dark:text-slate-400 font-medium">কোনো সাম্প্রতিক অর্ডার নেই</p>
+          </div>
+        )}
       </div>
     </div>
   );

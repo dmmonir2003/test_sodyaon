@@ -21,17 +21,10 @@ export const profileApi = baseApi.injectEndpoints({
         method: 'POST',
         body: credentials,
       }),
-      // Simple mock transformer to return a dummy user and token given any standard login
-      transformResponse: (response: any, meta, arg) => {
+      transformResponse: (response: any) => {
         return {
-          user: {
-            id: 'mock-user-123',
-            name: 'মক ইউজার',
-            email: arg.email || 'mock@example.com',
-            phone: arg.phone || '01XXXXXXXXX',
-            role: 'customer'
-          },
-          token: 'mock-jwt-token-abcd-1234'
+          user: response.data.user,
+          token: response.data.token,
         };
       }
     }),
@@ -41,26 +34,52 @@ export const profileApi = baseApi.injectEndpoints({
          method: 'POST',
          body: userData,
        }),
-       transformResponse: (response: any, meta, arg) => {
+       transformResponse: (response: any) => {
          return {
-           user: {
-             id: 'mock-user-123',
-             name: arg.name || 'নতুন ইউজার',
-             email: arg.email || 'mock@example.com',
-             phone: arg.phone || '01XXXXXXXXX',
-             role: 'customer'
-           },
-           token: 'mock-jwt-token-abcd-1234'
+           user: response.data.user,
+           token: response.data.token,
          };
        }
+    }),
+    phoneLogin: builder.mutation<{ success: boolean; message: string }, { phone: string }>({
+      query: (data) => ({
+        url: '/auth/phone-login',
+        method: 'POST',
+        body: data,
+      })
+    }),
+    phoneVerify: builder.mutation<{ user: Profile; token: string }, { phone: string; otp?: string; idToken?: string }>({
+      query: (data) => ({
+        url: '/auth/phone-verify',
+        method: 'POST',
+        body: data,
+      }),
+      transformResponse: (response: any) => {
+        return {
+          user: response.data.user,
+          token: response.data.token,
+        };
+      }
+    }),
+    socialLogin: builder.mutation<{ user: Profile; token: string }, { provider: string; token: string; email?: string; name?: string }>({
+      query: (data) => ({
+        url: '/auth/social-login',
+        method: 'POST',
+        body: data,
+      }),
+      transformResponse: (response: any) => {
+        return {
+          user: response.data.user,
+          token: response.data.token,
+        };
+      }
     }),
     forgotPassword: builder.mutation<{ success: boolean; message: string }, { identifier: string }>({
       query: (data) => ({
         url: '/auth/forgot-password',
         method: 'POST',
         body: data,
-      }),
-      transformResponse: () => ({ success: true, message: 'OTP পাঠানো হয়েছে (ডামি: ১২৩৪৫৬)' })
+      })
     }),
     verifyOtp: builder.mutation<{ success: boolean; token: string }, { identifier: string; otp: string }>({
       query: (data) => ({
@@ -68,9 +87,11 @@ export const profileApi = baseApi.injectEndpoints({
         method: 'POST',
         body: data,
       }),
-      transformResponse: (response: any, meta, arg) => {
-        if (arg.otp !== '123456') throw new Error('Invalid OTP');
-        return { success: true, token: 'temp-reset-token-789' };
+      transformResponse: (response: any) => {
+        return {
+          success: response.success,
+          token: response.data.token,
+        };
       }
     }),
     resetPassword: builder.mutation<{ success: boolean; message: string }, { token: string; newPassword: string }>({
@@ -78,8 +99,7 @@ export const profileApi = baseApi.injectEndpoints({
         url: '/auth/reset-password',
         method: 'POST',
         body: data,
-      }),
-      transformResponse: () => ({ success: true, message: 'পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে।' })
+      })
     }),
     changePassword: builder.mutation<{ success: boolean; message: string }, { currentPassword: string; newPassword: string }>({
       query: (data) => ({
@@ -87,7 +107,22 @@ export const profileApi = baseApi.injectEndpoints({
         method: 'POST',
         body: data,
       }),
+      invalidatesTags: ['User'],
       transformResponse: () => ({ success: true, message: 'পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে।' })
+    }),
+    emailRegisterInit: builder.mutation<{ success: boolean; message: string }, { email: string }>({
+      query: (data) => ({
+        url: '/auth/email-register-init',
+        method: 'POST',
+        body: data,
+      })
+    }),
+    emailRegisterVerify: builder.mutation<{ success: boolean; message: string }, { email: string; otp: string }>({
+      query: (data) => ({
+        url: '/auth/email-register-verify',
+        method: 'POST',
+        body: data,
+      })
     })
   })
 });
@@ -100,5 +135,10 @@ export const {
   useForgotPasswordMutation,
   useVerifyOtpMutation,
   useResetPasswordMutation,
-  useChangePasswordMutation
+  useChangePasswordMutation,
+  usePhoneLoginMutation,
+  usePhoneVerifyMutation,
+  useSocialLoginMutation,
+  useEmailRegisterInitMutation,
+  useEmailRegisterVerifyMutation,
 } = profileApi;

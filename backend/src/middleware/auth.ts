@@ -44,6 +44,42 @@ export const protect = catchAsync(async (req: AuthenticatedRequest, res: Respons
   next();
 });
 
+export const optionalProtect = catchAsync(async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  let token: string | undefined;
+
+  // Retrieve token from Authorization header or cookie
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  } else if (req.headers.cookie) {
+    const parsedCookies = req.headers.cookie.split(';').reduce((acc: Record<string, string>, cur) => {
+      const [key, val] = cur.trim().split('=');
+      if (key && val) acc[key] = val;
+      return acc;
+    }, {});
+    if (parsedCookies.auth_token) {
+      token = parsedCookies.auth_token;
+    }
+  }
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    // Verify JWT
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET || 'sodayon-default-secret');
+
+    // Verify user still exists
+    const currentUser = await User.findById(decoded.id);
+    if (currentUser) {
+      req.user = currentUser;
+    }
+  } catch (err) {
+    // Silently ignore invalid tokens for optionalProtect
+  }
+  next();
+});
+
 // Role-based restrict middleware
 export const restrictTo = (...roles: UserRole[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {

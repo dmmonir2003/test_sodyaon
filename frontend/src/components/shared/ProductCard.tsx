@@ -61,9 +61,17 @@ export default function ProductCard({
       {/* Product Image Container */}
       <Link
         href={resolvedLink}
-        className={`w-full aspect-square sm:h-48 rounded-none sm:rounded-xl ${img} relative overflow-hidden flex items-center justify-center cursor-pointer flex-shrink-0`}
+        className={`w-full aspect-square sm:h-48 rounded-none sm:rounded-xl ${img.startsWith('bg-') ? img : 'bg-slate-50'} relative overflow-hidden flex items-center justify-center cursor-pointer flex-shrink-0`}
       >
-        <Package className="w-12 h-12 sm:w-16 sm:h-16 text-slate-400/50" />
+        {!img.startsWith('bg-') ? (
+          <img 
+            src={img} 
+            alt={name}
+            className="object-contain p-2 w-full h-full transition-transform duration-500 group-hover:scale-110"
+          />
+        ) : (
+          <Package className="w-12 h-12 sm:w-16 sm:h-16 text-slate-400/50" />
+        )}
         <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <span className="px-4 sm:px-6 py-2 bg-white text-slate-900 rounded-full font-bold shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform text-xs sm:text-sm">
             কুইক ভিউ

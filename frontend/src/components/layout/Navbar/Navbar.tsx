@@ -30,6 +30,7 @@ import NavLink from "./NavLink";
 import MobileMenuSection from "./MobileMenuSection";
 import NavDropdown from "./NavDropdown";
 import PopularSearchTags from "@/components/shared/PopularSearchTags";
+import { useGetMenuItemsQuery } from "@/store/user/menu/menuApi";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -43,6 +44,10 @@ export default function Navbar() {
   const isMobileSearchOpen = useAppSelector((state) => state.ui.isMobileSearchOpen);
   const cartItems = useAppSelector((state) => state.cart.items);
   const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  // Fetch dynamic menus from database
+  const { data: menuData } = useGetMenuItemsQuery();
+  const dbNavItems = menuData?.data?.filter((item: any) => item.type === 'navbar' && !item.parentId) || [];
 
   // Animation variants for the text "সদায়ন"
   const textContainerVariants = {
@@ -245,22 +250,58 @@ export default function Navbar() {
 
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex space-x-8 py-3 w-full justify-center border-t border-slate-100 dark:border-slate-800/50 relative">
-          <NavLink href="/" text="হোম" />
-          <ShopMegaMenu />
-          <NavDropdown
-            title="এআই টুলস"
-            className="text-primary-600"
-            items={[
-              { label: "এআই গিফট ফাইন্ডার", href: "/ai-tools/gift-finder" },
-              {
-                label: "প্যারেন্টিং অ্যাসিস্ট্যান্ট",
-                href: "/ai-tools/parenting-assistant",
-              },
-              { label: "খেলনা তুলনা", href: "/ai-tools/compare" },
-            ]}
-          />
-          <NavLink href="/features" text="ফিচারসমূহ" />
-          <NavLink href="/blog" text="ব্লগ ও প্লে আইডিয়াস" />
+          {dbNavItems.length > 0 ? (
+            dbNavItems.map((item: any) => {
+              const children = menuData?.data?.filter((child: any) => child.parentId === item._id) || [];
+              const isShop = item.url === '/shop' || item.titleEn.toLowerCase() === 'shop';
+
+              if (isShop) {
+                return <ShopMegaMenu key={item._id} title={item.titleBn} childItems={children} />;
+              }
+
+              if (children.length > 0) {
+                const dropdownItems = children.map((c: any) => ({
+                  label: c.titleBn,
+                  href: c.url,
+                }));
+                return (
+                  <NavDropdown
+                    key={item._id}
+                    title={item.titleBn}
+                    className="text-primary-600"
+                    items={dropdownItems}
+                  />
+                );
+              }
+
+              return (
+                <NavLink 
+                  key={item._id} 
+                  href={item.url} 
+                  text={item.titleBn} 
+                />
+              );
+            })
+          ) : (
+            <>
+              <NavLink href="/" text="হোম" />
+              <ShopMegaMenu title="শপ" childItems={[]} />
+              <NavDropdown
+                title="এআই টুলস"
+                className="text-primary-600"
+                items={[
+                  { label: "এআই গিফট ফাইন্ডার", href: "/ai-tools/gift-finder" },
+                  {
+                    label: "প্যারেন্টিং অ্যাসিস্ট্যান্ট",
+                    href: "/ai-tools/parenting-assistant",
+                  },
+                  { label: "খেলনা তুলনা", href: "/ai-tools/compare" },
+                ]}
+              />
+              <NavLink href="/features" text="ফিচারসমূহ" />
+              <NavLink href="/blog" text="ব্লগ ও প্লে আইডিয়াস" />
+            </>
+          )}
         </nav>
       </div>
 

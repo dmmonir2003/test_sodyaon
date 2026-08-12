@@ -3,19 +3,22 @@
 import { X, Star, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useCreateReviewMutation } from "@/store/user/products/productsApi";
 
 interface WriteReviewDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  productId: string;
   productName: string;
   productImage: string;
-  price: string;
-  oldPrice?: string;
+  price: string | number;
+  oldPrice?: string | number;
 }
 
 export default function WriteReviewDrawer({
   isOpen,
   onClose,
+  productId,
   productName,
   productImage,
   price,
@@ -26,11 +29,15 @@ export default function WriteReviewDrawer({
   const [reviewText, setReviewText] = useState("");
   const [mounted, setMounted] = useState(false);
   const [showAnimated, setShowAnimated] = useState(false);
+  
+  const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation();
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
       setMounted(true);
+      setErrorMsg("");
       const timer = setTimeout(() => {
         setShowAnimated(true);
       }, 50);
@@ -38,6 +45,9 @@ export default function WriteReviewDrawer({
     } else {
       document.body.style.overflow = "";
       setShowAnimated(false);
+      setRating(0);
+      setReviewText("");
+      setErrorMsg("");
       const timer = setTimeout(() => setMounted(false), 500);
       return () => clearTimeout(timer);
     }
@@ -48,6 +58,24 @@ export default function WriteReviewDrawer({
       document.body.style.overflow = "";
     };
   }, []);
+
+  const handleSubmit = async () => {
+    if (rating === 0 || isSubmitting) return;
+    setErrorMsg("");
+    try {
+      await createReview({
+        productId,
+        rating,
+        body: reviewText || "Good product!",
+      }).unwrap();
+      alert("রিভিউ সফলভাবে পোস্ট হয়েছে! / Review submitted successfully!");
+      onClose();
+    } catch (err: any) {
+      console.error("Failed to submit review", err);
+      const serverMessage = err.data?.message || err.message || "রিভিউ সাবমিট করতে সমস্যা হয়েছে।";
+      setErrorMsg(serverMessage);
+    }
+  };
 
   if (!mounted) return null;
 
@@ -150,6 +178,11 @@ export default function WriteReviewDrawer({
             <ImageIcon className="w-5 h-5" />
             <span className="text-sm">Upload Photo ( up to 5 )</span>
           </button>
+          {errorMsg && (
+            <div className="mt-4 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-xl text-red-800 dark:text-red-300 text-xs font-bold leading-normal">
+              {errorMsg}
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -161,14 +194,15 @@ export default function WriteReviewDrawer({
             Cancel
           </button>
           <button
+            onClick={handleSubmit}
             className={`flex-1 py-3 font-semibold rounded-xl text-white transition-colors ${
-              rating > 0
+              rating > 0 && !isSubmitting
                 ? "bg-primary-600 hover:bg-primary-700 shadow-md"
                 : "bg-slate-300 dark:bg-slate-700 cursor-not-allowed"
             }`}
-            disabled={rating === 0}
+            disabled={rating === 0 || isSubmitting}
           >
-            Submit
+            {isSubmitting ? "Submitting..." : "Submit"}
           </button>
         </div>
       </div>

@@ -8,7 +8,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { addItem, setCartOpen } from "@/store/user/cart/cartSlice";
 
 export interface QuickDealProductProps {
-  id: number;
+  id: string | number;
   name: string;
   brand: string;
   oldPrice: string;

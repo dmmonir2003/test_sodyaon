@@ -1,60 +1,251 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Phone, Mail, Lock, User, ArrowRight, CheckCircle2,  } from "lucide-react";
+import { Phone, Mail, Lock, User, ArrowRight, CheckCircle2, ShieldCheck, X } from "lucide-react";
 import AnimatedLogo from "@/components/shared/AnimatedLogo";
-import { useRegisterProfileMutation } from "@/store/user/profile/profileApi";
+import { 
+  useRegisterProfileMutation,
+  usePhoneLoginMutation,
+  usePhoneVerifyMutation,
+  useSocialLoginMutation,
+  useEmailRegisterInitMutation,
+  useEmailRegisterVerifyMutation,
+} from "@/store/user/profile/profileApi";
 import { useAppDispatch } from "@/store/hooks";
 import { setCredentials } from "@/store/user/profile/profileSlice";
 import { FaFacebook } from "react-icons/fa";
 
+// Firebase imports
+import { auth, isFirebaseClientEnabled } from "@/config/firebase";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+
 function RegisterContent() {
-  const [registerMethod, setRegisterMethod] = useState<"phone" | "email">("phone");
+  const [registerMethod, setRegisterMethod] = useState<"phone" | "email">("email");
+  const [isPhoneVerifiedStage, setIsPhoneVerifiedStage] = useState(false);
+  const [isEmailVerifiedStage, setIsEmailVerifiedStage] = useState(false);
   const [name, setName] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   
+  // OTP Modal State
+  const [isOtpOpen, setIsOtpOpen] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [verificationError, setVerificationError] = useState("");
+
+  // Firebase Refs
+  const recaptchaVerifierRef = useRef<any>(null);
+  const confirmationResultRef = useRef<any>(null);
+  
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
-  const [registerProfile, { isLoading }] = useRegisterProfileMutation();
+  
+  const [registerProfile, { isLoading: isEmailLoading }] = useRegisterProfileMutation();
+  const [phoneLogin, { isLoading: isSendingPhoneOtp }] = usePhoneLoginMutation();
+  const [phoneVerify, { isLoading: isVerifyingOtp }] = usePhoneVerifyMutation();
+  const [socialLogin, { isLoading: isSocialLoading }] = useSocialLoginMutation();
+  const [emailRegisterInit, { isLoading: isSendingEmailOtp }] = useEmailRegisterInitMutation();
+  const [emailRegisterVerify, { isLoading: isVerifyingEmailOtp }] = useEmailRegisterVerifyMutation();
+
+  const handleTabChange = (method: "phone" | "email") => {
+    setRegisterMethod(method);
+    setIsPhoneVerifiedStage(false);
+    setIsEmailVerifiedStage(false);
+    setVerificationError("");
+    setIdentifier("");
+    setName("");
+    setPassword("");
+  };
+
+  // Reset recaptcha widget if needed
+  useEffect(() => {
+    return () => {
+      if (recaptchaVerifierRef.current) {
+        try {
+          recaptchaVerifierRef.current.clear();
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
+  }, []);
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const payload = registerMethod === "phone" 
-        ? { name, phone: identifier, password } 
-        : { name, email: identifier, password };
-        
-      const response = await registerProfile(payload).unwrap();
-      // Auto-login after register
-      dispatch(setCredentials({ user: response.user, token: response.token }));
-      
-      const redirectUrl = searchParams.get("redirect") || "/profile";
-      router.push(redirectUrl);
-    } catch (err) {
-      console.error("রেজিস্ট্রেশন ব্যর্থ হয়েছে", err);
-      alert("রেজিস্ট্রেশন করতে সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+    setVerificationError("");
+
+    if (registerMethod === "phone") {
+      const cleanPhone = identifier.replace(/^(\+880|0)/, '');
+      const formattedPhone = `+880${cleanPhone}`;
+
+      if (isPhoneVerifiedStage) {
+        // Stage 3: Call backend registration API with verified phone + name + password
+        try {
+          const response = await registerProfile({ 
+            name, 
+            phone: formattedPhone, 
+            password 
+          }).unwrap();
+
+          dispatch(setCredentials({ user: response.user, token: response.token }));
+          const redirectUrl = searchParams.get("redirect") || "/profile";
+          router.push(redirectUrl);
+          alert("মোবাইল নাম্বার দিয়ে রেজিস্ট্রেশন সফল হয়েছে!");
+        } catch (err: any) {
+          console.error("রেজিস্ট্রেশন ব্যর্থ হয়েছে", err);
+          const serverMessage = err.data?.message || err.message || "রেজিস্ট্রেশন করতে সমস্যা হয়েছে।";
+          setVerificationError(serverMessage);
+          alert(`রেজিস্ট্রেশন ব্যর্থ হয়েছে: ${serverMessage}`);
+        }
+      } else {
+        // Stage 1: Send OTP
+        // Secure Backend-driven SMS OTP (GioSMS)
+        try {
+          console.log('[Backend Phone Auth] Requesting secure SMS OTP for:', formattedPhone);
+          await phoneLogin({ phone: formattedPhone }).unwrap();
+          setIsOtpOpen(true);
+          alert("ভেরিফিকেশন কোড পাঠানো হয়েছে! অনুগ্রহ করে আপনার মোবাইল চেক করুন।");
+        } catch (err: any) {
+          console.error('[Backend Phone Auth Error]', err);
+          const serverMessage = err?.data?.message || err?.message || "কোড পাঠাতে সমস্যা হয়েছে।";
+          setVerificationError(serverMessage);
+          alert(`কোড পাঠাতে সমস্যা হয়েছে: ${serverMessage}`);
+        }
+      }
+    } else {
+      // Email registration flow
+      if (isEmailVerifiedStage) {
+        // Stage 3: Complete email registration with verified email + name + password
+        try {
+          const response = await registerProfile({ 
+            name, 
+            email: identifier.toLowerCase(), 
+            password 
+          }).unwrap();
+
+          dispatch(setCredentials({ user: response.user, token: response.token }));
+          const redirectUrl = searchParams.get("redirect") || "/profile";
+          router.push(redirectUrl);
+          alert("ইমেইল এড্রেস দিয়ে রেজিস্ট্রেশন সফল হয়েছে!");
+        } catch (err: any) {
+          console.error("রেজিস্ট্রেশন ব্যর্থ হয়েছে", err);
+          const serverMessage = err.data?.message || err.message || "রেজিস্ট্রেশন করতে সমস্যা হয়েছে।";
+          setVerificationError(serverMessage);
+          alert(`রেজিস্ট্রেশন ব্যর্থ হয়েছে: ${serverMessage}`);
+        }
+      } else {
+        // Stage 1: Send Email Verification OTP
+        try {
+          await emailRegisterInit({ email: identifier.toLowerCase() }).unwrap();
+          setIsOtpOpen(true);
+          alert("আপনার ইমেইলে ভেরিফিকেশন কোড পাঠানো হয়েছে! অনুগ্রহ করে সেটি চেক করুন।");
+        } catch (err: any) {
+          console.error("ইমেইল OTP পাঠাতে ব্যর্থ", err);
+          const serverMessage = err.data?.message || err.message || "কোড পাঠাতে সমস্যা হয়েছে।";
+          setVerificationError(serverMessage);
+          alert(`কোড পাঠাতে সমস্যা হয়েছে: ${serverMessage}`);
+        }
+      }
     }
   };
 
+  const handleOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerificationError("");
+
+    const formattedPhone = identifier.startsWith('+') ? identifier : `+880${identifier.replace(/^(\+880|0)/, '')}`;
+
+    if (registerMethod === "phone") {
+      try {
+        // 2. Secure Backend-driven Phone OTP verify
+        console.log('[Backend Phone Verify] Verifying OTP code:', otpCode);
+        await phoneVerify({ phone: formattedPhone, otp: otpCode }).unwrap();
+        
+        setIsPhoneVerifiedStage(true);
+        setIsOtpOpen(false);
+        alert("মোবাইল নাম্বার ভেরিফিকেশন সফল হয়েছে! অনুগ্রহ করে আপনার নাম ও পাসওয়ার্ড দিয়ে একাউন্ট তৈরি সম্পন্ন করুন।");
+      } catch (err: any) {
+        console.error("OTP ভেরিফাই ব্যর্থ", err);
+        const serverMessage = err?.data?.message || err?.message || "ভেরিফিকেশন কোডটি সঠিক নয়।";
+        setVerificationError(serverMessage);
+        alert(`ভেরিফিকেশন কোডটি সঠিক নয় বা মেয়াদ শেষ হয়ে গেছে: ${serverMessage}`);
+      }
+    } else {
+      // Email OTP Verification
+      try {
+        await emailRegisterVerify({ 
+          email: identifier.toLowerCase(), 
+          otp: otpCode 
+        }).unwrap();
+
+        setIsEmailVerifiedStage(true);
+        setIsOtpOpen(false);
+        alert("ইমেইল ভেরিফিকেশন সফল হয়েছে! অনুগ্রহ করে আপনার নাম ও পাসওয়ার্ড দিয়ে একাউন্ট তৈরি সম্পন্ন করুন।");
+      } catch (err: any) {
+        console.error("ইমেইল OTP ভেরিফাই ব্যর্থ", err);
+        const serverMessage = err.data?.message || err.message || "ভেরিফিকেশন কোডটি সঠিক নয়।";
+        setVerificationError(serverMessage);
+        alert(`ভেরিফিকেশন কোডটি সঠিক নয় বা মেয়াদ শেষ হয়ে গেছে: ${serverMessage}`);
+      }
+    }
+  };
+
+
   const handleSocialRegister = async (provider: string) => {
     try {
-      const response = await registerProfile({ name: `Social User`, email: `social_${provider}@dummy.com`, password: "social_dummy" }).unwrap();
-      dispatch(setCredentials({ user: response.user, token: response.token }));
+      let realToken = `social_token_${provider}_${Math.random().toString(36).substring(7)}`;
+      let realName = `${provider === 'google' ? 'Google' : 'Facebook'} Customer`;
+      let realEmail = `social_${provider}_${Math.random().toString(36).substring(7)}@example.com`;
+
+      if (isFirebaseClientEnabled && auth) {
+        if (provider === 'google') {
+          const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
+          const providerObj = new GoogleAuthProvider();
+          console.log('[Firebase Social Auth] Launching real Google Popup...');
+          const result = await signInWithPopup(auth, providerObj);
+          const credential = GoogleAuthProvider.credentialFromResult(result);
+          realToken = credential?.idToken || '';
+          realName = result.user.displayName || realName;
+          realEmail = result.user.email || realEmail;
+        } else if (provider === 'facebook') {
+          const { FacebookAuthProvider, signInWithPopup } = await import("firebase/auth");
+          const providerObj = new FacebookAuthProvider();
+          console.log('[Firebase Social Auth] Launching real Facebook Popup...');
+          const result = await signInWithPopup(auth, providerObj);
+          const credential = FacebookAuthProvider.credentialFromResult(result);
+          realToken = credential?.accessToken || '';
+          realName = result.user.displayName || realName;
+          realEmail = result.user.email || realEmail;
+        }
+      }
+
+      console.log(`[Social Register] Dispatching real payload to backend:`, { provider, realEmail });
+      const response = await socialLogin({
+        provider,
+        token: realToken,
+        name: realName,
+        email: realEmail,
+      }).unwrap();
       
+      dispatch(setCredentials({ user: response.user, token: response.token }));
       const redirectUrl = searchParams.get("redirect") || "/profile";
       router.push(redirectUrl);
-    } catch (err) {
+      alert(`${provider === 'google' ? 'গুগল' : 'ফেসবুক'} রেজিস্ট্রেশন সফল হয়েছে!`);
+    } catch (err: any) {
       console.error("সোশ্যাল রেজিস্ট্রেশন ব্যর্থ হয়েছে", err);
+      alert("সোশ্যাল রেজিস্ট্রেশন করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
     }
   };
 
   return (
     <div className="min-h-screen flex text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900">
       
+      {/* Invisible Firebase Recaptcha Container */}
+      <div id="recaptcha-container"></div>
+
       {/* Left Visual Side */}
       <div className="hidden lg:flex w-1/2 bg-secondary-50 dark:bg-slate-800 relative overflow-hidden flex-col justify-center p-12 lg:p-24 border-r border-slate-200 dark:border-slate-800">
         <div className="absolute inset-0 bg-secondary-400 dark:bg-secondary-900 opacity-20 blur-3xl transform -rotate-12 scale-150 -translate-y-1/2"></div>
@@ -93,6 +284,7 @@ function RegisterContent() {
           <div className="grid grid-cols-2 gap-4 mb-6">
             <button 
               onClick={() => handleSocialRegister('google')}
+              disabled={isSocialLoading}
               className="py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center justify-center gap-3"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -105,6 +297,7 @@ function RegisterContent() {
             </button>
             <button 
               onClick={() => handleSocialRegister('facebook')}
+              disabled={isSocialLoading}
               className="py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition flex items-center justify-center gap-3"
             >
               <FaFacebook className="w-5 h-5 text-[#1877F2]" fill="currentColor" />
@@ -121,35 +314,37 @@ function RegisterContent() {
           {/* Method Tabs */}
           <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl mb-6">
             <button
-              onClick={() => setRegisterMethod("phone")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all ${registerMethod === "phone" ? "bg-white dark:bg-slate-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-            >
-              <Phone className="w-4 h-4" /> মোবাইল
-            </button>
-            <button
-              onClick={() => setRegisterMethod("email")}
+              onClick={() => handleTabChange("email")}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all ${registerMethod === "email" ? "bg-white dark:bg-slate-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
             >
-              <Mail className="w-4 h-4" /> ইমেইল
+              <Mail className="w-4 h-4" /> ইমেইল এড্রেস
+            </button>
+            <button
+              onClick={() => handleTabChange("phone")}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all ${registerMethod === "phone" ? "bg-white dark:bg-slate-700 shadow-sm text-primary-600 dark:text-primary-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            >
+              <Phone className="w-4 h-4" /> মোবাইল নাম্বার
             </button>
           </div>
-
+ 
           <form onSubmit={handleRegister} className="space-y-4 mb-8">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">আপনার নাম</label>
-              <div className="relative">
-                <User className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                <input 
-                  type="text" 
-                  required
-                  placeholder="সম্পূর্ণ নাম লিখুন" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 transition-all outline-none" 
-                />
+            {((registerMethod === "email" && isEmailVerifiedStage) || (registerMethod === "phone" && isPhoneVerifiedStage)) && (
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">আপনার নাম</label>
+                <div className="relative">
+                  <User className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="সম্পূর্ণ নাম লিখুন" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 transition-all outline-none" 
+                  />
+                </div>
               </div>
-            </div>
-
+            )}
+ 
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {registerMethod === "phone" ? "মোবাইল নাম্বার" : "ইমেইল এড্রেস"}
@@ -163,58 +358,137 @@ function RegisterContent() {
                 <input 
                   type={registerMethod === "phone" ? "tel" : "email"} 
                   required
+                  disabled={(registerMethod === "phone" && isPhoneVerifiedStage) || (registerMethod === "email" && isEmailVerifiedStage)}
                   placeholder={registerMethod === "phone" ? "1XXXXXXXXX" : "your@email.com"} 
                   value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (registerMethod === "phone") {
+                      const cleaned = value.replace(/^(\+880|0)/, '').replace(/[^0-9]/g, '');
+                      setIdentifier(cleaned);
+                    } else {
+                      setIdentifier(value);
+                    }
+                  }}
                   className={`w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 transition-all outline-none ${registerMethod === "phone" ? "rounded-r-xl" : "rounded-xl"}`} 
                 />
               </div>
+              {registerMethod === "phone" && isPhoneVerifiedStage && (
+                <p className="text-emerald-500 text-xs font-bold mt-1.5 flex items-center gap-1">
+                  <CheckCircle2 className="w-4 h-4" /> মোবাইল নাম্বার ভেরিফাইড
+                </p>
+              )}
+              {registerMethod === "email" && isEmailVerifiedStage && (
+                <p className="text-emerald-500 text-xs font-bold mt-1.5 flex items-center gap-1">
+                  <CheckCircle2 className="w-4 h-4" /> ইমেইল এড্রেস ভেরিফাইড
+                </p>
+              )}
             </div>
             
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">পাসওয়ার্ড</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
-                <input 
-                  type="password" 
-                  required
-                  placeholder="••••••••" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 transition-all outline-none" 
-                />
+            {((registerMethod === "email" && isEmailVerifiedStage) || (registerMethod === "phone" && isPhoneVerifiedStage)) && (
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">পাসওয়ার্ড</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-3.5 h-5 w-5 text-slate-400" />
+                  <input 
+                    type="password" 
+                    required
+                    placeholder="••••••••" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 transition-all outline-none" 
+                  />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">কমপক্ষে ৮ অক্ষরের হতে হবে।</p>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">কমপক্ষে ৮ অক্ষরের হতে হবে।</p>
-            </div>
+            )}
+            
+            {verificationError && (
+              <p className="text-red-500 text-xs font-bold mt-2">{verificationError}</p>
+            )}
             
             <button 
               type="submit" 
-              disabled={isLoading}
+              disabled={isEmailLoading || isSendingEmailOtp}
               className="w-full flex items-center justify-center gap-2 py-3.5 mt-6 bg-primary-600 text-white font-bold rounded-xl shadow-md hover:bg-primary-700 hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:hover:translate-y-0"
             >
-              {isLoading ? "অপেক্ষা করুন..." : "একাউন্ট তৈরি করুন"} <ArrowRight className="w-5 h-5" />
+              {registerMethod === "phone" 
+                ? (isPhoneVerifiedStage ? "রেজিস্ট্রেশন সম্পন্ন করুন" : "ভেরিফিকেশন কোড পাঠান") 
+                : (isEmailVerifiedStage ? "রেজিস্ট্রেশন সম্পন্ন করুন" : "ভেরিফিকেশন কোড পাঠান")} 
+              <ArrowRight className="w-5 h-5" />
             </button>
+
           </form>
 
           <p className="text-center text-slate-500 font-medium">
             আগে থেকেই একাউন্ট আছে? 
-            <Link 
-              href={`/login${searchParams.get("redirect") ? `?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : ""}`} 
-              className="text-primary-600 font-bold underline ml-1"
-            >
-              লগইন করুন
-            </Link>
+            <Link href="/login" className="text-primary-600 font-bold underline ml-1">লগইন করুন</Link>
           </p>
-
         </div>
       </div>
+
+      {/* OTP MODAL OVERLAY */}
+      {isOtpOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-250">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center bg-slate-950 px-6 py-4 border-b border-slate-850">
+              <h2 className="text-lg font-black font-heading text-white flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                {registerMethod === "phone" ? "মোবাইল নাম্বার ওটিপি ভেরিফিকেশন" : "ইমেইল ওটিপি ভেরিফিকেশন"}
+              </h2>
+              <button onClick={() => setIsOtpOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleOtpVerify} className="p-6 space-y-4">
+              <p className="text-sm text-slate-400">
+                {registerMethod === "phone" ? (
+                  <>আপনার মোবাইল নাম্বার <span className="text-white font-bold">+880 {identifier}</span> এ একটি ৬-ডিজিটের ওটিপি ভেরিফিকেশন কোড পাঠানো হয়েছে।</>
+                ) : (
+                  <>আপনার ইমেইল এড্রেস <span className="text-white font-bold">{identifier}</span> এ একটি ৬-ডিজিটের ওটিপি ভেরিফিকেশন কোড পাঠানো হয়েছে।</>
+                )} অনুগ্রহ করে সেটি নিচে প্রদান করুন।
+              </p>
+              
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-450 mb-1.5">Verification Code (OTP)</label>
+                <input 
+                  type="text"
+                  required
+                  maxLength={6}
+                  placeholder="Enter 6-digit OTP"
+                  value={otpCode}
+                  onChange={e => setOtpCode(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-primary-500 rounded-xl px-4 py-3 text-center text-lg font-bold tracking-widest text-white outline-none transition-all"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button 
+                  type="button" 
+                  onClick={() => setIsOtpOpen(false)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-5 rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isVerifyingOtp || isVerifyingEmailOtp}
+                  className="bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white font-bold py-2 px-5 rounded-xl transition-all"
+                >
+                  {isVerifyingOtp || isVerifyingEmailOtp ? "ভেরিফাই করা হচ্ছে..." : "কোড নিশ্চিত করুন"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 border-2 border-primary-500 rounded-full w-12 h-12 border-t-transparent animate-spin mx-auto mt-20"></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">লোড হচ্ছে...</div>}>
       <RegisterContent />
     </Suspense>
   );

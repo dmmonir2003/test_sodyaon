@@ -1088,6 +1088,7 @@ import {
   Brain,
   Lightbulb,
   Layers,
+  Sparkles,
   Package,
   Gift,
   Smartphone,
@@ -1098,13 +1099,11 @@ import {
 import ProductCard from "@/components/shared/ProductCard";
 import MobileStickyCart from "@/components/shared/MobileStickyCart";
 import WriteReviewDrawer from "@/components/shared/WriteReviewDrawer";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { addItem, setCartOpen } from "@/store/user/cart/cartSlice";
+import { useCheckProductPurchaseQuery } from "@/store/user/products/productsApi";
 import CustomSelect from "@/components/shared/CustomSelect";
 
-
-
-// Mock Data
 const MOCK_PRODUCT = {
   id: 1,
   name: "ম্যাগনা-টাইলস ১০০-পিস ক্লিয়ার কালারস সেট",
@@ -1169,6 +1168,94 @@ export default function ProductDetailsClient({
   const [reviewSort, setReviewSort] = useState("Default");
   const [qaSort, setQaSort] = useState("Default");
   const bottomMarkerRef = useRef<HTMLDivElement>(null);
+
+  // check purchase state using RTK query:
+  const { isAuthenticated } = useAppSelector((state) => state.profile);
+  const productId = product?.id || product?._id || "";
+
+  const { data: purchaseData, isLoading: isCheckingPurchase } = useCheckProductPurchaseQuery(
+    productId,
+    { skip: !isAuthenticated || !productId }
+  );
+
+  const hasPurchased = isAuthenticated && purchaseData?.purchased;
+  
+  // ── DYNAMIC VIDEO INTEGRATION STUFF ──
+
+  const videoPlaylist = product?.videos?.length > 0 ? product.videos : [
+    {
+      youtubeUrl: product?.videoUrl || "https://www.youtube.com/watch?v=16L_7KJ_KlGu7bAU6UB0KbQoFcSHGiArrT87z_-TmY4M",
+      titleBn: product?.nameBn || product?.name || "বাচ্চাদের এডুকেশনাল খেলনা ডেমো",
+      channelName: "Sodayon Selection",
+      duration: "১০:০০"
+    }
+  ];
+  
+  const [activeVideoIdx, setActiveVideoIdx] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const activeVideo = videoPlaylist[activeVideoIdx] || videoPlaylist[0];
+
+  const isRealUrl = (url: string) => {
+    if (!url) return false;
+    return url.startsWith('http') || url.startsWith('/') || url.includes('.') || url.startsWith('data:');
+  };
+
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
+  const activeVariant = product?.variants?.[selectedVariantIdx];
+  const currentPrice = activeVariant ? activeVariant.price : (product?.price || MOCK_PRODUCT.price);
+  const currentOriginalPrice = activeVariant ? (activeVariant.originalPrice || activeVariant.price) : (product?.originalPrice || MOCK_PRODUCT.originalPrice);
+
+  const productImages = activeVariant?.images?.length > 0 
+    ? activeVariant.images 
+    : (product?.images?.length > 0 
+        ? product.images 
+        : ["bg-indigo-100", "bg-purple-100", "bg-blue-100", "bg-cyan-100"]);
+  const activeImg = productImages[activeImage] || productImages[0];
+
+  const getCartItem = () => {
+    const finalId = activeVariant ? activeVariant.sku : (product?.sku || MOCK_PRODUCT.id.toString());
+    const finalName = activeVariant ? (activeVariant.nameBn || activeVariant.nameEn) : (product?.nameBn || product?.name || MOCK_PRODUCT.name);
+    const finalPrice = activeVariant ? activeVariant.price : (product?.price || MOCK_PRODUCT.price);
+    const finalImage = isRealUrl(activeImg) ? activeImg : "";
+    return {
+      id: finalId,
+      name: finalName,
+      price: finalPrice,
+      quantity: quantity,
+      image: finalImage
+    };
+  };
+  
+
+  const getYoutubeThumbnail = (url: string) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    const videoId = (match && match[2].length === 11) ? match[2] : null;
+    return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+  };
+
+  const getEmbedUrl = (url: string) => {
+    if (!url) return "";
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    const videoId = (match && match[2].length === 11) ? match[2] : null;
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0` : "";
+  };
+
+  const packageItems = product?.packageItems?.length > 0 ? product.packageItems : [
+    { count: "৫০x", textBn: "ছোট স্কয়ার টাইলস" },
+    { count: "২০x", textBn: "সমবাহু ত্রিভুজ" },
+    { count: "১৫x", textBn: "সমদ্বিবাহু ত্রিভুজ" },
+    { count: "১৫x", textBn: "বড় স্কয়ার টাইলস" },
+  ];
+
+  const features = product?.features?.length > 0 ? product.features : [
+    "স্থানিক যুক্তি এবং সূক্ষ্ম মোটর স্কিল বিকাশ করে",
+    "ফুড-গ্রেড এবিএস প্লাস্টিক দিয়ে তৈরি (বিপিএ-মুক্ত)",
+    "সর্বোচ্চ নিরাপত্তার জন্য স্টেইনলেস স্টিল রিভেট",
+  ];
+  
 
   // ✅ WORKING: Sticky cart positioning based on scroll distance from bottom
   useEffect(() => {
@@ -1237,7 +1324,7 @@ export default function ProductDetailsClient({
           </Link>
           <ChevronRight className="w-4 h-4 mx-2" />
           <span className="text-slate-900 dark:text-slate-200 line-clamp-1">
-            {MOCK_PRODUCT.name}
+            {product?.nameBn || product?.name || MOCK_PRODUCT.name}
           </span>
         </nav>
       </div>
@@ -1250,33 +1337,46 @@ export default function ProductDetailsClient({
               
               {/* Thumbnails: Vertical on Mobile (Right), Horizontal on Desktop (Bottom) */}
               <div className="flex flex-col lg:flex-row gap-2 sm:gap-3 lg:gap-4 overflow-y-auto lg:overflow-x-auto pb-0 lg:pb-2 custom-scrollbar shrink-0 order-last w-14 sm:w-16 lg:w-auto">
-                {(MOCK_PRODUCT.images || []).map((img: string, idx: number) => (
+                {(productImages || []).map((img: string, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => setActiveImage(idx)}
                     className={`w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 flex-shrink-0 rounded-xl lg:rounded-2xl border-[2px] lg:border-4 transition-all overflow-hidden ${activeImage === idx ? "border-primary-500 shadow-md lg:shadow-lg scale-105" : "border-transparent hover:border-primary-300 opacity-70 hover:opacity-100"}`}
                   >
-                    <div className={`w-full h-full ${img}`}></div>
+                    {isRealUrl(img) ? (
+                      <img src={img} alt={`Product thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className={`w-full h-full ${img}`}></div>
+                    )}
                   </button>
                 ))}
               </div>
 
               {/* Main Image */}
               <div
-                className={`flex-1 order-first relative w-full aspect-[15/10] sm:aspect-square lg:aspect-square rounded-2xl lg:rounded-3xl overflow-hidden cursor-crosshair transition-colors duration-500 ${MOCK_PRODUCT.images[activeImage]} shadow-inner`}
+                className="flex-1 order-first relative w-full aspect-[15/10] sm:aspect-square lg:aspect-square rounded-2xl lg:rounded-3xl overflow-hidden cursor-crosshair transition-colors duration-500 shadow-inner bg-slate-100 dark:bg-slate-800"
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
               >
-                <div
-                  className="absolute inset-0 w-full h-full opacity-60 mix-blend-multiply dark:mix-blend-color-burn transition-transform duration-200 ease-out flex items-center justify-center p-12 pointer-events-none"
-                  style={zoomStyle}
-                >
-                  <div className="hidden lg:flex w-full h-full border-8 border-white/40 border-dashed rounded-full justify-center items-center">
-                    <span className="font-heading font-black text-6xl text-slate-800/20 rotate-[-15deg]">
-                      টয় প্রিভিউ
-                    </span>
+                {isRealUrl(activeImg) ? (
+                  <img
+                    src={activeImg}
+                    alt={product?.nameBn || product?.name || "Product Image"}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-200 ease-out"
+                    style={zoomStyle}
+                  />
+                ) : (
+                  <div 
+                    className={`absolute inset-0 w-full h-full ${activeImg} flex items-center justify-center p-12`}
+                    style={zoomStyle}
+                  >
+                    <div className="hidden lg:flex w-full h-full border-8 border-white/40 border-dashed rounded-full justify-center items-center">
+                      <span className="font-heading font-black text-6xl text-slate-800/20 rotate-[-15deg]">
+                        টয় প্রিভিউ
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {!isZooming && (
                   <>
@@ -1312,13 +1412,13 @@ export default function ProductDetailsClient({
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2 lg:gap-3">
                   <span className="text-[11px] lg:text-sm font-black tracking-widest text-emerald-500 uppercase">
-                    SODAYON SELECTION
+                    {product?.brandBn || product?.brandEn || "SODAYON SELECTION"}
                   </span>
                   {/* AGE RANGE BADGE */}
                   <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-slate-800/60 rounded-full border border-slate-200 dark:border-slate-700/60">
                     <Baby className="w-3.5 h-3.5 text-emerald-500" />
                     <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                      বয়স: {MOCK_PRODUCT.ageRange || '4-6'}
+                      বয়স: {product?.ageRange || product?.ageRangeBn || MOCK_PRODUCT.ageRange || '৩+ বছর'}
                     </span>
                   </div>
                 </div>
@@ -1335,7 +1435,7 @@ export default function ProductDetailsClient({
               </div>
 
               <h1 className="text-[26px] lg:text-4xl md:text-5xl font-black font-heading text-slate-900 dark:text-white leading-[1.1] mb-3 lg:mb-4 tracking-tight">
-                {MOCK_PRODUCT.name}
+                {product?.nameBn || product?.name || MOCK_PRODUCT.name}
               </h1>
 
               <div className="flex items-center gap-2 lg:gap-4 mb-5 lg:mb-6">
@@ -1354,68 +1454,108 @@ export default function ProductDetailsClient({
 
               <div className="flex items-baseline gap-2.5 lg:gap-4 mb-6 lg:mb-8">
                 <span className="text-[34px] lg:text-4xl font-black text-slate-900 dark:text-white leading-none">
-                  ৳{MOCK_PRODUCT.price}
+                  ৳{currentPrice}
                 </span>
-                <span className="text-[18px] lg:text-xl font-bold text-[#8fa2b8] line-through">
-                  ৳{MOCK_PRODUCT.originalPrice}
-                </span>
-                <span className="px-2 py-0.5 ml-1 bg-emerald-100/50 text-emerald-700 dark:bg-[#123126] dark:text-[#38a169] text-[11px] lg:text-xs font-bold rounded">
-                  ৳১০০০ বাঁচান
-                </span>
+                {currentOriginalPrice > currentPrice && (
+                  <>
+                    <span className="text-[18px] lg:text-xl font-bold text-[#8fa2b8] line-through">
+                      ৳{currentOriginalPrice}
+                    </span>
+                    <span className="px-2 py-0.5 ml-1 bg-emerald-100/50 text-emerald-700 dark:bg-[#123126] dark:text-[#38a169] text-[11px] lg:text-xs font-bold rounded">
+                      ৳{currentOriginalPrice - currentPrice} বাঁচান
+                    </span>
+                  </>
+                )}
               </div>
 
               <p className="text-slate-600 dark:text-slate-300 text-[15px] lg:text-lg mb-8 lg:mb-10 leading-relaxed max-w-xl">
-                {MOCK_PRODUCT.description}
+                {product?.descriptionBn || product?.descriptionEn || product?.description || MOCK_PRODUCT.description}
               </p>
 
               {/* Options Selection */}
-              <div className="space-y-6 lg:space-y-8 mb-8 lg:mb-10">
-                <div>
+              {/* Dynamic Variants Selector */}
+              {product?.variants && product.variants.length > 0 && (
+                <div className="mb-6 lg:mb-8 pt-2">
                   <div className="flex mb-3">
                     <span className="text-[15px] font-bold text-slate-900 dark:text-white mr-1.5">
-                      রং:
+                      সংস্করণ (Editions):
                     </span>
-                    <span className="text-[15px] text-slate-500 dark:text-slate-400 font-medium">
-                      {MOCK_PRODUCT.colors[activeColor]?.name || "ক্লিয়ার কালার"}
+                    <span className="text-[15px] text-slate-500 dark:text-slate-400 font-medium font-heading">
+                      {product.variants[selectedVariantIdx]?.nameBn || product.variants[selectedVariantIdx]?.nameEn || "Rainbow Edition"}
                     </span>
-                  </div>
-                  <div className="flex gap-3 lg:gap-4">
-                    {(MOCK_PRODUCT.colors || []).map((color: {name: string, class: string}, idx: number) => (
-                      <button
-                        key={idx}
-                        onClick={() => setActiveColor(idx)}
-                        className={`transition-all rounded-full ${activeColor === idx ? "w-12 h-12 lg:w-14 lg:h-14 border-[3px] border-emerald-500 p-0.5" : "w-12 h-12 lg:w-14 lg:h-14 border-transparent p-1 opacity-80 hover:opacity-100 bg-[#2d3748]"}`}
-                      >
-                        <div
-                          className={`w-full h-full rounded-full ${activeColor !== idx && idx !== 0 && color.name.includes("আর্কটিক") ? "bg-cyan-100" : activeColor !== idx && idx !== 0 && color.name.includes("নিওন") ? "bg-lime-400" : color.class}`}
-                        ></div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-end mb-3">
-                    <span className="text-[15px] font-bold text-slate-900 dark:text-white">
-                      সাইজ / স্টাইল:
-                    </span>
-                    <button className="text-[13px] text-emerald-600 dark:text-emerald-500 hover:text-emerald-700 font-medium underline underline-offset-4 decoration-emerald-500/50 hover:decoration-emerald-500">
-                      সাইজ গাইড
-                    </button>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    {(MOCK_PRODUCT.sizes || []).map((size: string, idx: number) => (
-                      <button
-                        key={idx}
-                        onClick={() => setActiveSize(idx)}
-                        className={`px-4 py-2 lg:px-6 lg:py-2.5 rounded-lg border font-bold text-[13px] lg:text-sm transition-all ${activeSize === idx ? "border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-[#123126]/50 shadow-sm" : "border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400 bg-transparent"}`}
-                      >
-                        {size}
-                      </button>
-                    ))}
+                    {product.variants.map((v: any, idx: number) => {
+                      const isSelected = selectedVariantIdx === idx;
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setSelectedVariantIdx(idx);
+                            setActiveImage(0); // Reset to first image of variant
+                          }}
+                          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition-all ${isSelected ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 ring-2 ring-emerald-500" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300 bg-white dark:bg-slate-900"}`}
+                        >
+                          <div className="flex flex-col items-start gap-0.5">
+                            <span>{v.nameBn || v.nameEn}</span>
+                            <span className="text-xs opacity-80 font-normal">৳{v.price}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              </div>
+              )}
+  
+              {!product?.variants?.length && (
+                <div className="space-y-6 lg:space-y-8 mb-8 lg:mb-10">
+                  <div>
+                    <div className="flex mb-3">
+                      <span className="text-[15px] font-bold text-slate-900 dark:text-white mr-1.5">
+                        রং:
+                      </span>
+                      <span className="text-[15px] text-slate-500 dark:text-slate-400 font-medium">
+                        {MOCK_PRODUCT.colors[activeColor]?.name || "ক্লিয়ার কালার"}
+                      </span>
+                    </div>
+                    <div className="flex gap-3 lg:gap-4">
+                      {(MOCK_PRODUCT.colors || []).map((color: {name: string, class: string}, idx: number) => (
+                        <button
+                          key={idx}
+                          onClick={() => setActiveColor(idx)}
+                          className={`transition-all rounded-full ${activeColor === idx ? "w-12 h-12 lg:w-14 lg:h-14 border-[3px] border-emerald-500 p-0.5" : "w-12 h-12 lg:w-14 lg:h-14 border-transparent p-1 opacity-80 hover:opacity-100 bg-[#2d3748]"}`}
+                        >
+                          <div
+                            className={`w-full h-full rounded-full ${activeColor !== idx && idx !== 0 && color.name.includes("আর্কটিক") ? "bg-cyan-100" : activeColor !== idx && idx !== 0 && color.name.includes("নিওন") ? "bg-lime-400" : color.class}`}
+                          ></div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-end mb-3">
+                      <span className="text-[15px] font-bold text-slate-900 dark:text-white">
+                        সাইজ / স্টাইল:
+                      </span>
+                      <button className="text-[13px] text-emerald-600 dark:text-emerald-500 hover:text-emerald-700 font-medium underline underline-offset-4 decoration-emerald-500/50 hover:decoration-emerald-500">
+                        সাইজ গাইড
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {(MOCK_PRODUCT.sizes || []).map((size: string, idx: number) => (
+                        <button
+                          key={idx}
+                          onClick={() => setActiveSize(idx)}
+                          className={`px-4 py-2 lg:px-6 lg:py-2.5 rounded-lg border font-bold text-[13px] lg:text-sm transition-all ${activeSize === idx ? "border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-[#123126]/50 shadow-sm" : "border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400 bg-transparent"}`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
                {/* Inline Quantity block */}
                <div className="flex items-center gap-4 mb-0 lg:mb-10 pt-2 border-t border-slate-100 dark:border-slate-700/50">
@@ -1443,13 +1583,7 @@ export default function ProductDetailsClient({
                 <div className="hidden lg:grid grid-cols-2 gap-4 flex-1">
                   <button 
                     onClick={() => {
-                      dispatch(addItem({
-                        id: MOCK_PRODUCT.id.toString(),
-                        name: MOCK_PRODUCT.name,
-                        price: MOCK_PRODUCT.price,
-                        quantity: quantity,
-                        image: MOCK_PRODUCT.images[0]
-                      }));
+                      dispatch(addItem(getCartItem()));
                       dispatch(setCartOpen(true));
                     }}
                     className="flex items-center justify-center gap-2 py-4 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-lg shadow-sm transition-all uppercase tracking-wide"
@@ -1521,8 +1655,8 @@ export default function ProductDetailsClient({
           {/* Desktop Badge Array */}
           <div className="hidden md:flex w-full md:w-1/3 justify-center z-10">
             <div className="w-48 h-48 rounded-full border-8 border-white/20 flex items-center justify-center bg-white/10 backdrop-blur-sm shadow-2xl">
-              <span className="font-heading font-black text-4xl text-center leading-tight">
-                মাস্টার<br/>বিল্ডার
+              <span className="font-heading font-black text-2xl text-center leading-tight">
+                {product?.playPersonality?.labelBn || "স্ট্রাকচারাল<br/>আর্কিটেক্ট".split('<br/>').join('\n')}
               </span>
             </div>
           </div>
@@ -1533,7 +1667,7 @@ export default function ProductDetailsClient({
             <div className="flex md:hidden items-center gap-4 mb-4">
               <div className="w-16 h-16 shrink-0 rounded-full border-[3px] border-emerald-300 flex items-center justify-center bg-emerald-500 shadow-md">
                 <span className="font-heading font-black text-xs text-center leading-tight">
-                  মাস্টার<br/>বিল্ডার
+                  {product?.playPersonality?.labelBn || "স্ট্রাকচারাল আর্কিটেক্ট"}
                 </span>
               </div>
               <div className="flex-1">
@@ -1557,9 +1691,10 @@ export default function ProductDetailsClient({
             </div>
             
             <p className="text-sm md:text-lg text-emerald-50 mb-6 md:mb-8 leading-relaxed opacity-90">
-              <b className="text-white bg-emerald-700/50 px-1 py-0.5 rounded">মাস্টার বিল্ডার</b> এর জন্য পারফেক্ট। যে সব বাচ্চারা লজিক পাজল
-              এবং আর্কিটেকচারাল ডিজাইন পছন্দ করে তারা এই খেলনাটির সাথে ঘণ্টার পর
-              ঘণ্টা মেতে থাকবে।
+              <b className="text-white bg-emerald-700/50 px-2 py-0.5 rounded mr-1">
+                {product?.playPersonality?.labelBn || "স্ট্রাকচারাল আর্কিটেক্ট"}
+              </b>
+              {product?.playPersonality?.descBn || "বহুমাত্রিক কাঠামো পরিকল্পনা, তৈরি এবং সাজাতে পছন্দ করে।"}
             </p>
             
             <button className="w-full md:w-auto px-6 py-3.5 md:py-4 bg-white text-emerald-700 font-bold rounded-xl shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2 relative z-10">
@@ -1598,10 +1733,10 @@ export default function ProductDetailsClient({
             <div className="absolute bottom-0 left-0 -ml-10 -mb-10 md:-ml-20 md:-mb-20 w-40 h-40 md:w-64 md:h-64 rounded-full bg-cyan-300 opacity-20 blur-3xl"></div>
             
             <h3 className="text-2xl md:text-4xl lg:text-5xl font-black font-heading mb-3 md:mb-4 relative z-10 text-white drop-shadow-md leading-tight">
-              সৃজনশীলতা বিকাশের সেরা খেলনা
+              {product?.personalityType || product?.playPersonality?.labelBn || "সৃজনশীলতা বিকাশের সেরা খেলনা"}
             </h3>
             <p className="text-primary-50 text-[15px] md:text-lg lg:text-xl max-w-3xl mx-auto relative z-10 leading-relaxed font-medium">
-              ম্যাগনা-টাইলস ১০০-পিস ক্লিয়ার কালারস সেট! মজায় মজায় বিজ্ঞান, গণিত ও স্থাপত্যবিদ্যার হাতেখড়ি নিতে এই ম্যাগনেটিক টাইলস অতুলনীয়। মোবাইল আসক্তি দূর করে আপনার শিশুকে কল্পনাপ্রসূত খেলায় ব্যস্ত রাখার এটি এক আদর্শ উপহার।
+              {product?.personalityDesc || product?.playPersonality?.descBn || "ম্যাগনা-টাইলস ১০০-পিস ক্লিয়ার কালারস সেট! মজায় মজায় বিজ্ঞান, গণিত ও স্থাপত্যবিদ্যার হাতেখড়ি নিতে এই ম্যাগনেটিক টাইলস অতুলনীয়। মোবাইল আসক্তি দূর করে আপনার শিশুকে কল্পনাপ্রসূত খেলায় ব্যস্ত রাখার এটি এক আদর্শ উপহার।"}
             </p>
           </div>
 
@@ -1615,51 +1750,91 @@ export default function ProductDetailsClient({
             {/* Elegant Features Row */}
             <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-5 md:mb-6 text-center">কেন এই সেটটি প্রয়োজন?</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10 md:mb-16">
-              
-              {/* Feature 1 */}
-              <div className="group bg-slate-50 dark:bg-slate-800/30 p-5 md:p-6 rounded-2xl md:rounded-[1.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:border-blue-100 dark:hover:border-blue-900/50 transition-all duration-300">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-sm">
-                  <Smartphone className="w-6 h-6 md:w-7 md:h-7" />
-                </div>
-                <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">মোবাইল আসক্তি মুক্তি</h4>
-                <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
-                  টিভি বা ফোনের বদলে শিশুকে শিক্ষণীয় ম্যাগনেটিক ব্লকস তৈরি করতে দীর্ঘক্ষণ ব্যস্ত রাখে।
-                </p>
-              </div>
+              {product?.benefits && product.benefits.length > 0 ? (
+                product.benefits.map((benefit: any, idx: number) => {
+                  let IconComponent = Brain;
+                  if (benefit.icon === 'Lightbulb') IconComponent = Lightbulb;
+                  if (benefit.icon === 'Sparkles') IconComponent = Sparkles;
+                  if (benefit.icon === 'Smartphone') IconComponent = Smartphone;
+                  if (benefit.icon === 'Gift') IconComponent = Gift;
 
-              {/* Feature 2 */}
-              <div className="group bg-slate-50 dark:bg-slate-800/30 p-5 md:p-6 rounded-2xl md:rounded-[1.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:border-amber-100 dark:hover:border-amber-900/50 transition-all duration-300">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-sm">
-                  <Lightbulb className="w-6 h-6 md:w-7 md:h-7" />
-                </div>
-                <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">সৃজনশীলতা বৃদ্ধি</h4>
-                <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
-                  অগণিত থ্রিডি মডেল তৈরির মাধ্যমে শিশুর কল্পনাশক্তি ও সৃজনশীলতা বহুগুণ বৃদ্ধি পায়।
-                </p>
-              </div>
+                  const borderClasses = [
+                    "hover:border-blue-100 dark:hover:border-blue-900/50",
+                    "hover:border-amber-100 dark:hover:border-amber-900/50",
+                    "hover:border-emerald-100 dark:hover:border-emerald-900/50",
+                    "hover:border-pink-100 dark:hover:border-pink-900/50"
+                  ];
 
-              {/* Feature 3 */}
-              <div className="group bg-slate-50 dark:bg-slate-800/30 p-5 md:p-6 rounded-2xl md:rounded-[1.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:border-emerald-100 dark:hover:border-emerald-900/50 transition-all duration-300">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-sm">
-                  <Brain className="w-6 h-6 md:w-7 md:h-7" />
-                </div>
-                <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">মেধা বিকাশ</h4>
-                <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
-                  জ্যামিতিক আকৃতি ও রঙ মেলানোর খেলা শিশুর ব্রেনের সঠিক বিকাশ ঘটাতে সাহায্য করে।
-                </p>
-              </div>
+                  const iconColorClasses = [
+                    "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400",
+                    "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400",
+                    "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400",
+                    "bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400"
+                  ];
 
-              {/* Feature 4 */}
-              <div className="group bg-slate-50 dark:bg-slate-800/30 p-5 md:p-6 rounded-2xl md:rounded-[1.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:border-pink-100 dark:hover:border-pink-900/50 transition-all duration-300">
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400 flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-sm">
-                  <Gift className="w-6 h-6 md:w-7 md:h-7" />
-                </div>
-                <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">উপহার হিসেবে সেরা</h4>
-                <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
-                  ৩ বছর থেকে শুরু করে যেকোনো বয়সের বাচ্চার জন্মদিনের সেরা ও নিরাপদ উপহার।
-                </p>
-              </div>
+                  const colIdx = idx % 4;
 
+                  return (
+                    <div key={idx} className={`group bg-slate-50 dark:bg-slate-800/30 p-5 md:p-6 rounded-2xl md:rounded-[1.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all duration-300 ${borderClasses[colIdx]}`}>
+                      <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 transition-transform shadow-sm ${iconColorClasses[colIdx]}`}>
+                        <IconComponent className="w-6 h-6 md:w-7 md:h-7" />
+                      </div>
+                      <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">
+                        {benefit.titleBn || benefit.titleEn}
+                      </h4>
+                      <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
+                        {benefit.descBn || benefit.descEn}
+                      </p>
+                    </div>
+                  );
+                })
+              ) : (
+                <>
+                  {/* Feature 1 */}
+                  <div className="group bg-slate-50 dark:bg-slate-800/30 p-5 md:p-6 rounded-2xl md:rounded-[1.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:border-blue-100 dark:hover:border-blue-900/50 transition-all duration-300">
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-sm">
+                      <Smartphone className="w-6 h-6 md:w-7 md:h-7" />
+                    </div>
+                    <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">মোবাইল আসক্তি মুক্তি</h4>
+                    <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
+                      {features[0] || "টিভি বা ফোনের বদলে শিশুকে শিক্ষণীয় ম্যাগনেটিক ব্লকস তৈরি করতে দীর্ঘক্ষণ ব্যস্ত রাখে।"}
+                    </p>
+                  </div>
+
+                  {/* Feature 2 */}
+                  <div className="group bg-slate-50 dark:bg-slate-800/30 p-5 md:p-6 rounded-2xl md:rounded-[1.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:border-amber-100 dark:hover:border-amber-900/50 transition-all duration-300">
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-sm">
+                      <Lightbulb className="w-6 h-6 md:w-7 md:h-7" />
+                    </div>
+                    <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">সৃজনশীলতা বৃদ্ধি</h4>
+                    <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
+                      {features[1] || "অগণিত থ্রিডি মডেল তৈরির মাধ্যমে শিশুর কল্পনাশক্তি ও সৃজনশীলতা ও গুণ বৃদ্ধি পায়।"}
+                    </p>
+                  </div>
+
+                  {/* Feature 3 */}
+                  <div className="group bg-slate-50 dark:bg-slate-800/30 p-5 md:p-6 rounded-2xl md:rounded-[1.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:border-emerald-100 dark:hover:border-emerald-900/50 transition-all duration-300">
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-sm">
+                      <Brain className="w-6 h-6 md:w-7 md:h-7" />
+                    </div>
+                    <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">মেধা বিকাশ</h4>
+                    <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
+                      {features[2] || "জ্যামিতিক আকৃতি ও রঙ মেলানোর খেলা শিশুর ব্রেনের সঠিক বিকাশ ঘটাতে সাহায্য করে।"}
+                    </p>
+                  </div>
+
+                  {/* Feature 4 */}
+                  <div className="group bg-slate-50 dark:bg-slate-800/30 p-5 md:p-6 rounded-2xl md:rounded-[1.5rem] border border-slate-100 dark:border-slate-800 hover:shadow-lg hover:border-pink-100 dark:hover:border-pink-900/50 transition-all duration-300">
+                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400 flex items-center justify-center mb-4 md:mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-sm">
+                      <Gift className="w-6 h-6 md:w-7 md:h-7" />
+                    </div>
+                    <h4 className="text-base md:text-lg font-bold text-slate-900 dark:text-white mb-1.5 md:mb-2">উপহার হিসেবে সেরা</h4>
+                    <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm leading-relaxed">
+                      ৩ বছর থেকে শুরু করে যেকোনো বয়সের বাচ্চার জন্মদিনের সেরা ও নিরাপদ উপহার।
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
 
              {/* Beautiful What's Included */}
@@ -1678,18 +1853,13 @@ export default function ProductDetailsClient({
               
               {/* Flex Tags for included items */}
               <div className="flex flex-wrap gap-2.5 sm:gap-4 mb-6 md:mb-8">
-                {[
-                  { count: "৫০x", text: "ছোট স্কয়ার টাইলস" },
-                  { count: "২০x", text: "সমবাহু ত্রিভুজ" },
-                  { count: "১৫x", text: "সমদ্বিবাহু ত্রিভুজ" },
-                  { count: "১৫x", text: "বড় স্কয়ার টাইলস" },
-                ].map((item, idx) => (
+                {packageItems.map((item: any, idx: number) => (
                   <div key={idx} className="flex items-center bg-white dark:bg-slate-900 pl-1 pr-3 md:pr-4 py-1.5 md:py-1.5 rounded-full border border-slate-200 dark:border-slate-700/80 shadow-sm transition-colors cursor-default">
                     <span className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-400 font-bold text-[12px] md:text-sm flex items-center justify-center mr-2 md:mr-3 shrink-0">
                       {item.count}
                     </span>
                     <span className="text-slate-700 dark:text-slate-300 font-medium text-[13px] md:text-[15px]">
-                      {item.text}
+                      {item.textBn || item.textEn || item.text}
                     </span>
                   </div>
                 ))}
@@ -1697,30 +1867,78 @@ export default function ProductDetailsClient({
 
                {/* Details List */}
                <div className="space-y-4 md:space-y-5 pt-5 md:pt-6 border-t border-slate-200 dark:border-slate-700/50">
-                  <div className="flex gap-3 md:gap-4 items-start">
-                    <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mt-1 md:mt-0.5 shrink-0" />
-                    <div>
-                        <h5 className="font-bold text-slate-900 dark:text-white text-[15px] md:text-base">১০০-পিস ম্যাগনেটিক সেট</h5>
-                        <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm mt-1">এই সেটে রয়েছে বিভিন্ন আকৃতির ১০০টি শক্তিশালী ম্যাগনেটিক টাইলস যা দিয়ে অনায়াসেই বিশাল থেকে বিশাল সব ভাস্কর্য তৈরি করা সম্ভব। এটি বাচ্চাদের জ্যামিতি এবং আর্কিটেকচারের প্রাথমিক ধারণা দেয়।</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 md:gap-4 items-start">
-                    <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mt-1 md:mt-0.5 shrink-0" />
-                    <div>
-                        <h5 className="font-bold text-slate-900 dark:text-white text-[15px] md:text-base">বিপিএ-মুক্ত ও সম্পূর্ণ নিরাপদ</h5>
-                        <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm mt-1">সবগুলো টাইলস নন-টক্সিক ফুড-গ্রেড এবিএস (ABS) প্লাস্টিক দিয়ে তৈরি এবং এতে কোনো ক্ষতিকারক রাসায়নিক নেই। প্রতিটি টাইলসে অত্যন্ত নিরাপত্তার জন্য স্টেইনলেস স্টিল রিভেট ব্যবহার করা হয়েছে।</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 md:gap-4 items-start">
-                    <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mt-1 md:mt-0.5 shrink-0" />
-                    <div>
-                        <h5 className="font-bold text-slate-900 dark:text-white text-[15px] md:text-base">উজ্জ্বল ক্লিয়ার কালারস</h5>
-                        <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm mt-1">টাইলসগুলো সূর্যের আলোতে বা ঘরের লাইটে অত্যন্ত আকর্ষণীয় দেখায় যা বাচ্চাদের মনোযোগ আকর্ষণ করে এবং রঙ पहचानने (কালার রিকগনিশন) দক্ষতা বাড়ায়।</p>
-                    </div>
-                  </div>
+                  {packageItems.map((item: any, idx: number) => {
+                    const title = item.textBn || item.textEn || item.text;
+                    const description = item.detailsBn || item.detailsEn || `উচ্চমানের ${title} পিস যা বাচ্চাদের খেলার অভিজ্ঞতা আরও আকর্ষণীয় ও শিক্ষণীয় করে তোলে।`;
+                    return (
+                      <div key={idx} className="flex gap-3 md:gap-4 items-start">
+                        <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-emerald-500 mt-1 md:mt-0.5 shrink-0" />
+                        <div>
+                            <h5 className="font-bold text-slate-900 dark:text-white text-[15px] md:text-base">
+                              {item.count} {title}
+                            </h5>
+                            <p className="text-slate-600 dark:text-slate-400 text-[13px] md:text-sm mt-1">
+                              {description}
+                            </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                </div>
             </div>
 
+            
+            {/* Dynamic Polymorphic Specifications Grid */}
+            {product?.specifications && Object.keys(product.specifications).length > 0 && (
+              <div className="mt-10 md:mt-16 bg-slate-50 dark:bg-slate-800/50 rounded-2xl md:rounded-[2rem] p-5 md:p-8 lg:p-10 border border-slate-100 dark:border-slate-700/50">
+                <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-5 md:mb-6 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  পণ্য স্পেসিফিকেশন (Specifications)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                  {Object.entries(product.specifications).map(([key, value]) => {
+                    const labelBn = {
+                      material: "উপাদান (Material)",
+                      dimensions: "সাইজ/মাত্রা (Dimensions)",
+                      weight: "ওজন (Weight)",
+                      battery: "ব্যাটারি (Battery)",
+                    }[key] || key;
+                    return (
+                      <div key={key} className="flex justify-between items-center py-3.5 border-b border-slate-200 dark:border-slate-700/60 text-sm">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium capitalize">
+                          {labelBn}
+                        </span>
+                        <span className="text-slate-900 dark:text-white font-bold text-right font-heading">
+                          {String(value)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Dynamic Usage Directions Section */}
+            {(product?.directionsBn || product?.directionsEn) && (
+              <div className="mt-10 md:mt-16 bg-amber-50/50 dark:bg-amber-950/15 rounded-2xl md:rounded-[2rem] p-5 md:p-8 lg:p-10 border border-amber-100 dark:border-amber-900/30">
+                <div className="flex items-center gap-3 md:gap-4 mb-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
+                    ব্যবহারের নির্দেশনা (Usage Directions)
+                  </h3>
+                </div>
+                <p className="text-slate-700 dark:text-slate-300 text-sm md:text-base leading-relaxed">
+                  {product.directionsBn || product.directionsEn}
+                </p>
+              </div>
+            )}
+  
           </div>
         </div>
       </div>
@@ -1741,37 +1959,59 @@ export default function ProductDetailsClient({
           
           {/* Main Video Player (Left) */}
           <div className="flex-1">
-            <div className="relative w-full aspect-video bg-[#0f172a] rounded-[2rem] shadow-2xl overflow-hidden group cursor-pointer border-[8px] md:border-[12px] border-slate-800">
-              <div className="absolute inset-0 bg-blue-900/30 mix-blend-multiply transition-opacity group-hover:opacity-60"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 border border-white/20 shadow-xl">
-                  <div className="w-14 h-14 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
-                    <Play className="w-6 h-6 text-primary-600 ml-1 fill-current" />
+            {isPlaying ? (
+              <div className="relative w-full aspect-video bg-[#0f172a] rounded-[2rem] shadow-2xl overflow-hidden border-[8px] md:border-[12px] border-slate-800">
+                <iframe
+                  src={getEmbedUrl(activeVideo.youtubeUrl)}
+                  title={activeVideo.titleBn || "Product Demo Video"}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <div 
+                onClick={() => setIsPlaying(true)}
+                className="relative w-full aspect-video bg-[#0f172a] rounded-[2rem] shadow-2xl overflow-hidden group cursor-pointer border-[8px] md:border-[12px] border-slate-800"
+              >
+                {getYoutubeThumbnail(activeVideo.youtubeUrl) ? (
+                  <img 
+                    src={getYoutubeThumbnail(activeVideo.youtubeUrl) || undefined} 
+                    alt={activeVideo.titleBn || "Video Preview"} 
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-blue-900/30 mix-blend-multiply transition-opacity group-hover:opacity-60"></div>
+                )}
+                <div className="absolute inset-0 bg-black/35 group-hover:bg-black/15 transition-colors"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-20 h-20 md:w-24 md:h-24 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300 border border-white/20 shadow-xl">
+                    <div className="w-14 h-14 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
+                      <Play className="w-6 h-6 text-primary-600 ml-1 fill-current" />
+                    </div>
                   </div>
                 </div>
+                {/* Fake Progress Bar */}
+                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20">
+                  <div className="h-full w-1/3 bg-primary-600"></div>
+                </div>
               </div>
-              {/* Fake Progress Bar */}
-              <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20">
-                <div className="h-full w-1/3 bg-primary-600"></div>
-              </div>
-            </div>
+            )}
             
             {/* Main Video Info */}
             <div className="mt-5 px-1 lg:px-2">
               <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-2 leading-snug">
-                বাচ্চাদের জন্য সেরা এডুকেশনাল খেলনা: কীভাবে খেলবেন?
+                {activeVideo.titleBn || activeVideo.titleEn || "বাচ্চাদের জন্য সেরা এডুকেশনাল খেলনা: কীভাবে খেলবেন?"}
               </h3>
               <div className="flex items-center gap-4 text-slate-500 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold shrink-0">
-                    S
+                    {activeVideo.channelName ? activeVideo.channelName.charAt(0) : "S"}
                   </div>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">Sodayon Toys</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">{activeVideo.channelName || "Sodayon Toys"}</span>
                 </div>
                 <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                <span>१००के ভিউজ</span>
-                <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                <span>३ সপ্তাহ আগে</span>
+                <span>{activeVideo.duration || "১০:০০"} মিনিট</span>
               </div>
             </div>
           </div>
@@ -1782,37 +2022,43 @@ export default function ProductDetailsClient({
             
             <div className="flex flex-col gap-4 overflow-y-auto max-h-[450px] lg:max-h-[550px] pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               
-              {[
-                { title: "ম্যাগনা-টাইলস १००० পিস আনবক্সিং এবং ওভারভিউ", views: "४५के", time: "१ মাস আগে", duration: "८:४५" },
-                { title: "বাচ্চাদের ব্রেন ডেভেলপমেন্টে এসব খেলনা কেন জরুরি?", views: "८९कে", time: "३ মাস আগে", duration: "१२:१०" },
-                { title: "কীভাবে বিশাল দুর্গ বানাবেন? স্টেপ বাই স্টেপ গাইড", views: "२१कে", time: "३ সপ্তাহ আগে", duration: "५:३०" },
-                { title: "ম্যাগনা-টাইলস বনাম অন্যান্য ব্র্যান্ড: কোনটি কিনবেন?", views: "११२के", time: "५ মাস আগে", duration: "१५:२०" },
-                { title: "५টি মজার গেম যা আপনি এই টাইলস দিয়ে খেলতে পারেন", views: "६७कে", time: "६ মাস আগে", duration: "१०:०५" },
-                { title: "ক্রেজি টাওয়ার বিল্ডিং চ্যালেঞ্জ!", views: "१९के", time: "२ সপ্তাহ আগে", duration: "६:४५" },
-              ].map((vid, idx) => (
-                <div key={idx} className="flex gap-3 group cursor-pointer hover:bg-white dark:hover:bg-slate-800 p-2 -mx-2 rounded-xl transition-colors">
-                  {/* Thumbnail Element */}
-                  <div className="relative w-[140px] shrink-0 aspect-video bg-slate-800 rounded-lg overflow-hidden">
-                    <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/10 transition-colors"></div>
-                    <div className="absolute bottom-1.5 right-1.5 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-medium text-white">{vid.duration}</div>
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                       <Play className="w-8 h-8 text-white drop-shadow-md fill-white/20" />
+              {videoPlaylist.map((vid: any, idx: number) => {
+                const isCurrent = idx === activeVideoIdx;
+                const sidebarThumb = getYoutubeThumbnail(vid.youtubeUrl);
+                return (
+                  <div 
+                    key={idx} 
+                    onClick={() => {
+                      setActiveVideoIdx(idx);
+                      setIsPlaying(true);
+                    }}
+                    className={`flex gap-3 group cursor-pointer p-2 -mx-2 rounded-xl transition-colors ${isCurrent ? 'bg-primary-50 dark:bg-slate-800/80 border border-primary-200 dark:border-slate-700' : 'hover:bg-white dark:hover:bg-slate-800'}`}
+                  >
+                    {/* Thumbnail Element */}
+                    <div className="relative w-[140px] shrink-0 aspect-video bg-slate-800 rounded-lg overflow-hidden">
+                      {sidebarThumb ? (
+                        <img src={sidebarThumb} alt={vid.titleBn || vid.titleEn || "খেলনা ভিডিও"} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 bg-slate-900/40 group-hover:bg-slate-900/10 transition-colors"></div>
+                      )}
+                      <div className="absolute bottom-1.5 right-1.5 bg-black/80 px-1.5 py-0.5 rounded text-[10px] font-medium text-white">{vid.duration || "১০:০০"}</div>
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                         <Play className="w-8 h-8 text-white drop-shadow-md fill-white/20" />
+                      </div>
+                    </div>
+                    {/* Info Element */}
+                    <div className="flex flex-col justify-start pt-0.5 flex-1">
+                      <h5 className={`text-slate-800 dark:text-slate-100 text-[13px] font-bold line-clamp-2 leading-snug group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors ${isCurrent ? 'text-primary-600 dark:text-primary-400' : ''}`}>
+                        {vid.titleBn || vid.titleEn || "খেলনা ভিডিও"}
+                      </h5>
+                      <span className="text-slate-500 text-xs mt-1">Sodayon Toys</span>
+                      <div className="flex items-center gap-1.5 text-slate-500 text-[11px] mt-0.5">
+                        <span>{vid.channelName || "Sodayon"}</span>
+                      </div>
                     </div>
                   </div>
-                  {/* Info Element */}
-                  <div className="flex flex-col justify-start pt-0.5">
-                    <h5 className="text-slate-800 dark:text-slate-100 text-[13px] font-bold line-clamp-2 leading-snug group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                      {vid.title}
-                    </h5>
-                    <span className="text-slate-500 text-xs mt-1.5">Sodayon Toys</span>
-                    <div className="flex items-center gap-1.5 text-slate-500 text-[11px] mt-0.5">
-                      <span>{vid.views} ভিউজ</span>
-                      <span className="w-0.5 h-0.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                      <span>{vid.time}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               
             </div>
           </div>
@@ -1881,22 +2127,66 @@ export default function ProductDetailsClient({
               </div>
             </div>
 
+
             {/* Rate this product */}
             <div className="mb-6">
-              <p className="text-slate-700 dark:text-slate-300 mb-2 text-[15px]">Rate this product</p>
-              <div className="flex items-center gap-1 text-amber-500 mb-5 cursor-pointer" onClick={() => setIsWriteReviewOpen(true)}>
-                <Star className="w-6 h-6 stroke-[1.5]" />
-                <Star className="w-6 h-6 stroke-[1.5]" />
-                <Star className="w-6 h-6 stroke-[1.5]" />
-                <Star className="w-6 h-6 stroke-[1.5]" />
-                <Star className="w-6 h-6 stroke-[1.5]" />
-              </div>
-              <button 
-                onClick={() => setIsWriteReviewOpen(true)}
-                className="px-6 py-2 border border-primary-500 text-primary-500 dark:text-primary-400 font-medium rounded hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-              >
-                Write a review
-              </button>
+              <p className="text-slate-700 dark:text-slate-300 mb-2 text-[15px]">Rate this product / এই পণ্যটি মূল্যায়ন করুন</p>
+              {!isAuthenticated ? (
+                <>
+                  <div className="flex items-center gap-1 text-slate-300 dark:text-slate-600 mb-3">
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                  </div>
+                  <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xl text-amber-800 dark:text-amber-300 text-xs leading-relaxed mb-4">
+                    <p className="font-bold mb-1">লগইন প্রয়োজন / Login Required</p>
+                    রিভিউ দেওয়ার জন্য অনুগ্রহ করে প্রথমে লগইন করুন। শুধুমাত্র পণ্যটি ক্রয়কারী ক্রেতারাই রিভিউ দিতে পারবেন।
+                  </div>
+                  <Link
+                    href={`/login?redirect=${encodeURIComponent(`/shop/products/${product?.slug || ''}`)}`}
+                    className="inline-block px-6 py-2 border border-primary-500 text-primary-500 dark:text-primary-400 font-medium rounded hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors text-sm"
+                  >
+                    Login to review
+                  </Link>
+                </>
+              ) : isCheckingPurchase ? (
+                <div className="text-slate-400 text-sm animate-pulse py-2">যাচাই করা হচ্ছে / Verifying purchase status...</div>
+              ) : !hasPurchased ? (
+                <>
+                  <div className="flex items-center gap-1 text-slate-300 dark:text-slate-600 mb-3">
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                  </div>
+                  <div className="p-3.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-xl text-red-800 dark:text-red-300 text-xs leading-relaxed">
+                    <p className="font-bold mb-1 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0"></span>
+                      ভেরিফাইড পারচেজ প্রয়োজন / Verified Purchase Required
+                    </p>
+                    রিভিউ দেওয়ার জন্য পণ্যটি আপনার পূর্বে ক্রয় করা থাকতে হবে। শুধুমাত্র ভেরিফাইড ক্রেতারাই রিভিউ লিখতে পারেন।
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1 text-amber-500 mb-5 cursor-pointer hover:scale-105 origin-left transition-transform" onClick={() => setIsWriteReviewOpen(true)}>
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                    <Star className="w-6 h-6 stroke-[1.5]" />
+                  </div>
+                  <button 
+                    onClick={() => setIsWriteReviewOpen(true)}
+                    className="px-6 py-2 border border-primary-500 text-primary-500 dark:text-primary-400 font-medium rounded hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors shadow-sm hover:shadow-md"
+                  >
+                    Write a review
+                  </button>
+                </>
+              )}
             </div>
             
             <div className="border-t border-slate-100 dark:border-slate-800 pt-4 hidden lg:block"></div>
@@ -2151,13 +2441,7 @@ export default function ProductDetailsClient({
         alternativePrice="180"
         alternativeImage="/next.svg"
         onAddToCart={() => {
-          dispatch(addItem({
-            id: MOCK_PRODUCT.id.toString(),
-            name: MOCK_PRODUCT.name,
-            price: MOCK_PRODUCT.price,
-            quantity: quantity,
-            image: MOCK_PRODUCT.images[0]
-          }));
+          dispatch(addItem(getCartItem()));
           dispatch(setCartOpen(true));
         }}
         // TODO: Map these to your real backend admin configurations
@@ -2220,10 +2504,11 @@ export default function ProductDetailsClient({
       <WriteReviewDrawer
         isOpen={isWriteReviewOpen}
         onClose={() => setIsWriteReviewOpen(false)}
+        productId={productId}
         productName={MOCK_PRODUCT.name}
-        productImage={MOCK_PRODUCT.images[0]}
-        price={MOCK_PRODUCT.price}
-        oldPrice={MOCK_PRODUCT.originalPrice}
+        productImage={isRealUrl(productImages[0]) ? productImages[0] : ""}
+        price={currentPrice}
+        oldPrice={currentOriginalPrice}
       />
     </div>
   );

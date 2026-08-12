@@ -1,68 +1,89 @@
 import { Request, Response, NextFunction } from 'express';
 import { genAI } from '../../config/gemini';
 import { Product } from '../product/product.model';
+import { AiGiftSession } from './aiSession.model';
 import { ApiError } from '../../utils/ApiError';
 import { catchAsync } from '../../utils/catchAsync';
 
 // Fallback logic for local development if Gemini key is missing/mock
 const isMockKey = !process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'mock-gemini-key';
 
-// 1. Gift Finder
+// 1. Gift Finder (Upgraded to log sessions in DB)
 export const getGiftSuggestions = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { ageRange, categoryId, budget } = req.body;
+  const { ageRange, categoryId, budget, gender = 'any', interests = 'play', occasion = 'general' } = req.body;
+  const userId = (req as any).user ? (req as any).user.id : undefined;
 
   if (!ageRange) {
     return next(new ApiError(400, 'Age range is required'));
   }
 
-  // 1. Lookup products matching filters in DB
+  // Lookup products matching filters in DB
   const queryObj: any = {};
   if (categoryId) queryObj.categoryId = Number(categoryId);
-  if (ageRange) queryObj.ageRange = ageRange;
+  if (ageRange) {
+    // Attempt parsing age range filters
+    const numericAge = parseInt(ageRange);
+    if (!isNaN(numericAge)) {
+      queryObj.ageMonthsMin = { $lte: numericAge * 12 };
+      queryObj.ageMonthsMax = { $gte: numericAge * 12 };
+    } else {
+      queryObj.ageRange = ageRange;
+    }
+  }
   if (budget) queryObj.price = { $lte: Number(budget) };
 
   const matchingProducts = await Product.find(queryObj).limit(3);
 
+  let advice = '';
+
   if (isMockKey) {
     // Generate simulated AI advice
-    const mockAdvice = `Based on your request for a gift suitable for age ${ageRange}, under ${budget || 'any'} BDT, we suggest choosing interactive toys. Educational toys support cognitive development and improve problem-solving skills.`;
-    return res.status(200).json({
-      success: true,
-      data: {
-        advice: mockAdvice,
-        suggestedProducts: matchingProducts,
-      },
-    });
+    advice = `Based on your request for a ${gender} child of age ${ageRange} who likes ${interests}, under ${budget || 'any'} BDT, we suggest choosing interactive toys. Educational toys support cognitive development and improve problem-solving skills.`;
+  } else {
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const productListText = matchingProducts
+        .map((p) => `- ID: ${p.numericId}, Name: ${p.nameEn}, Price: ${p.price} BDT, Description: ${p.descriptionEn}`)
+        .join('\n');
+
+      const prompt = `
+        You are Sodayon's expert children's gift consultant.
+        The user is looking for a gift for a ${gender} child in the age range of "${ageRange}" for the occasion of "${occasion}".
+        Child's Interests: "${interests}". Budget: "${budget || 'unlimited'} BDT".
+        Here are some available products from our store:
+        ${productListText}
+
+        Please write a short, friendly, expert paragraph advising the parent on what to choose and why (based on developmental psychology/play research). Focus on why the listed products (or types of toys) are beneficial. Keep the output under 150 words.
+      `;
+
+      const result = await model.generateContent(prompt);
+      advice = result.response.text().trim();
+    } catch (error: any) {
+      return next(new ApiError(500, `Gemini API Error: ${error.message}`));
+    }
   }
 
-  try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const productListText = matchingProducts
-      .map((p) => `- ID: ${p.numericId}, Name: ${p.name}, Price: ${p.price} BDT, Description: ${p.description}`)
-      .join('\n');
+  // Log this session in the database as per ERD requirements
+  const parsedAge = parseInt(ageRange);
+  await AiGiftSession.create({
+    userId,
+    childAge: isNaN(parsedAge) ? 0 : parsedAge,
+    gender,
+    interests,
+    occasion,
+    budgetMin: 0,
+    budgetMax: budget ? Number(budget) : undefined,
+    recommendedIds: matchingProducts.map((p) => p._id),
+    aiReasoning: advice,
+  });
 
-    const prompt = `
-      You are an expert children's gift consultant.
-      The user is looking for a gift for a child in the age range of "${ageRange}" with a budget of "${budget || 'unlimited'} BDT".
-      Here are some available products from our store:
-      ${productListText}
-
-      Please write a short, friendly, expert paragraph advising the parent on what to choose and why (based on developmental psychology/play research). Focus on why the listed products (or types of toys) are beneficial. Keep the output under 150 words.
-    `;
-
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-
-    res.status(200).json({
-      success: true,
-      data: {
-        advice: text.trim(),
-        suggestedProducts: matchingProducts,
-      },
-    });
-  } catch (error: any) {
-    return next(new ApiError(500, `Gemini API Error: ${error.message}`));
-  }
+  res.status(200).json({
+    success: true,
+    data: {
+      advice,
+      suggestedProducts: matchingProducts,
+    },
+  });
 });
 
 // 2. Parenting Assistant
@@ -113,7 +134,7 @@ export const askParentingAssistant = catchAsync(async (req: Request, res: Respon
 
 // 3. Product Compare
 export const compareProducts = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { productIds } = req.body; // Expects array of 2 IDs
+  const { productIds } = req.body;
 
   if (!Array.isArray(productIds) || productIds.length < 2) {
     return next(new ApiError(400, 'At least 2 product IDs are required for comparison'));
@@ -173,4 +194,19 @@ export const compareProducts = catchAsync(async (req: Request, res: Response, ne
   } catch (error: any) {
     return next(new ApiError(500, `Gemini API Error: ${error.message}`));
   }
+});
+
+// 4. Public/User: Get past AI sessions log history
+export const getAiSessions = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const userId = (req as any).user.id;
+
+  const sessions = await AiGiftSession.find({ userId })
+    .populate('recommendedIds')
+    .sort('-createdAt');
+
+  res.status(200).json({
+    success: true,
+    results: sessions.length,
+    data: sessions,
+  });
 });
