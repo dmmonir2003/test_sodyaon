@@ -18,12 +18,12 @@ git pull origin production
 
 echo "🛠️ [3/5] Building Backend API..."
 cd $PROJECT_DIR/backend
-npm ci
+npm install --legacy-peer-deps
 npm run build
 
 echo "🎨 [4/5] Building Next.js Frontend..."
 cd $PROJECT_DIR/frontend
-npm ci
+npm install --legacy-peer-deps
 npm run build
 
 echo "⚡ [5/5] Reloading PM2 processes (Zero-Downtime)..."
