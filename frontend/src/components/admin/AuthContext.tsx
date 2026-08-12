@@ -125,7 +125,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     try {
       // 1. Try real login request to the Sodayon Backend Server
-      const res = await fetch("http://localhost:5000/api/auth/login", {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+      const res = await fetch(`${apiBase}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password: pass }),
