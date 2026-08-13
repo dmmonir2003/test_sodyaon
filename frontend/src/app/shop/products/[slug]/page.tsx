@@ -1,13 +1,15 @@
 import { notFound, redirect } from "next/navigation";
 import ProductDetailsClient from "@/components/shared/ProductDetailsClient";
+import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:5000/api";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sodayon.com";
 
-export async function generateMetadata({ params }: PageProps): Promise<import("next").Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
   try {
@@ -16,24 +18,53 @@ export async function generateMetadata({ params }: PageProps): Promise<import("n
       const json = await res.json();
       const p = json.data;
       if (p) {
-        const title = `${p.nameBn || p.nameEn || p.name} | Sodayon - সেরা কিডস খেলনা শপ`;
-        const description = (p.descriptionBn || p.descriptionEn || p.description || `${p.nameEn} কিনুন সোদায়ন থেকে।`).slice(0, 160);
+        const title = `${p.nameBn || p.nameEn || p.name} - কিনুন সেরা দামে | সদায়ন`;
+        const rawDesc = p.descriptionBn || p.descriptionEn || p.description || `${p.nameEn || p.name} কিনুন সদায়ন থেকে। সেরা দাম ও দ্রুত ডেলিভারি।`;
+        const description = rawDesc.length > 155 ? `${rawDesc.slice(0, 152)}...` : rawDesc;
+        const imageUrl = p.images && p.images.length > 0 ? p.images[0] : (p.image || `${SITE_URL}/default-product.jpg`);
+        const canonicalUrl = `${SITE_URL}/shop/products/${p.slug || slug}`;
+
         return {
           title,
           description,
+          alternates: {
+            canonical: canonicalUrl,
+          },
           openGraph: {
             title,
             description,
-            images: p.images && p.images.length > 0 ? [{ url: p.images[0] }] : (p.image ? [{ url: p.image }] : []),
+            url: canonicalUrl,
+            siteName: "সদায়ন",
+            type: "website",
+            images: [
+              {
+                url: imageUrl,
+                width: 800,
+                height: 800,
+                alt: p.nameEn || p.name,
+              },
+            ],
+          },
+          twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+            images: [imageUrl],
+          },
+          robots: {
+            index: true,
+            follow: true,
           },
         };
       }
     }
-  } catch (err) { /* fallback */ }
+  } catch (err) {
+    /* fallback */
+  }
 
   return {
-    title: "খেলনার বিস্তারিত | Sodayon",
-    description: "সেরা কিডস খেলনা ও বেবি কেয়ার আইটেম সংগ্রহ - সোদায়ন",
+    title: "খেলনার বিস্তারিত | সদায়ন",
+    description: "সেরা কিডস খেলনা ও বেবি কেয়ার আইটেম সংগ্রহ - সদায়ন",
   };
 }
 
@@ -78,7 +109,65 @@ export default async function ProductDetailPage({ params }: PageProps) {
       images: dbProduct.images?.length > 0 ? dbProduct.images : [dbProduct.image || "bg-indigo-100"],
     };
 
-    return <ProductDetailsClient product={productData} relatedProducts={relatedProducts} />;
+    // JSON-LD Structured Data Schema for Product & Breadcrumbs
+    const productSchema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": dbProduct.nameEn || dbProduct.name,
+      "image": productData.images,
+      "description": dbProduct.descriptionEn || dbProduct.descriptionBn || dbProduct.description,
+      "brand": {
+        "@type": "Brand",
+        "name": productData.brand,
+      },
+      "offers": {
+        "@type": "Offer",
+        "url": `${SITE_URL}/shop/products/${dbProduct.slug || slug}`,
+        "priceCurrency": "BDT",
+        "price": dbProduct.price,
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition",
+      },
+    };
+
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "হোম",
+          "item": SITE_URL,
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "শপ",
+          "item": `${SITE_URL}/shop`,
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": dbProduct.nameEn || dbProduct.name,
+          "item": `${SITE_URL}/shop/products/${dbProduct.slug || slug}`,
+        },
+      ],
+    };
+
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
+        <ProductDetailsClient product={productData} relatedProducts={relatedProducts} />
+      </>
+    );
   } catch (err) {
     console.error("[ProductDetailPage Error] Failed to fetch product:", err);
     notFound();

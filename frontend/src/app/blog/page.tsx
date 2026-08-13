@@ -2,9 +2,27 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Calendar, Clock, Sparkles, Send, User } from "lucide-react";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sodayon.com";
+
 export const metadata: Metadata = {
   title: "ব্লগ এবং প্লে আইডিয়াস | সদায়ন এডুকেশনাল ইনসাইটস",
   description: "আপনার সন্তানের মেধা ও দক্ষতা বিকাশে সাহায্য করার জন্য চাইল্ড ডেভেলপমেন্ট, ক্রিয়েটিভ প্লে আইডিয়াস এবং খেলনার নির্দেশিকা নিয়ে বিশেষজ্ঞদের লেখা আর্টিকেল পড়ুন।",
+  keywords: ["প্যারেন্টিং ব্লগ", "চাইল্ড ডেভেলপমেন্ট", "স্টেম খেলনা গাইড", "ক্রিয়েটিভ প্লে আইডিয়াস", "সদায়ন ব্লগ"],
+  alternates: {
+    canonical: "/blog",
+  },
+  openGraph: {
+    title: "ব্লগ এবং প্লে আইডিয়াস | সদায়ন এডুকেশনাল ইনসাইটস",
+    description: "আপনার সন্তানের মেধা ও দক্ষতা বিকাশে সাহায্য করার জন্য চাইল্ড ডেভেলপমেন্ট এবং প্লে আইডিয়াস সংক্রান্ত আর্টিকেল।",
+    url: `${SITE_URL}/blog`,
+    siteName: "সদায়ন",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ব্লগ এবং প্লে আইডিয়াস | সদায়ন এডুকেশনাল ইনসাইটস",
+    description: "আপনার সন্তানের মেধা ও দক্ষতা বিকাশে সাহায্য করার জন্য চাইল্ড ডেভেলপমেন্ট এবং প্লে আইডিয়াস।",
+  },
 };
 
 const CATEGORIES = ["সব", "বিকাশের মাইলফলক", "ডিআইওয়াই ও ক্র্যাফটস", "খেলনা গাইড", "বিশেষজ্ঞ সাক্ষাৎকার"];
