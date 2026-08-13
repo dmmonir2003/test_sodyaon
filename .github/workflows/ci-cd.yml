@@ -117,6 +117,5 @@ jobs:
           host: ${{ secrets.HOSTINGER_VPS_HOST }}
           username: ${{ secrets.HOSTINGER_VPS_USER || 'root' }}
           key: ${{ secrets.HOSTINGER_VPS_SSH_KEY }}
-          passphrase: ${{ secrets.HOSTINGER_VPS_PASSPHRASE }}
           script: bash /var/www/sodayon/deploy-hostinger.sh
 
