@@ -25,13 +25,33 @@ const outfit = Noto_Serif_Bengali({
   subsets: ["bengali"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sodayon.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     template: "%s | সদায়ন ই-কমার্স",
     default: "সদায়ন | আপনার সন্তানের জন্য নিখুঁত খেলনা খুঁজুন",
   },
   description: "সদায়ন - বিশ্বের সবচেয়ে স্মার্ট খেলনার দোকান। বয়স অনুযায়ী দারুণ সব খেলনার রিকমেন্ডেশন, চমৎকার গিফট সাজেশন এবং নিখুঁত খেলার সময়ের জন্য আমাদের এআই প্যারেন্টিং অ্যাসিস্ট্যান্স আবিষ্কার করুন।",
-  keywords: ["সদায়ন", "খেলনা", "বাচ্চা", "এআই খেলনা ফাইন্ডার", "শিক্ষামূলক খেলনা", "বাচ্চাদের উপহার"],
+  keywords: ["সদায়ন", "খেলনা", "বাচ্চা", "এআই খেলনা ফাইন্ডার", "শিক্ষামূলক খেলনা", "বাচ্চাদের উপহার", "Sodayon", "Kids Toys Bangladesh"],
+  authors: [{ name: "Sodayon Team", url: SITE_URL }],
+  creator: "Sodayon",
+  publisher: "Sodayon",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: "/favicon.svg",
     apple: "/favicon.svg",
@@ -39,7 +59,24 @@ export const metadata: Metadata = {
   openGraph: {
     title: "সদায়ন | আপনার সন্তানের জন্য নিখুঁত খেলনা খুঁজুন",
     description: "সদায়ন - বিশ্বের সবচেয়ে স্মার্ট খেলনার দোকান। বয়স অনুযায়ী দারুণ সব খেলনার রিকমেন্ডেশন, চমৎকার গিফট সাজেশন এবং নিখুঁত খেলার সময়ের জন্য আমাদের এআই প্যারেন্টিং অ্যাসিস্ট্যান্স আবিষ্কার করুন।",
+    url: SITE_URL,
+    siteName: "সদায়ন",
+    locale: "bn_BD",
     type: "website",
+    images: [
+      {
+        url: `${SITE_URL}/promo_toys_banner_1777417968994.png`,
+        width: 1200,
+        height: 630,
+        alt: "সদায়ন ই-কমার্স কিডস শপ",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "সদায়ন | আপনার সন্তানের জন্য নিখুঁত খেলনা খুঁজুন",
+    description: "সদায়ন - বিশ্বের সবচেয়ে স্মার্ট খেলনার দোকান। বয়স অনুযায়ী দারুণ সব খেলনার রিকমেন্ডেশন ও উপহার।",
+    images: [`${SITE_URL}/promo_toys_banner_1777417968994.png`],
   },
 };
 

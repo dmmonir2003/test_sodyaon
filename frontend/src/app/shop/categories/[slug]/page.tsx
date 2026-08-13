@@ -5,14 +5,15 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Metadata } from "next";
 
-// Define a type for our mock category database
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://sodayon.com";
+
+// Define a type for category metadata
 type CategoryMetadata = {
   name: string;
   description: string;
   theme: string;
 };
 
-// Mock database fetch
 const getCategoryMetadata = (slug: string): CategoryMetadata => {
   const categories: Record<string, CategoryMetadata> = {
     "action-figures": { name: "Action Figures", description: "Heroes, villains, and everything in between.", theme: "bg-red-500" },
@@ -21,22 +22,48 @@ const getCategoryMetadata = (slug: string): CategoryMetadata => {
     "dolls": { name: "Dolls & Figures", description: "Inspire empathy and storytelling with our inclusive collection of dolls.", theme: "bg-pink-500" },
     "outdoor": { name: "Outdoor Play", description: "Get outside and unleash their energy with our active outdoor play equipment.", theme: "bg-amber-500" }
   };
-  return categories[slug] || { name: slug.replace("-", " "), description: "Explore this amazing category.", theme: "bg-primary-600" };
+  return categories[slug] || { name: slug.replace(/-/g, " "), description: "Explore this amazing category of premium kids toys.", theme: "bg-primary-600" };
 };
 
 // DYNAMIC SEO GENERATION
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
   const category = getCategoryMetadata(resolvedParams.slug);
-  
+  const title = `${category.name} খেলনা কালেকশন | সদায়ন`;
+  const description = `সদায়ন থেকে সেরা ${category.name} খেলনা শপ করুন। ${category.description}`;
+  const canonicalUrl = `${SITE_URL}/shop/categories/${resolvedParams.slug}`;
+
   return {
-    title: `${category.name} | Shop at Sodayon`,
-    description: `Shop the best ${category.name} toys. ${category.description}`,
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
-      title: `${category.name} Toys | Sodayon`,
-      description: category.description,
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: "সদায়ন",
       type: "website",
-    }
+      images: [
+        {
+          url: `${SITE_URL}/promo_toys_banner_1777417968994.png`,
+          width: 1200,
+          height: 630,
+          alt: category.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`${SITE_URL}/promo_toys_banner_1777417968994.png`],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
   };
 }
 
@@ -86,7 +113,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
             </div>
             
             {/* JSON-LD Schema Component injected here for SEO */}
-            <ProductCollectionSchema category={category.name} />
+            <ProductCollectionSchema category={category.name} slug={resolvedParams.slug} />
           </div>
         </div>
       </div>
@@ -95,22 +122,21 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 }
 
 // JSON-LD Schema generation for SEO
-function ProductCollectionSchema({ category }: { category: string }) {
+function ProductCollectionSchema({ category, slug }: { category: string; slug: string }) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "itemListElement": [
-      {
-        "@type": "ListItem",
-        "position": 1,
-        "item": {
-          "@type": "Product",
-          "name": `${category} Item 1`,
-          "offers": { "@type": "Offer", "price": "39.99", "priceCurrency": "USD" }
-        }
+    "name": `${category} Toys Collection`,
+    "url": `${SITE_URL}/shop/categories/${slug}`,
+    "itemListElement": [1, 2, 3, 4, 5, 6].map((idx) => ({
+      "@type": "ListItem",
+      "position": idx,
+      "item": {
+        "@type": "Product",
+        "name": `${category} Item ${idx}`,
+        "offers": { "@type": "Offer", "price": (29.99 + idx * 10).toFixed(2), "priceCurrency": "BDT" }
       }
-      // In a real app, this maps over the actual items displayed on the page
-    ]
+    }))
   };
 
   return (
