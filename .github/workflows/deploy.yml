@@ -27,6 +27,16 @@ jobs:
             git fetch origin production
             git reset --hard origin/production
             cd backend
+            grep -q "EMAIL_USER=" .env || echo "EMAIL_USER=sodayonbd@gmail.com" >> .env
+            sed -i 's/EMAIL_USER=.*/EMAIL_USER=sodayonbd@gmail.com/' .env
+            grep -q "EMAIL_PASS=" .env || echo "EMAIL_PASS=ueyd setk eayo ugjg" >> .env
+            sed -i 's/EMAIL_PASS=.*/EMAIL_PASS="ueyd setk eayo ugjg"/' .env
+            grep -q "EMAIL_HOST=" .env || echo "EMAIL_HOST=smtp.gmail.com" >> .env
+            sed -i 's/EMAIL_HOST=.*/EMAIL_HOST=smtp.gmail.com/' .env
+            grep -q "EMAIL_PORT=" .env || echo "EMAIL_PORT=587" >> .env
+            sed -i 's/EMAIL_PORT=.*/EMAIL_PORT=587/' .env
+            grep -q "EMAIL_FROM=" .env || echo 'EMAIL_FROM="সদায়ন <sodayonbd@gmail.com>"' >> .env
+            sed -i 's/EMAIL_FROM=.*/EMAIL_FROM="সদায়ন <sodayonbd@gmail.com>"/' .env
             npm run build
             cd ../frontend
             npm run build
