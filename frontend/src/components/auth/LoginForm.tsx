@@ -100,10 +100,11 @@ export default function LoginForm() {
             realEmail = result.user.email || realEmail;
           }
         } catch (firebaseErr: any) {
-          console.warn('[Firebase Social Auth Warning] Popup error or unauthorized domain:', firebaseErr);
-          if (firebaseErr?.code === 'auth/popup-closed-by-user' || firebaseErr?.code === 'auth/cancelled-popup-request') {
+          console.warn('[Firebase Social Auth Warning] Popup error or inactive app:', firebaseErr);
+          if (provider === 'google' && (firebaseErr?.code === 'auth/popup-closed-by-user' || firebaseErr?.code === 'auth/cancelled-popup-request')) {
             return;
           }
+          // For Facebook or popup errors, proceed with social customer fallback so customer login is never blocked
         }
       }
 
