@@ -129,6 +129,32 @@ app.use('/api/menu', menuRouter);
 
 app.use('/api/settings/marketing', marketingSettingsRouter);
 
+// Singular-to-Plural Route Aliases & Redirects
+app.use('/api/category', (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  categoryRouter(req, res, next);
+});
+app.use('/api/product', (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  productRouter(req, res, next);
+});
+app.use('/api/brand', (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  brandRouter(req, res, next);
+});
+app.use('/api/order', (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  orderRouter(req, res, next);
+});
+app.use('/api/coupon', (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  couponRouter(req, res, next);
+});
+app.use('/api/menu', (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  menuRouter(req, res, next);
+});
+
 // 8. 404 handler for unmatched routes
 app.use((req, res, next) => {
   next(new ApiError(404, `Route not found - ${req.originalUrl}`));
