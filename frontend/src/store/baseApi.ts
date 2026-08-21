@@ -1,11 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 const getBaseUrl = () => {
+  
   let baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
   
   // Auto-upgrade protocol to HTTPS in secure environments to avoid Mixed Content blocks
   if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-    baseUrl = baseUrl.replace(/^http:\/\//, 'https://');
+    baseUrl = baseUrl?.replace(/^http:\/\//, 'https://');
   }
   
   return baseUrl;

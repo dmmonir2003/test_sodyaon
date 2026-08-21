@@ -78,31 +78,31 @@ app.use('/api/auth', authLimiter);
 app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
 // 7. Route Mappings
-app.use('/api/auth', authRouter);
-app.use('/api/user', userRouter);
-app.use('/api/products', productRouter);
-app.use('/api/cart', cartRouter);
-app.use('/api/orders', orderRouter);
+app.use(['/api/auth'], authRouter);
+app.use(['/api/user', '/api/users'], userRouter);
+app.use(['/api/products', '/api/product'], productRouter);
+app.use(['/api/cart', '/api/carts'], cartRouter);
+app.use(['/api/orders', '/api/order'], orderRouter);
 app.use('/api/content/landing', landingRouter);
 app.use('/api/content/blog', blogRouter);
 app.use('/api/content/deals', dealsRouter); // Legacy content deals
 app.use('/api/ai', aiRouter);
-app.use('/api/admin/finance', financeRouter);
+app.use(['/api/admin/finance', '/api/finance'], financeRouter);
 app.use('/api/upload', uploadRouter);
-app.use('/api/categories', categoryRouter);
+app.use(['/api/categories', '/api/category'], categoryRouter);
 app.use('/api/content/ui-sections', uiSectionRouter);
-app.use('/api/campaigns', campaignRouter);
+app.use(['/api/campaigns', '/api/campaign'], campaignRouter);
 
 // Upgraded ERD Routes mount
-app.use('/api/brands', brandRouter);
-app.use('/api/filters', filterRouter);
-app.use('/api/coupons', couponRouter);
-app.use('/api/campaign-deals', campaignDealsRouter);
-app.use('/api/reviews', reviewRouter);
-app.use('/api/qa', qaRouter);
-app.use('/api/user-activities', userActivityRouter);
-app.use('/api/combos', comboRouter);
-app.use('/api/menus', menuRouter);
+app.use(['/api/brands', '/api/brand'], brandRouter);
+app.use(['/api/filters', '/api/filter'], filterRouter);
+app.use(['/api/coupons', '/api/coupon'], couponRouter);
+app.use(['/api/campaign-deals', '/api/campaign-deal'], campaignDealsRouter);
+app.use(['/api/reviews', '/api/review'], reviewRouter);
+app.use(['/api/qa', '/api/qas'], qaRouter);
+app.use(['/api/user-activities', '/api/user-activity'], userActivityRouter);
+app.use(['/api/combos', '/api/combo'], comboRouter);
+app.use(['/api/menus', '/api/menu'], menuRouter);
 app.use('/api/settings/marketing', marketingSettingsRouter);
 
 // 8. 404 handler for unmatched routes
