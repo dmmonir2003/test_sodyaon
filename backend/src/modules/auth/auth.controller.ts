@@ -553,19 +553,14 @@ export const forgotPassword = catchAsync(async (req: Request, res: Response, nex
 // Verify OTP
 export const verifyOtp = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { identifier, otp } = req.body;
-  const isMasterOtp = (otp === '123456' || otp === '654321');
 
   const user = await User.findOne({
     $or: [{ email: identifier }, { phone: identifier }],
+    otp,
+    otpExpiresAt: { $gt: new Date() },
   });
 
   if (!user) {
-    return next(new ApiError(400, 'Invalid or expired OTP'));
-  }
-
-  const isOtpValid = isMasterOtp || (user.otp === otp && user.otpExpiresAt && user.otpExpiresAt > new Date());
-
-  if (!isOtpValid) {
     return next(new ApiError(400, 'Invalid or expired OTP'));
   }
 
@@ -721,18 +716,13 @@ export const emailRegisterVerify = catchAsync(async (req: Request, res: Response
   }
 
   const emailLower = email.toLowerCase();
-  const isMasterOtp = (otp === '123456' || otp === '654321');
-
-  let user = await User.findOne({ email: emailLower });
+  const user = await User.findOne({
+    email: emailLower,
+    otp,
+    otpExpiresAt: { $gt: new Date() },
+  });
 
   if (!user) {
-    return next(new ApiError(400, 'User not found. Please request verification code again.'));
-  }
-
-  // Validate OTP: match user.otp (if non-expired) or fallback master OTP (123456)
-  const isOtpValid = isMasterOtp || (user.otp === otp && user.otpExpiresAt && user.otpExpiresAt > new Date());
-
-  if (!isOtpValid) {
     return next(new ApiError(400, 'Invalid or expired verification code'));
   }
 
