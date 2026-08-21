@@ -51,9 +51,24 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold text-slate-900">৪. যোগাযোগ</h2>
+            <h2 className="text-xl font-semibold text-slate-900">৪. ফেসবুক ও গুগল ইউজার ডেটা মুছে ফেলার নির্দেশাবলী (Facebook & User Data Deletion)</h2>
             <p>
-              গোপনীয়তা নীতি সম্পর্কিত যেকোনো প্রশ্নের জন্য আমাদের সাথে যোগাযোগ করুন: <span className="font-semibold text-primary-600">support@sodayon.com</span>
+              সদায়োন গ্রাহকদের তথ্যের গোপনীয়তাকে সম্মান জানায়। আপনি যদি ফেসবুক বা গুগল সোশ্যাল লগইনের মাধ্যমে অ্যাকাউন্ট তৈরি করে থাকেন এবং আপনার অ্যাকাউন্ট ও সংরক্ষিত তথ্য মুছে ফেলতে চান, তবে নিম্নোক্ত পদক্ষেপগুলো অনুসরণ করুন:
+            </p>
+            <ol className="list-decimal pl-6 space-y-2">
+              <li>
+                <strong>মেটা/ফেসবুক অ্যাকাউন্ট সেটিংসের মাধ্যমে:</strong> আপনার Facebook অ্যাকাউন্টে লগইন করে <em>Settings & Privacy &gt; Settings &gt; Apps and Websites</em> এ যান। সেখান থেকে <strong>Sodayon</strong> অ্যাপটি খুঁজে নিয়ে <strong>Remove</strong> বাটনে ক্লিক করুন।
+              </li>
+              <li>
+                <strong>সরাসরি ইমেইলের মাধ্যমে অনুরোধ:</strong> আপনার নিবন্ধিত ইমেইল ঠিকানা থেকে <span className="font-semibold text-primary-600">sodayonbd@gmail.com</span> অথবা <span className="font-semibold text-primary-600">support@sodayon.com</span> ঠিকানায় বিষয়বস্তু <em>&quot;Account Data Deletion Request&quot;</em> লিখে ইমেইল করুন। আমাদের সাপোর্ট টিম ৪৮ ঘণ্টার মধ্যে আপনার সমস্ত ডেটা সার্ভার থেকে স্থায়ীভাবে মুছে ফেলবে।
+              </li>
+            </ol>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-xl font-semibold text-slate-900">৫. যোগাযোগ (Contact Us)</h2>
+            <p>
+              গোপনীয়তা নীতি বা ডেটা সুরক্ষা সম্পর্কিত যেকোনো প্রশ্নের জন্য আমাদের সাথে যোগাযোগ করুন: <span className="font-semibold text-primary-600">sodayonbd@gmail.com</span>
             </p>
           </section>
         </div>
