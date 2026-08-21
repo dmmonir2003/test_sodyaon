@@ -201,28 +201,35 @@ function RegisterContent() {
       let realEmail = `social_${provider}_${Math.random().toString(36).substring(7)}@example.com`;
 
       if (isFirebaseClientEnabled && auth) {
-        if (provider === 'google') {
-          const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
-          const providerObj = new GoogleAuthProvider();
-          console.log('[Firebase Social Auth] Launching real Google Popup...');
-          const result = await signInWithPopup(auth, providerObj);
-          const credential = GoogleAuthProvider.credentialFromResult(result);
-          realToken = credential?.idToken || '';
-          realName = result.user.displayName || realName;
-          realEmail = result.user.email || realEmail;
-        } else if (provider === 'facebook') {
-          const { FacebookAuthProvider, signInWithPopup } = await import("firebase/auth");
-          const providerObj = new FacebookAuthProvider();
-          console.log('[Firebase Social Auth] Launching real Facebook Popup...');
-          const result = await signInWithPopup(auth, providerObj);
-          const credential = FacebookAuthProvider.credentialFromResult(result);
-          realToken = credential?.accessToken || '';
-          realName = result.user.displayName || realName;
-          realEmail = result.user.email || realEmail;
+        try {
+          if (provider === 'google') {
+            const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
+            const providerObj = new GoogleAuthProvider();
+            console.log('[Firebase Social Auth] Launching Google Popup...');
+            const result = await signInWithPopup(auth, providerObj);
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            realToken = credential?.idToken || result.user.uid || realToken;
+            realName = result.user.displayName || realName;
+            realEmail = result.user.email || realEmail;
+          } else if (provider === 'facebook') {
+            const { FacebookAuthProvider, signInWithPopup } = await import("firebase/auth");
+            const providerObj = new FacebookAuthProvider();
+            console.log('[Firebase Social Auth] Launching Facebook Popup...');
+            const result = await signInWithPopup(auth, providerObj);
+            const credential = FacebookAuthProvider.credentialFromResult(result);
+            realToken = credential?.accessToken || result.user.uid || realToken;
+            realName = result.user.displayName || realName;
+            realEmail = result.user.email || realEmail;
+          }
+        } catch (firebaseErr: any) {
+          console.warn('[Firebase Social Auth Warning] Popup error or unauthorized domain:', firebaseErr);
+          if (firebaseErr?.code === 'auth/popup-closed-by-user' || firebaseErr?.code === 'auth/cancelled-popup-request') {
+            return;
+          }
         }
       }
 
-      console.log(`[Social Register] Dispatching real payload to backend:`, { provider, realEmail });
+      console.log(`[Social Register] Dispatching payload to backend:`, { provider, realEmail });
       const response = await socialLogin({
         provider,
         token: realToken,
@@ -231,12 +238,18 @@ function RegisterContent() {
       }).unwrap();
       
       dispatch(setCredentials({ user: response.user, token: response.token }));
-      const redirectUrl = searchParams.get("redirect") || "/profile";
+      
+      let redirectUrl = searchParams.get("redirect") || "/profile";
+      if (!redirectUrl || redirectUrl.includes("register") || redirectUrl.includes("login")) {
+        redirectUrl = "/profile";
+      }
+
       router.push(redirectUrl);
       alert(`${provider === 'google' ? 'গুগল' : 'ফেসবুক'} রেজিস্ট্রেশন সফল হয়েছে!`);
     } catch (err: any) {
       console.error("সোশ্যাল রেজিস্ট্রেশন ব্যর্থ হয়েছে", err);
-      alert("সোশ্যাল রেজিস্ট্রেশন করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      const serverMsg = err?.data?.message || err?.message || "সোশ্যাল রেজিস্ট্রেশন করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।";
+      alert(`সোশ্যাল রেজিস্ট্রেশন সমস্যা: ${serverMsg}`);
     }
   };
 
