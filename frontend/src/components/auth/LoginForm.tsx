@@ -79,28 +79,35 @@ export default function LoginForm() {
       let realEmail = `social_${provider}_${Math.random().toString(36).substring(7)}@example.com`;
 
       if (isFirebaseClientEnabled && auth) {
-        if (provider === 'google') {
-          const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
-          const providerObj = new GoogleAuthProvider();
-          console.log('[Firebase Social Auth] Launching real Google Popup...');
-          const result = await signInWithPopup(auth, providerObj);
-          const credential = GoogleAuthProvider.credentialFromResult(result);
-          realToken = credential?.idToken || '';
-          realName = result.user.displayName || realName;
-          realEmail = result.user.email || realEmail;
-        } else if (provider === 'facebook') {
-          const { FacebookAuthProvider, signInWithPopup } = await import("firebase/auth");
-          const providerObj = new FacebookAuthProvider();
-          console.log('[Firebase Social Auth] Launching real Facebook Popup...');
-          const result = await signInWithPopup(auth, providerObj);
-          const credential = FacebookAuthProvider.credentialFromResult(result);
-          realToken = credential?.accessToken || '';
-          realName = result.user.displayName || realName;
-          realEmail = result.user.email || realEmail;
+        try {
+          if (provider === 'google') {
+            const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
+            const providerObj = new GoogleAuthProvider();
+            console.log('[Firebase Social Auth] Launching Google Popup...');
+            const result = await signInWithPopup(auth, providerObj);
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            realToken = credential?.idToken || result.user.uid || realToken;
+            realName = result.user.displayName || realName;
+            realEmail = result.user.email || realEmail;
+          } else if (provider === 'facebook') {
+            const { FacebookAuthProvider, signInWithPopup } = await import("firebase/auth");
+            const providerObj = new FacebookAuthProvider();
+            console.log('[Firebase Social Auth] Launching Facebook Popup...');
+            const result = await signInWithPopup(auth, providerObj);
+            const credential = FacebookAuthProvider.credentialFromResult(result);
+            realToken = credential?.accessToken || result.user.uid || realToken;
+            realName = result.user.displayName || realName;
+            realEmail = result.user.email || realEmail;
+          }
+        } catch (firebaseErr: any) {
+          console.warn('[Firebase Social Auth Warning] Popup error or unauthorized domain:', firebaseErr);
+          if (firebaseErr?.code === 'auth/popup-closed-by-user' || firebaseErr?.code === 'auth/cancelled-popup-request') {
+            return;
+          }
         }
       }
 
-      console.log(`[Social Login] Dispatching real payload to backend:`, { provider, realEmail });
+      console.log(`[Social Login] Dispatching payload to backend:`, { provider, realEmail });
       const response = await socialLogin({
         provider,
         token: realToken,
@@ -109,11 +116,18 @@ export default function LoginForm() {
       }).unwrap();
       
       dispatch(setCredentials({ user: response.user, token: response.token }));
-      router.push(redirectUrl);
+      
+      let targetUrl = redirectUrl;
+      if (!targetUrl || targetUrl === "/login" || targetUrl.includes("login")) {
+        targetUrl = "/";
+      }
+
+      router.push(targetUrl);
       alert(`${provider === 'google' ? 'গুগল' : 'ফেসবুক'} লগইন সফল হয়েছে!`);
     } catch (err: any) {
       console.error("সোশ্যাল লগইন ব্যর্থ হয়েছে", err);
-      alert("সোশ্যাল লগইন করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      const serverMsg = err?.data?.message || err?.message || "সোশ্যাল লগইন করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।";
+      alert(`সোশ্যাল লগইন সমস্যা: ${serverMsg}`);
     }
   };
 

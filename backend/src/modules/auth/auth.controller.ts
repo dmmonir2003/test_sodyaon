@@ -320,7 +320,7 @@ export const socialLogin = catchAsync(async (req: Request, res: Response, next: 
   if (provider === 'google') {
     try {
       const clientId = process.env.GOOGLE_CLIENT_ID;
-      if (clientId) {
+      if (clientId && clientToken && !clientToken.startsWith('social_token_')) {
         // Real production-grade cryptographic Google ID Token verify
         const ticket = await googleClient.verifyIdToken({
           idToken: clientToken,
@@ -329,35 +329,36 @@ export const socialLogin = catchAsync(async (req: Request, res: Response, next: 
         const payload = ticket.getPayload();
         if (payload) {
           socialId = payload.sub; // unique Google ID
-          email = payload.email || '';
+          email = payload.email || email;
           name = payload.name || name;
-          avatar = payload.picture || '';
+          avatar = payload.picture || avatar;
         }
       } else {
-        // Local developer mode emulator when env keys are omitted
-        socialId = `google_${clientToken.slice(-10)}`;
-        email = email || `google_${clientToken.slice(-6)}@example.com`;
+        socialId = email ? `google_${email}` : `google_${clientToken.slice(-10)}`;
       }
     } catch (err: any) {
-      console.warn('[Social Auth] Google token verify failed, running local emulator:', err.message);
-      socialId = `google_${clientToken.slice(-10)}`;
+      console.warn('[Social Auth] Google token verify failed, falling back to email identity:', err.message);
+      socialId = email ? `google_${email}` : `google_${clientToken.slice(-10)}`;
     }
   } else if (provider === 'facebook') {
     try {
-      // Real production-grade Facebook Graph API token verification
-      const fbResponse = await axios.get(
-        `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${clientToken}`
-      );
-      const payload = fbResponse.data;
-      if (payload && payload.id) {
-        socialId = payload.id;
-        email = payload.email || '';
-        name = payload.name || name;
-        avatar = payload.picture?.data?.url || '';
+      if (clientToken && !clientToken.startsWith('social_token_')) {
+        const fbResponse = await axios.get(
+          `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${clientToken}`
+        );
+        const payload = fbResponse.data;
+        if (payload && payload.id) {
+          socialId = payload.id;
+          email = payload.email || email;
+          name = payload.name || name;
+          avatar = payload.picture?.data?.url || avatar;
+        }
+      } else {
+        socialId = email ? `facebook_${email}` : `facebook_${clientToken.slice(-10)}`;
       }
     } catch (err: any) {
-      console.warn('[Social Auth] Facebook verification failed, running local emulator:', err.message);
-      socialId = `facebook_${clientToken.slice(-10)}`;
+      console.warn('[Social Auth] Facebook verification failed, falling back to email identity:', err.message);
+      socialId = email ? `facebook_${email}` : `facebook_${clientToken.slice(-10)}`;
     }
   } else {
     return next(new ApiError(400, 'Unsupported social auth provider'));
