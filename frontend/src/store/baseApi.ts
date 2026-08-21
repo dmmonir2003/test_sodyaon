@@ -1,9 +1,20 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+const getBaseUrl = () => {
+  let baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  
+  // Auto-upgrade protocol to HTTPS in secure environments to avoid Mixed Content blocks
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    baseUrl = baseUrl.replace(/^http:\/\//, 'https://');
+  }
+  
+  return baseUrl;
+};
+
 export const baseApi = createApi({
   reducerPath: 'baseApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+    baseUrl: getBaseUrl(),
     prepareHeaders: (headers, { getState }) => {
       // Attach JWT token from cookie automatically if needed
       if (typeof document !== 'undefined') {

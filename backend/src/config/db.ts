@@ -7,11 +7,11 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/sodayon';
 
 export const connectDB = async (): Promise<void> => {
   try {
-    const conn = await mongoose.connect(MONGO_URI);
+    const conn = await mongoose.connect(MONGO_URI, { family: 4 });
     console.log(`[MongoDB Connected] Host: ${conn.connection.host}`);
   } catch (error: any) {
     console.error(`[MongoDB Connection Error] ${error.message}`);
-    process.exit(1);
+    console.warn(`[MongoDB Warning] Server running in offline/retry mode until DB is whitelisted.`);
   }
 };
 

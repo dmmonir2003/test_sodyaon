@@ -62,16 +62,23 @@ export default function ShopMegaMenu({ title, childItems = [] }: ShopMegaMenuPro
                 কুইক লিংক
               </h3>
               <ul className="space-y-4">
-                {quickLinks.map((sub: any) => (
-                  <li key={sub._id}>
-                    <Link
-                      href={sub.url}
-                      className={`text-sm ${sub.titleEn === 'Age Finder' || sub.titleBn === 'বয়স-ভিত্তিক ফাইন্ডার' ? 'font-bold text-primary-600 dark:text-primary-400' : 'font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400'}`}
-                    >
-                      {sub.titleBn}
-                    </Link>
-                  </li>
-                ))}
+                {quickLinks.map((sub: any) => {
+                  const formattedUrl = sub.url ? (sub.url.startsWith('/') ? sub.url : `/${sub.url}`) : '/shop';
+                  return (
+                    <li key={sub._id}>
+                      <Link
+                        href={formattedUrl}
+                        className={`text-sm ${
+                          sub.titleEn === 'Age Finder' || sub.titleBn === 'বয়স-ভিত্তিক ফাইন্ডার'
+                            ? 'font-bold text-primary-600 dark:text-primary-400'
+                            : 'font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400'
+                        }`}
+                      >
+                        {sub.titleBn}
+                      </Link>
+                    </li>
+                  );
+                })}
                 {quickLinks.length === 0 && (
                   <li className="text-sm text-slate-400">কোন লিংক নেই।</li>
                 )}
@@ -83,30 +90,30 @@ export default function ShopMegaMenu({ title, childItems = [] }: ShopMegaMenuPro
                 শীর্ষ ক্যাটাগরি
               </h3>
               <ul className="space-y-4">
-                {topSubcategories.length > 0 ? (
-                  topSubcategories.map((sub: any) => (
-                    <li key={sub._id || sub.id}>
-                      <Link
-                        href={`/shop?category=${sub._id || sub.id}`}
-                        className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                      >
-                        {sub.nameBn}
-                      </Link>
-                    </li>
-                  ))
-                ) : (
-                  topCategories.map((sub: any) => (
+                {topCategories.map((sub: any) => {
+                  const formattedUrl = sub.url ? (sub.url.startsWith('/') ? sub.url : `/${sub.url}`) : '/shop';
+                  return (
                     <li key={sub._id}>
                       <Link
-                        href={sub.url}
-                        className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400"
+                        href={formattedUrl}
+                        className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 transition-colors"
                       >
                         {sub.titleBn}
                       </Link>
                     </li>
-                  ))
-                )}
-                {topSubcategories.length === 0 && topCategories.length === 0 && (
+                  );
+                })}
+                {topSubcategories.map((sub: any) => (
+                  <li key={sub._id || sub.id}>
+                    <Link
+                      href={`/shop?category=${sub._id || sub.id}`}
+                      className="text-sm font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 transition-colors"
+                    >
+                      {sub.nameBn}
+                    </Link>
+                  </li>
+                ))}
+                {topCategories.length === 0 && topSubcategories.length === 0 && (
                   <li className="text-sm text-slate-400">কোন ক্যাটাগরি নেই।</li>
                 )}
               </ul>
@@ -117,28 +124,32 @@ export default function ShopMegaMenu({ title, childItems = [] }: ShopMegaMenuPro
                 শিশু পণ্য
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                {babySubcategories.length > 0 ? (
-                  babySubcategories.map((sub: any) => (
-                    <Link
-                      key={sub._id || sub.id}
-                      href={`/shop?category=${sub._id || sub.id}`}
-                      className={`text-sm px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-center font-medium text-slate-700 dark:text-slate-300`}
-                    >
-                      {sub.nameBn}
-                    </Link>
-                  ))
-                ) : (
-                  babyProducts.map((sub: any) => (
+                {babyProducts.map((sub: any) => {
+                  const formattedUrl = sub.url ? (sub.url.startsWith('/') ? sub.url : `/${sub.url}`) : '/shop';
+                  return (
                     <Link
                       key={sub._id}
-                      href={sub.url}
-                      className={`text-sm px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-center ${sub.titleEn === 'Baby Bags' || sub.titleBn === 'শিশু ব্যাগ' ? 'font-bold text-primary-600 dark:text-primary-400' : 'font-medium text-slate-700 dark:text-slate-300'}`}
+                      href={formattedUrl}
+                      className={`text-sm px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-center ${
+                        sub.titleEn === 'Baby Bags' || sub.titleBn === 'শিশু ব্যাগ'
+                          ? 'font-bold text-primary-600 dark:text-primary-400'
+                          : 'font-medium text-slate-700 dark:text-slate-300'
+                      }`}
                     >
                       {sub.titleBn}
                     </Link>
-                  ))
-                )}
-                {babySubcategories.length === 0 && babyProducts.length === 0 && (
+                  );
+                })}
+                {babySubcategories.map((sub: any) => (
+                  <Link
+                    key={sub._id || sub.id}
+                    href={`/shop?category=${sub._id || sub.id}`}
+                    className="text-sm px-4 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-center font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    {sub.nameBn}
+                  </Link>
+                ))}
+                {babyProducts.length === 0 && babySubcategories.length === 0 && (
                   <div className="text-sm text-slate-400 col-span-2">কোন পণ্য নেই।</div>
                 )}
               </div>
