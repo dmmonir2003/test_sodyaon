@@ -79,20 +79,31 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
 // 7. Route Mappings
 app.use('/api/auth', authRouter);
-app.use('/api/user', userRouter);
-app.use('/api/users', userRouter);
 
-app.use('/api/products', productRouter);
-app.use('/api/product', productRouter);
+app.use(['/api/users', '/api/user'], (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  userRouter(req, res, next);
+});
 
-app.use('/api/cart', cartRouter);
-app.use('/api/carts', cartRouter);
+app.use(['/api/products', '/api/product'], (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  productRouter(req, res, next);
+});
 
-app.use('/api/orders', orderRouter);
-app.use('/api/order', orderRouter);
+app.use(['/api/carts', '/api/cart'], (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  cartRouter(req, res, next);
+});
 
-app.use('/api/categories', categoryRouter);
-app.use('/api/category', categoryRouter);
+app.use(['/api/orders', '/api/order'], (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  orderRouter(req, res, next);
+});
+
+app.use(['/api/categories', '/api/category'], (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  categoryRouter(req, res, next);
+});
 
 app.use('/api/content/landing', landingRouter);
 app.use('/api/content/blog', blogRouter);
@@ -102,58 +113,49 @@ app.use('/api/admin/finance', financeRouter);
 app.use('/api/finance', financeRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/content/ui-sections', uiSectionRouter);
-app.use('/api/campaigns', campaignRouter);
-app.use('/api/campaign', campaignRouter);
+
+app.use(['/api/campaigns', '/api/campaign'], (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  campaignRouter(req, res, next);
+});
 
 // Upgraded ERD Routes mount
-app.use('/api/brands', brandRouter);
-app.use('/api/brand', brandRouter);
-
-app.use('/api/filters', filterRouter);
-app.use('/api/filter', filterRouter);
-
-app.use('/api/coupons', couponRouter);
-app.use('/api/coupon', couponRouter);
-
-app.use('/api/campaign-deals', campaignDealsRouter);
-app.use('/api/reviews', reviewRouter);
-app.use('/api/review', reviewRouter);
-
-app.use('/api/qa', qaRouter);
-app.use('/api/user-activities', userActivityRouter);
-app.use('/api/combos', comboRouter);
-app.use('/api/combo', comboRouter);
-
-app.use('/api/menus', menuRouter);
-app.use('/api/menu', menuRouter);
-
-app.use('/api/settings/marketing', marketingSettingsRouter);
-
-// Singular-to-Plural Route Aliases & Redirects
-app.use('/api/category', (req, res, next) => {
-  req.url = req.url === '' ? '/' : req.url;
-  categoryRouter(req, res, next);
-});
-app.use('/api/product', (req, res, next) => {
-  req.url = req.url === '' ? '/' : req.url;
-  productRouter(req, res, next);
-});
-app.use('/api/brand', (req, res, next) => {
+app.use(['/api/brands', '/api/brand'], (req, res, next) => {
   req.url = req.url === '' ? '/' : req.url;
   brandRouter(req, res, next);
 });
-app.use('/api/order', (req, res, next) => {
+
+app.use(['/api/filters', '/api/filter'], (req, res, next) => {
   req.url = req.url === '' ? '/' : req.url;
-  orderRouter(req, res, next);
+  filterRouter(req, res, next);
 });
-app.use('/api/coupon', (req, res, next) => {
+
+app.use(['/api/coupons', '/api/coupon'], (req, res, next) => {
   req.url = req.url === '' ? '/' : req.url;
   couponRouter(req, res, next);
 });
-app.use('/api/menu', (req, res, next) => {
+
+app.use('/api/campaign-deals', campaignDealsRouter);
+
+app.use(['/api/reviews', '/api/review'], (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  reviewRouter(req, res, next);
+});
+
+app.use('/api/qa', qaRouter);
+app.use('/api/user-activities', userActivityRouter);
+
+app.use(['/api/combos', '/api/combo'], (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  comboRouter(req, res, next);
+});
+
+app.use(['/api/menus', '/api/menu'], (req, res, next) => {
   req.url = req.url === '' ? '/' : req.url;
   menuRouter(req, res, next);
 });
+
+app.use('/api/settings/marketing', marketingSettingsRouter);
 
 // 8. 404 handler for unmatched routes
 app.use((req, res, next) => {
