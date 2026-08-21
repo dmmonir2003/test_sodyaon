@@ -1,0 +1,32 @@
+name: Production Deployment CI/CD
+
+on:
+  push:
+    branches:
+      - production
+
+jobs:
+  deploy:
+    name: Deploy to Hostinger VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Production Code
+        uses: actions/checkout@v4
+
+      - name: SSH & Deploy to Hostinger
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 187.52.115.218
+          username: root
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: 22
+          script_stop: true
+          script: |
+            cd /var/www/sodayon
+            git pull origin production
+            cd backend
+            npm run build
+            cd ../frontend
+            npm run build
+            pm2 reload all
