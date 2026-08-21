@@ -24,7 +24,8 @@ jobs:
           script_stop: true
           script: |
             cd /var/www/sodayon
-            git pull origin production
+            git fetch origin production
+            git reset --hard origin/production
             cd backend
             npm run build
             cd ../frontend
