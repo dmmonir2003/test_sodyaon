@@ -13,7 +13,7 @@ import { protect, requirePermission } from '../../middleware/auth';
 const router = Router();
 
 // Public routes
-router.get('/', getAllProducts);
+router.get(['/', ''], getAllProducts);
 router.get('/deals/special-offers', getSpecialOffers);
 router.get('/:id', getProductById);
 

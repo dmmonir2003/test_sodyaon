@@ -11,7 +11,7 @@ import { protect, requirePermission } from '../../middleware/auth';
 const router = Router();
 
 // Public routes
-router.get('/', getAllCategories);
+router.get(['/', ''], getAllCategories);
 router.get('/:idOrSlug', getCategoryByIdOrSlug);
 
 // Dashboard management routes
