@@ -185,14 +185,15 @@ export default function MobileNavDrawer() {
             <div className="flex items-center justify-between mb-3 px-1">
               <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                 <Layers className="h-3.5 w-3.5 text-primary-600" />
-                ক্যাটাগরি ও সাব-ক্যাটাগরি
+                শীর্ষ ক্যাটাগরি
               </span>
               <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full font-mono font-bold">
                 {rootCategories.length} টি
               </span>
             </div>
 
-            <div className="space-y-2">
+            {/* Main Categories List with vertical scrollbar after 5 items */}
+            <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
               {rootCategories.map((cat: any) => {
                 const isExpanded = expandedCatSlug === cat.slug;
                 const subcats = cat.children || [];
@@ -256,7 +257,7 @@ export default function MobileNavDrawer() {
                     {isExpanded && (
                       <div className="px-3 pb-3 pt-1 border-t border-slate-200/60 dark:border-slate-800 space-y-2.5 animate-fade-in">
                         {subcats.length > 0 ? (
-                          <div className="grid grid-cols-2 gap-2 pt-1">
+                          <div className="grid grid-cols-2 gap-2 pt-1 max-h-[220px] overflow-y-auto pr-1">
                             {subcats.map((sub: any) => (
                               <Link
                                 key={sub.id || sub._id || sub.slug}
