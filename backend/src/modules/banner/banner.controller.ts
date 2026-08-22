@@ -6,6 +6,7 @@ import { ApiError } from '../../utils/ApiError';
 const DEFAULT_BANNERS = [
   {
     type: 'promo',
+    title: '৳৬,০০০',
     badge: '৳৬,০০০',
     badgeLabel: 'ছাড়!',
     subtitle: 'ঈদের কেনাকাটায় দারুণ সারপ্রাইজ',
@@ -19,6 +20,7 @@ const DEFAULT_BANNERS = [
   },
   {
     type: 'image',
+    title: '',
     link: '/shop/new-arrivals',
     imageUrl: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80',
     sortOrder: 2,
@@ -26,6 +28,7 @@ const DEFAULT_BANNERS = [
   },
   {
     type: 'promo',
+    title: 'ফ্রি',
     badge: 'ফ্রি',
     badgeLabel: 'ডেলিভারি!',
     subtitle: '২০০০ টাকার বেশি অর্ডারে সারা দেশে ফ্রি ডেলিভারি',

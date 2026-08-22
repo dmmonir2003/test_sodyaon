@@ -127,59 +127,133 @@ export default function HomeHeroBanner() {
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
             >
               {/* Sliding Contents */}
-              {activeBanners.map((banner: any, index: number) => (
-                <div 
-                  key={banner._id || banner.id || index}
-                  className="min-w-full relative flex flex-col justify-center overflow-hidden "
-                >
-                  {banner.type === 'image' ? (
-                     <Link href={banner.link || "/shop"} className="block w-full h-full relative group ">
-                        {banner.imageUrl && (
-                          <Image 
-                            src={banner.imageUrl} 
-                            alt="" 
-                            fill
-                            sizes="(max-width: 768px) 100vw, 66vw"
-                            className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                          />
-                        )}
-                        {/* Subte overlay on hover to indicate clickability */}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 z-10"></div>
-                     </Link>
-                  ) : (
-                    <div className={`w-full h-full bg-gradient-to-r ${banner.bgGradient || "from-orange-50 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/20"} flex flex-col justify-center p-6 sm:p-10 lg:p-14`}>
-                      <div className="max-w-xs sm:max-w-sm lg:max-w-md relative z-20">
-                        <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black font-heading text-slate-900 dark:text-white leading-tight mb-2 lg:mb-4">
-                            {banner.badge} <span className="text-xl sm:text-2xl lg:text-3xl text-primary-600 block sm:inline">{banner.badgeLabel}</span>
-                        </h2>
-                        <p className="text-slate-700 dark:text-slate-300 font-medium text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
-                            {banner.subtitle}
-                        </p>
-                        <Link href={banner.link || "/shop"} className="inline-block bg-primary-600 text-white font-bold px-6 sm:px-8 py-2 sm:py-3 rounded text-sm sm:text-base hover:bg-primary-700 transition shadow-lg">
-                            {banner.buttonText || "অফার দেখুন"}
-                        </Link>
-                      </div>
+              {activeBanners.map((banner: any, index: number) => {
+                const isImageBanner = banner.type === 'image' || (!banner.type && banner.imageUrl);
+                const hasText = Boolean(banner.title || banner.badge || banner.subtitle || banner.buttonText);
+                const titleText = banner.title || banner.badge || "";
+                const badgeTag = banner.badgeLabel || "";
+                const subtitleText = banner.subtitle || "";
+                const buttonLabel = banner.buttonText || (hasText ? "অফার দেখুন" : "");
+                const targetLink = banner.link || "/shop";
 
-                      {/* Absolute right side PROMO IMAGE & Graphic Simulation */}
-                      <div className="absolute right-0 bottom-0 w-2/3 sm:w-1/2 h-full flex justify-end items-end p-2 sm:p-6 lg:p-10 pointer-events-none z-10">
-                          {banner.promoImage && (
-                            <div className="relative w-full h-full">
-                              <Image 
-                                src={banner.promoImage} 
-                                alt="Promo product" 
-                                fill
-                                sizes="(max-width: 768px) 50vw, 33vw"
-                                className="object-contain object-right-bottom opacity-90 drop-shadow-xl z-20 mix-blend-multiply dark:mix-blend-normal"
-                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                              />
-                            </div>
-                          )}
-                          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 sm:w-56 sm:h-56 lg:w-72 lg:h-72 rounded-full blur-3xl -z-10 opacity-70 ${banner.blobColor || "bg-orange-200 dark:bg-orange-800/50"}`}></div>
+                // Case 1: Pure Image Banner (Without Title)
+                if (isImageBanner && !hasText) {
+                  return (
+                    <div 
+                      key={banner._id || banner.id || index}
+                      className="min-w-full h-full relative flex flex-col justify-center overflow-hidden"
+                    >
+                      <Link href={targetLink} className="block w-full h-full relative group">
+                        {banner.imageUrl ? (
+                          <img 
+                            src={banner.imageUrl} 
+                            alt="Hero Banner" 
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80";
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-400 font-medium">
+                            No image available
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 z-10" />
+                      </Link>
+                    </div>
+                  );
+                }
+
+                // Case 2: Image Banner with Title Overlay
+                if (isImageBanner && (hasText || banner.showOverlay)) {
+                  return (
+                    <div 
+                      key={banner._id || banner.id || index}
+                      className="min-w-full h-full relative flex flex-col justify-center overflow-hidden"
+                    >
+                      {banner.imageUrl && (
+                        <img 
+                          src={banner.imageUrl} 
+                          alt={titleText || "Banner"} 
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80";
+                          }}
+                        />
+                      )}
+                      {/* Dark gradient overlay for text readability */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent z-10" />
+                      
+                      <div className="relative z-20 max-w-xs sm:max-w-sm lg:max-w-md p-6 sm:p-10 lg:p-14 text-white">
+                        {titleText && (
+                          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black font-heading text-white leading-tight mb-2 lg:mb-3 drop-shadow-md">
+                            {titleText} {badgeTag && <span className="text-xl sm:text-2xl lg:text-3xl text-amber-400 block sm:inline ml-1 font-bold">{badgeTag}</span>}
+                          </h2>
+                        )}
+                        {subtitleText && (
+                          <p className="text-slate-200 font-medium text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 drop-shadow line-clamp-2">
+                            {subtitleText}
+                          </p>
+                        )}
+                        {buttonLabel && (
+                          <Link 
+                            href={targetLink} 
+                            className="inline-block bg-primary-600 hover:bg-primary-500 text-white font-bold px-6 sm:px-8 py-2 sm:py-3 rounded-xl text-sm sm:text-base transition-all shadow-lg hover:shadow-primary-500/40"
+                          >
+                            {buttonLabel}
+                          </Link>
+                        )}
                       </div>
                     </div>
-                  )}
-                </div>
-              ))}
+                  );
+                }
+
+                // Case 3: Rich Promo Banner (With Title, Subtitle, CTA & Cutout Product Image)
+                return (
+                  <div 
+                    key={banner._id || banner.id || index}
+                    className="min-w-full h-full relative flex flex-col justify-center overflow-hidden"
+                  >
+                    <div className={`w-full h-full bg-gradient-to-r ${banner.bgGradient || "from-orange-50 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/20"} flex flex-col justify-center p-6 sm:p-10 lg:p-14 relative`}>
+                      <div className="max-w-xs sm:max-w-sm lg:max-w-md relative z-20">
+                        {(titleText || badgeTag) && (
+                          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black font-heading text-slate-900 dark:text-white leading-tight mb-2 lg:mb-4">
+                            {titleText} {badgeTag && <span className="text-xl sm:text-2xl lg:text-3xl text-primary-600 block sm:inline ml-1">{badgeTag}</span>}
+                          </h2>
+                        )}
+                        {subtitleText && (
+                          <p className="text-slate-700 dark:text-slate-300 font-medium text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 line-clamp-2">
+                            {subtitleText}
+                          </p>
+                        )}
+                        {buttonLabel && (
+                          <Link 
+                            href={targetLink} 
+                            className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 sm:px-8 py-2 sm:py-3 rounded-xl text-sm sm:text-base transition-all shadow-lg hover:shadow-primary-500/30"
+                          >
+                            {buttonLabel}
+                          </Link>
+                        )}
+                      </div>
+
+                      {/* Right side Cutout Promo Image */}
+                      <div className="absolute right-0 bottom-0 w-2/3 sm:w-1/2 h-full flex justify-end items-end p-2 sm:p-6 lg:p-10 pointer-events-none z-10">
+                        {banner.promoImage && (
+                          <div className="relative w-full h-full">
+                            <img 
+                              src={banner.promoImage} 
+                              alt={titleText || "Promo product"} 
+                              className="w-full h-full object-contain object-right-bottom opacity-90 drop-shadow-xl z-20 mix-blend-multiply dark:mix-blend-normal"
+                              onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                            />
+                          </div>
+                        )}
+                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 sm:w-56 sm:h-56 lg:w-72 lg:h-72 rounded-full blur-3xl -z-10 opacity-70 ${banner.blobColor || "bg-orange-200 dark:bg-orange-800/50"}`} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Slider Controls */}

@@ -2,6 +2,7 @@ import { Schema, model, Document } from 'mongoose';
 
 export interface IBanner {
   type: 'promo' | 'image';
+  title?: string;
   badge?: string;
   badgeLabel?: string;
   subtitle?: string;
@@ -11,6 +12,7 @@ export interface IBanner {
   promoImage?: string;
   bgGradient?: string;
   blobColor?: string;
+  showOverlay?: boolean;
   sortOrder: number;
   isActive: boolean;
 }
@@ -29,6 +31,7 @@ const BannerSchema = new Schema<IBannerDocument>(
       default: 'promo',
       required: true,
     },
+    title: { type: String, trim: true },
     badge: { type: String, trim: true },
     badgeLabel: { type: String, trim: true },
     subtitle: { type: String, trim: true },
@@ -38,6 +41,7 @@ const BannerSchema = new Schema<IBannerDocument>(
     promoImage: { type: String },
     bgGradient: { type: String, default: 'from-orange-50 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/20' },
     blobColor: { type: String, default: 'bg-orange-200 dark:bg-orange-800/50' },
+    showOverlay: { type: Boolean, default: false },
     sortOrder: { type: Number, default: 0, index: true },
     isActive: { type: Boolean, default: true, index: true },
   },

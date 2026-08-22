@@ -87,7 +87,8 @@ export default function ContentPage() {
   // 6. HERO BANNER FORM STATE
   const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
   const [editingBannerId, setEditingBannerId] = useState<string | null>(null);
-  const [bannerType, setBannerType] = useState<"promo" | "image">("promo");
+  const [bannerType, setBannerType] = useState<"image" | "promo" | "overlay">("image");
+  const [bannerTitle, setBannerTitle] = useState("");
   const [bannerBadge, setBannerBadge] = useState("");
   const [bannerBadgeLabel, setBannerBadgeLabel] = useState("");
   const [bannerSubtitle, setBannerSubtitle] = useState("");
@@ -95,49 +96,68 @@ export default function ContentPage() {
   const [bannerLink, setBannerLink] = useState("/shop");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [bannerPromoImage, setBannerPromoImage] = useState("");
+  const [bannerBgGradient, setBannerBgGradient] = useState("from-orange-50 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/20");
   const [bannerSortOrder, setBannerSortOrder] = useState(0);
+  const [bannerIsActive, setBannerIsActive] = useState(true);
+  const [bannerFilter, setBannerFilter] = useState<"all" | "image" | "promo">("all");
+  const [isUploadingBannerImage, setIsUploadingBannerImage] = useState(false);
+  const [isUploadingPromoImage, setIsUploadingPromoImage] = useState(false);
 
-  const handleAddBannerClick = () => {
+  const handleAddBannerClick = (type: "image" | "promo" | "overlay" = "image") => {
     setEditingBannerId(null);
-    setBannerType("promo");
-    setBannerBadge("");
-    setBannerBadgeLabel("");
-    setBannerSubtitle("");
-    setBannerButtonText("অফার দেখুন");
+    setBannerType(type);
+    setBannerTitle(type === "promo" ? "৳৬,০০০" : "");
+    setBannerBadge(type === "promo" ? "৳৬,০০০" : "");
+    setBannerBadgeLabel(type === "promo" ? "ছাড়!" : "");
+    setBannerSubtitle(type === "promo" ? "ঈদের কেনাকাটায় দারুণ সারপ্রাইজ" : "");
+    setBannerButtonText(type === "promo" ? "অফার দেখুন" : "");
     setBannerLink("/shop");
     setBannerImageUrl("");
     setBannerPromoImage("");
-    setBannerSortOrder(0);
+    setBannerBgGradient("from-orange-50 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/20");
+    setBannerSortOrder((bannerData?.data?.length || 0) + 1);
+    setBannerIsActive(true);
     setIsBannerModalOpen(true);
   };
 
   const handleEditBannerClick = (b: any) => {
     setEditingBannerId(b._id || b.id);
-    setBannerType(b.type || "promo");
-    setBannerBadge(b.badge || "");
+    const inferredType = (b.type === "image" && (b.title || b.badge || b.subtitle || b.showOverlay))
+      ? "overlay"
+      : (b.type || "image");
+    setBannerType(inferredType);
+    setBannerTitle(b.title || b.badge || "");
+    setBannerBadge(b.badge || b.title || "");
     setBannerBadgeLabel(b.badgeLabel || "");
     setBannerSubtitle(b.subtitle || "");
     setBannerButtonText(b.buttonText || "");
     setBannerLink(b.link || "/shop");
     setBannerImageUrl(b.imageUrl || "");
     setBannerPromoImage(b.promoImage || "");
-    setBannerSortOrder(b.sortOrder || 0);
+    setBannerBgGradient(b.bgGradient || "from-orange-50 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/20");
+    setBannerSortOrder(b.sortOrder ?? 0);
+    setBannerIsActive(b.isActive !== false);
     setIsBannerModalOpen(true);
   };
 
   const handleSubmitBanner = async (e: React.FormEvent) => {
     e.preventDefault();
+    const actualType = bannerType === "promo" ? "promo" : "image";
+    const isOverlay = bannerType === "overlay";
     const payload = {
-      type: bannerType,
-      badge: bannerBadge || undefined,
-      badgeLabel: bannerBadgeLabel || undefined,
-      subtitle: bannerSubtitle || undefined,
-      buttonText: bannerButtonText || undefined,
+      type: actualType,
+      title: bannerType === "image" && !isOverlay ? undefined : (bannerTitle || bannerBadge || undefined),
+      badge: bannerType === "image" && !isOverlay ? undefined : (bannerBadge || bannerTitle || undefined),
+      badgeLabel: bannerType === "image" && !isOverlay ? undefined : (bannerBadgeLabel || undefined),
+      subtitle: bannerType === "image" && !isOverlay ? undefined : (bannerSubtitle || undefined),
+      buttonText: bannerType === "image" && !isOverlay ? undefined : (bannerButtonText || undefined),
       link: bannerLink || "/shop",
       imageUrl: bannerImageUrl || undefined,
       promoImage: bannerPromoImage || undefined,
-      sortOrder: Number(bannerSortOrder),
-      isActive: true
+      bgGradient: bannerBgGradient || undefined,
+      showOverlay: isOverlay,
+      sortOrder: Number(bannerSortOrder) || 0,
+      isActive: bannerIsActive
     };
 
     try {
@@ -154,7 +174,7 @@ export default function ContentPage() {
   };
 
   const handleDeleteBannerClick = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this banner?")) return;
+    if (!confirm("Are you sure you want to delete this hero banner?")) return;
     try {
       await deleteBanner(id).unwrap();
       refetchBanners();
@@ -832,7 +852,7 @@ export default function ContentPage() {
           )}
           {activeTab === "banners" && (
             <button
-              onClick={handleAddBannerClick}
+              onClick={() => handleAddBannerClick("image")}
               className="bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
             >
               <PlusCircle className="h-5 w-5" />
@@ -863,6 +883,16 @@ export default function ContentPage() {
           Taxonomy Tree
         </button>
         <button
+          onClick={() => setActiveTab("banners")}
+          className={`py-3 px-6 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${
+            activeTab === "banners" ? "border-rose-500 text-rose-400 bg-slate-900/50 shadow-sm" : "border-transparent text-slate-400 hover:text-slate-200"
+          } flex items-center gap-2 rounded-t-xl relative`}
+        >
+          <ImageIcon className="h-4 w-4 text-rose-500" />
+          Hero Banners ({bannerData?.count ?? bannerData?.data?.length ?? 0})
+          <span className="bg-rose-500/20 text-rose-400 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">Slider</span>
+        </button>
+        <button
           onClick={() => setActiveTab("ui-sections")}
           className={`py-3 px-6 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${
             activeTab === "ui-sections" ? "border-blue-500 text-blue-400 bg-slate-900/50" : "border-transparent text-slate-400 hover:text-slate-200"
@@ -888,15 +918,6 @@ export default function ContentPage() {
         >
           <Sliders className="h-4 w-4" />
           Navigation Menus ({menuData?.count || 0})
-        </button>
-        <button
-          onClick={() => setActiveTab("banners")}
-          className={`py-3 px-6 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${
-            activeTab === "banners" ? "border-rose-500 text-rose-400 bg-slate-900/50" : "border-transparent text-slate-400 hover:text-slate-200"
-          } flex items-center gap-2 rounded-t-xl`}
-        >
-          <ImageIcon className="h-4 w-4" />
-          Hero Banners ({bannerData?.count || 0})
         </button>
       </div>
 
@@ -1071,10 +1092,44 @@ export default function ContentPage() {
           ========================================================= */}
       {activeTab === "ui-sections" && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <LayoutTemplate className="text-blue-500 h-5 w-5" />
-            Homepage Dynamic UI Grid Blocks
-          </h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <LayoutTemplate className="text-blue-500 h-5 w-5" />
+                Homepage Dynamic UI Grid Blocks (কন্টেন্ট গ্রিড ব্লক)
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Manage dynamic collection blocks and product grids on the homepage.
+              </p>
+            </div>
+            <button
+              onClick={() => setIsUiModalOpen(true)}
+              className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2.5 px-5 rounded-xl transition flex items-center gap-2"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add UI Section
+            </button>
+          </div>
+
+          {/* Quick Notice for Hero Banners */}
+          <div className="bg-gradient-to-r from-rose-950/40 via-purple-950/30 to-slate-900 border border-rose-800/40 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-rose-600/20 text-rose-400 flex items-center justify-center shrink-0">
+                <ImageIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-white">Looking to add / edit the top rotating Hero Banners?</h4>
+                <p className="text-[11px] text-slate-400">Manage image and promo sliders displayed at the top of your homepage under the <strong>Hero Banners</strong> tab.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveTab("banners")}
+              className="shrink-0 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-md shadow-rose-600/20"
+            >
+              <ImageIcon className="w-3.5 h-3.5" />
+              Go to Hero Banners
+            </button>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {uiData?.data?.map((sec: any) => (
@@ -1238,86 +1293,181 @@ export default function ContentPage() {
           ========================================================= */}
       {activeTab === "banners" && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
-          <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+          {/* Header & Actions */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800 pb-5">
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <ImageIcon className="h-5 w-5 text-rose-500" />
-                Hero Section Image & Promo Banners (হিরো ব্যানার সমূহের তালিকা)
+                Hero Section Image & Promo Banners (হোমপেজ হিরো ব্যানার সমূহের তালিকা)
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                Upload image banners directly to Cloudinary or build rich text promo slides displayed on the Homepage Hero carousel.
+                Manage the rotating carousel banners on your customer homepage hero section. Supports both <strong>Without Title (Full Image Graphic)</strong> and <strong>With Title (Promo Text + Cutout)</strong>.
               </p>
             </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => handleAddBannerClick("image")}
+                className="bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-bold py-2.5 px-4 rounded-xl transition flex items-center gap-1.5 shadow-sm"
+              >
+                <PlusCircle className="h-4 w-4 text-rose-400" />
+                + Pure Image Banner (Without Title)
+              </button>
+              <button
+                onClick={() => handleAddBannerClick("promo")}
+                className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-rose-600/20"
+              >
+                <Sparkles className="h-4 w-4" />
+                + Promo Banner (With Title)
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Filter Pills */}
+          <div className="flex items-center gap-2 text-xs overflow-x-auto pb-1">
             <button
-              onClick={handleAddBannerClick}
-              className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs py-2 px-4 rounded-xl transition flex items-center gap-2"
+              onClick={() => setBannerFilter("all")}
+              className={`px-3 py-1.5 rounded-lg font-bold transition ${
+                bannerFilter === "all" ? "bg-rose-600 text-white" : "bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800"
+              }`}
             >
-              <PlusCircle className="h-4 w-4" />
-              New Hero Banner
+              All Banners ({bannerData?.data?.length || 0})
+            </button>
+            <button
+              onClick={() => setBannerFilter("image")}
+              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
+                bannerFilter === "image" ? "bg-blue-600 text-white" : "bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800"
+              }`}
+            >
+              🖼️ Full Image Only ({bannerData?.data?.filter((b: any) => b.type === "image" && !b.title && !b.badge && !b.showOverlay)?.length || 0})
+            </button>
+            <button
+              onClick={() => setBannerFilter("promo")}
+              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 ${
+                bannerFilter === "promo" ? "bg-orange-600 text-white" : "bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800"
+              }`}
+            >
+              🎨 Promo Text ({bannerData?.data?.filter((b: any) => b.type === "promo" || b.title || b.badge || b.showOverlay)?.length || 0})
             </button>
           </div>
 
           {/* Banner Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {bannerData?.data?.map((b: any, idx: number) => (
-              <div key={b._id || b.id || idx} className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-md flex flex-col group relative">
-                {/* Visual Preview */}
-                <div className="relative h-44 w-full bg-slate-900 overflow-hidden flex items-center justify-center">
-                  {b.type === "image" ? (
-                    b.imageUrl ? (
-                      <img src={b.imageUrl} alt="Banner" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                    ) : (
-                      <div className="text-slate-600 text-xs">No image uploaded</div>
-                    )
-                  ) : (
-                    <div className={`w-full h-full bg-gradient-to-r ${b.bgGradient || "from-orange-50 to-amber-100"} flex flex-col justify-center p-4 text-slate-900`}>
-                      <span className="text-lg font-black">{b.badge} <span className="text-sm text-primary-600">{b.badgeLabel}</span></span>
-                      <p className="text-xs font-medium text-slate-700 mt-1 line-clamp-2">{b.subtitle}</p>
-                      <span className="inline-block mt-2 bg-primary-600 text-white font-bold text-[10px] px-3 py-1 rounded w-fit">{b.buttonText || "অফার দেখুন"}</span>
-                    </div>
-                  )}
-                  <div className="absolute top-2 right-2 bg-slate-900/80 backdrop-blur-sm text-xs px-2.5 py-1 rounded-full text-slate-300 font-mono">
-                    Order #{b.sortOrder ?? 0}
-                  </div>
-                </div>
+            {bannerData?.data
+              ?.filter((b: any) => {
+                if (bannerFilter === "image") return b.type === "image" && !b.title && !b.badge && !b.showOverlay;
+                if (bannerFilter === "promo") return b.type === "promo" || b.title || b.badge || b.showOverlay;
+                return true;
+              })
+              ?.map((b: any, idx: number) => {
+                const isPureImage = b.type === "image" && !b.title && !b.badge && !b.showOverlay;
+                const isOverlay = b.type === "image" && (b.title || b.badge || b.showOverlay);
+                const titleText = b.title || b.badge;
 
-                {/* Details Body */}
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${b.type === "image" ? "bg-blue-500/20 text-blue-400" : "bg-orange-500/20 text-orange-400"}`}>
-                        {b.type === "image" ? "Full Image Banner" : "Promo Text Banner"}
-                      </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${b.isActive ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-700 text-slate-400"}`}>
-                        {b.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-400 mt-2 font-mono truncate">
-                      Link: <span className="text-slate-200">{b.link || "/shop"}</span>
-                    </p>
-                  </div>
+                return (
+                  <div key={b._id || b.id || idx} className="bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-2xl overflow-hidden shadow-md flex flex-col group relative transition-all">
+                    {/* Visual Preview Box */}
+                    <div className="relative h-44 w-full bg-slate-900 overflow-hidden flex items-center justify-center">
+                      {isPureImage ? (
+                        b.imageUrl ? (
+                          <img src={b.imageUrl} alt="Banner" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                        ) : (
+                          <div className="text-slate-600 text-xs">No image uploaded</div>
+                        )
+                      ) : isOverlay ? (
+                        <div className="relative w-full h-full">
+                          {b.imageUrl && <img src={b.imageUrl} alt="Overlay Banner" className="w-full h-full object-cover" />}
+                          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent p-4 flex flex-col justify-center text-white">
+                            <span className="text-base font-black">{titleText} {b.badgeLabel && <span className="text-amber-400 text-xs">{b.badgeLabel}</span>}</span>
+                            {b.subtitle && <p className="text-[11px] text-slate-300 line-clamp-1 mt-1">{b.subtitle}</p>}
+                            {b.buttonText && <span className="inline-block mt-2 bg-primary-600 text-white font-bold text-[9px] px-2.5 py-0.5 rounded w-fit">{b.buttonText}</span>}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={`w-full h-full bg-gradient-to-r ${b.bgGradient || "from-orange-50 to-amber-100"} flex flex-col justify-center p-4 text-slate-900 relative overflow-hidden`}>
+                          <div className="relative z-10">
+                            <span className="text-base font-black">{titleText} <span className="text-xs text-primary-600">{b.badgeLabel}</span></span>
+                            <p className="text-[11px] font-medium text-slate-700 mt-1 line-clamp-2">{b.subtitle}</p>
+                            <span className="inline-block mt-2 bg-primary-600 text-white font-bold text-[10px] px-3 py-1 rounded w-fit">{b.buttonText || "অফার দেখুন"}</span>
+                          </div>
+                          {b.promoImage && (
+                            <img src={b.promoImage} alt="Cutout" className="absolute right-1 bottom-1 w-20 h-20 object-contain drop-shadow-md z-0 opacity-90" />
+                          )}
+                        </div>
+                      )}
 
-                  {/* Card Actions */}
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-900">
-                    <button
-                      onClick={() => handleEditBannerClick(b)}
-                      className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1"
-                    >
-                      <Edit3 className="h-3.5 w-3.5 text-amber-400" />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteBannerClick(b._id || b.id)}
-                      className="text-xs bg-red-950/40 hover:bg-red-900/60 text-red-400 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                      Delete
-                    </button>
+                      {/* Top Order Badge */}
+                      <div className="absolute top-2 right-2 bg-slate-900/85 backdrop-blur-sm text-[11px] px-2.5 py-0.5 rounded-full text-slate-300 font-mono border border-slate-700/50">
+                        Order #{b.sortOrder ?? 0}
+                      </div>
+                    </div>
+
+                    {/* Details Body */}
+                    <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                            isPureImage 
+                              ? "bg-blue-500/20 text-blue-400" 
+                              : isOverlay 
+                              ? "bg-purple-500/20 text-purple-400" 
+                              : "bg-orange-500/20 text-orange-400"
+                          }`}>
+                            {isPureImage ? "Without Title (Image)" : isOverlay ? "Image with Title Overlay" : "Promo Banner (With Title)"}
+                          </span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${b.isActive ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-700 text-slate-400"}`}>
+                            {b.isActive ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-2 font-mono truncate">
+                          Link: <span className="text-slate-200">{b.link || "/shop"}</span>
+                        </p>
+                      </div>
+
+                      {/* Card Actions */}
+                      <div className="flex justify-end gap-2 pt-2 border-t border-slate-900">
+                        <button
+                          onClick={() => handleEditBannerClick(b)}
+                          className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+                        >
+                          <Edit3 className="h-3.5 w-3.5 text-amber-400" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBannerClick(b._id || b.id)}
+                          className="text-xs bg-red-950/40 hover:bg-red-900/60 text-red-400 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                );
+              })}
           </div>
+
+          {/* Empty State */}
+          {(!bannerData?.data || bannerData.data.length === 0) && (
+            <div className="text-center py-12 border border-dashed border-slate-800 rounded-2xl space-y-3">
+              <ImageIcon className="h-10 w-10 text-slate-600 mx-auto" />
+              <h4 className="text-slate-300 font-bold">No Hero Banners Found in Database</h4>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">Click below to upload your first banner image or create a rich promo slide.</p>
+              <div className="flex justify-center gap-2 pt-2">
+                <button
+                  onClick={() => handleAddBannerClick("image")}
+                  className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-4 rounded-xl"
+                >
+                  Add Full Image Banner
+                </button>
+                <button
+                  onClick={() => handleAddBannerClick("promo")}
+                  className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-4 rounded-xl"
+                >
+                  Add Promo Banner
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1325,210 +1475,350 @@ export default function ContentPage() {
           MODAL: HERO BANNER CREATION & UPDATE (Cloudinary Image Upload)
           ========================================================= */}
       {isBannerModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-300 flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center bg-slate-950/80 px-6 py-4 border-b border-slate-800">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-300 flex flex-col my-6 max-h-[90vh]">
+            <div className="flex justify-between items-center bg-slate-950/90 px-6 py-4 border-b border-slate-800">
               <h2 className="text-sm font-black text-white flex items-center gap-2">
                 <ImageIcon className="h-4 w-4 text-rose-500" />
-                {editingBannerId ? "Edit Hero Banner" : "Add New Hero Banner"}
+                {editingBannerId ? "Edit Hero Banner Slide" : "Add New Hero Banner Slide"}
               </h2>
               <button onClick={() => setIsBannerModalOpen(false)} className="text-slate-400 hover:text-white p-1">
                 <X className="h-6 w-6" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitBanner} className="p-6 space-y-4 overflow-y-auto">
-              {/* Banner Type selector */}
+            <form onSubmit={handleSubmitBanner} className="p-6 space-y-5 overflow-y-auto text-xs text-slate-300">
+              {/* 1. Format Selection */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Banner Format Type</label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setBannerType("promo")}
-                    className={`py-3 px-4 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 ${
-                      bannerType === "promo" ? "bg-rose-600/20 border-rose-500 text-rose-400" : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    <span>Promo Text + Image Slide</span>
-                    <span className="text-[10px] font-normal text-slate-400">Custom Title, Badge & Subtitle</span>
-                  </button>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  Choose Banner Format Style
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
                     type="button"
                     onClick={() => setBannerType("image")}
-                    className={`py-3 px-4 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 ${
-                      bannerType === "image" ? "bg-rose-600/20 border-rose-500 text-rose-400" : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                    className={`py-3 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center text-center gap-1.5 ${
+                      bannerType === "image" ? "bg-blue-600/20 border-blue-500 text-blue-300 shadow-md shadow-blue-500/10" : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                     }`}
                   >
-                    <span>Full Custom Image Banner</span>
-                    <span className="text-[10px] font-normal text-slate-400">Cloudinary Uploaded Graphic</span>
+                    <span className="text-base">🖼️</span>
+                    <span>Full Image Banner</span>
+                    <span className="text-[10px] font-normal text-slate-400">Without Title (Canva/Photoshop graphic)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBannerType("promo")}
+                    className={`py-3 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center text-center gap-1.5 ${
+                      bannerType === "promo" ? "bg-rose-600/20 border-rose-500 text-rose-300 shadow-md shadow-rose-500/10" : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <span className="text-base">🎨</span>
+                    <span>Rich Promo Banner</span>
+                    <span className="text-[10px] font-normal text-slate-400">With Title, Subtitle, CTA & Cutout Image</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setBannerType("overlay")}
+                    className={`py-3 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center text-center gap-1.5 ${
+                      bannerType === "overlay" ? "bg-purple-600/20 border-purple-500 text-purple-300 shadow-md shadow-purple-500/10" : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <span className="text-base">🏷️</span>
+                    <span>Image with Title Overlay</span>
+                    <span className="text-[10px] font-normal text-slate-400">Background photo + Title text overlay</span>
                   </button>
                 </div>
               </div>
 
-              {/* Full Image Banner Fields */}
-              {bannerType === "image" ? (
-                <div className="space-y-4 bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                      Cloudinary Banner Image (ক্লাউডিনারিতে আপলোড করুন) *
+              {/* 2. Banner Image Uploader (For Full Image & Overlay modes) */}
+              {(bannerType === "image" || bannerType === "overlay") && (
+                <div className="space-y-3 bg-slate-950/70 border border-slate-800 p-4 rounded-xl">
+                  <div className="flex justify-between items-center">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
+                      Cloudinary Banner Image (ব্যানার ইমেজ আপলোড করুন) *
                     </label>
-                    <div className="flex items-center gap-4">
-                      <input
-                        type="text"
-                        value={bannerImageUrl}
-                        onChange={(e) => setBannerImageUrl(e.target.value)}
-                        placeholder="https://res.cloudinary.com/..."
-                        className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500"
-                      />
-                      <label className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl cursor-pointer transition flex items-center gap-1.5 whitespace-nowrap">
-                        <UploadCloud className="h-4 w-4" />
-                        {isUploadingImage ? "Uploading..." : "Upload File"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const formData = new FormData();
-                            formData.append("file", file);
-                            try {
-                              const res = await uploadMedia(formData).unwrap();
-                              if (res.url) setBannerImageUrl(res.url);
-                            } catch (err) {
-                              alert("Cloudinary upload failed!");
-                            }
-                          }}
-                        />
-                      </label>
-                    </div>
-                    {bannerImageUrl && (
-                      <div className="mt-3 relative h-32 w-full rounded-xl overflow-hidden border border-slate-800">
-                        <img src={bannerImageUrl} alt="Preview" className="w-full h-full object-cover" />
-                      </div>
-                    )}
+                    <span className="text-[10px] text-slate-400">Recommended: 1200 x 480 px</span>
                   </div>
+
+                  {/* Upload Area */}
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    <input
+                      type="text"
+                      value={bannerImageUrl}
+                      onChange={(e) => setBannerImageUrl(e.target.value)}
+                      placeholder="Paste image URL (https://res.cloudinary.com/...)"
+                      className="flex-1 w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-mono"
+                    />
+                    <label className="w-full sm:w-auto bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl cursor-pointer transition flex items-center justify-center gap-2 whitespace-nowrap shadow-md shadow-rose-600/20">
+                      {isUploadingBannerImage ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <UploadCloud className="h-4 w-4" />
+                      )}
+                      <span>{isUploadingBannerImage ? "Uploading..." : "Upload from Device"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploadingBannerImage}
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setIsUploadingBannerImage(true);
+                          const formData = new FormData();
+                          formData.append("file", file);
+                          try {
+                            const res = await uploadMedia(formData).unwrap();
+                            if (res.url) setBannerImageUrl(res.url);
+                          } catch (err: any) {
+                            alert(err?.data?.message || "Image upload failed! Check file size or format.");
+                          } finally {
+                            setIsUploadingBannerImage(false);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  {/* Preview Box */}
+                  {bannerImageUrl && (
+                    <div className="relative h-40 w-full rounded-xl overflow-hidden border border-slate-800 group bg-slate-900">
+                      <img src={bannerImageUrl} alt="Banner Preview" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setBannerImageUrl("")}
+                          className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-lg"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Remove Image
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                /* Promo Text Fields */
-                <div className="space-y-4 bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
-                  <div className="grid grid-cols-2 gap-4">
+              )}
+
+              {/* 3. Text Fields (For Promo & Overlay modes) */}
+              {(bannerType === "promo" || bannerType === "overlay") && (
+                <div className="space-y-4 bg-slate-950/70 border border-slate-800 p-4 rounded-xl">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-amber-400" />
+                    Banner Title, Badge & Subtitle Texts
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Badge Text (e.g. ৳৬,০০০)</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1">
+                        Main Title / Badge (e.g. ৳৬,০০০ or ঈদ অফার)
+                      </label>
                       <input
                         type="text"
                         value={bannerBadge}
-                        onChange={(e) => setBannerBadge(e.target.value)}
+                        onChange={(e) => {
+                          setBannerBadge(e.target.value);
+                          setBannerTitle(e.target.value);
+                        }}
                         placeholder="৳৬,০০০"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Badge Label (e.g. ছাড়!)</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1">
+                        Badge Label / Highlight Tag (e.g. ছাড়! or MEGA SALE)
+                      </label>
                       <input
                         type="text"
                         value={bannerBadgeLabel}
                         onChange={(e) => setBannerBadgeLabel(e.target.value)}
                         placeholder="ছাড়!"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Subtitle / Description</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1">Subtitle / Promotional Description</label>
                     <textarea
                       rows={2}
                       value={bannerSubtitle}
                       onChange={(e) => setBannerSubtitle(e.target.value)}
                       placeholder="ঈদের কেনাকাটায় দারুণ সারপ্রাইজ..."
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Button Text</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1">CTA Button Text</label>
                       <input
                         type="text"
                         value={bannerButtonText}
                         onChange={(e) => setBannerButtonText(e.target.value)}
                         placeholder="অফার দেখুন"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Cloudinary Promo Image</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={bannerPromoImage}
-                          onChange={(e) => setBannerPromoImage(e.target.value)}
-                          placeholder="Image URL"
-                          className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-rose-500"
-                        />
-                        <label className="bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold px-3 py-2 rounded-xl cursor-pointer whitespace-nowrap">
-                          Upload
+
+                    {/* Cutout Promo Image (for Promo Mode) */}
+                    {bannerType === "promo" && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 mb-1">Right-Side Cutout Product Image</label>
+                        <div className="flex items-center gap-2">
                           <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              const formData = new FormData();
-                              formData.append("file", file);
-                              try {
-                                const res = await uploadMedia(formData).unwrap();
-                                if (res.url) setBannerPromoImage(res.url);
-                              } catch (err) {
-                                alert("Cloudinary upload failed!");
-                              }
-                            }}
+                            type="text"
+                            value={bannerPromoImage}
+                            onChange={(e) => setBannerPromoImage(e.target.value)}
+                            placeholder="Cutout PNG URL"
+                            className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-rose-500 font-mono"
                           />
-                        </label>
+                          <label className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-2 rounded-xl cursor-pointer whitespace-nowrap flex items-center gap-1">
+                            {isUploadingPromoImage ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5" />}
+                            <span>{isUploadingPromoImage ? "..." : "Upload"}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={isUploadingPromoImage}
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setIsUploadingPromoImage(true);
+                                const formData = new FormData();
+                                formData.append("file", file);
+                                try {
+                                  const res = await uploadMedia(formData).unwrap();
+                                  if (res.url) setBannerPromoImage(res.url);
+                                } catch (err: any) {
+                                  alert(err?.data?.message || "Cutout image upload failed!");
+                                } finally {
+                                  setIsUploadingPromoImage(false);
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Gradient / Theme Presets (For Promo Mode) */}
+                  {bannerType === "promo" && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-2">Background Gradient Theme</label>
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        {[
+                          { name: "Sunset Orange", gradient: "from-orange-50 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/20", color: "bg-gradient-to-r from-orange-400 to-amber-300" },
+                          { name: "Emerald Breeze", gradient: "from-emerald-50 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/20", color: "bg-gradient-to-r from-emerald-400 to-teal-300" },
+                          { name: "Royal Indigo", gradient: "from-indigo-50 to-blue-100 dark:from-indigo-900/40 dark:to-blue-900/20", color: "bg-gradient-to-r from-indigo-400 to-blue-300" },
+                          { name: "Rose Bloom", gradient: "from-rose-50 to-pink-100 dark:from-rose-900/40 dark:to-pink-900/20", color: "bg-gradient-to-r from-rose-400 to-pink-300" },
+                          { name: "Cyber Violet", gradient: "from-purple-50 to-violet-100 dark:from-purple-900/40 dark:to-violet-900/20", color: "bg-gradient-to-r from-purple-400 to-violet-300" },
+                          { name: "Slate Dark", gradient: "from-slate-900 to-slate-950 dark:from-slate-900 dark:to-slate-950 text-white", color: "bg-gradient-to-r from-slate-700 to-slate-900" },
+                        ].map((theme) => (
+                          <button
+                            key={theme.name}
+                            type="button"
+                            onClick={() => setBannerBgGradient(theme.gradient)}
+                            className={`p-2 rounded-xl border text-center transition flex flex-col items-center gap-1.5 ${
+                              bannerBgGradient === theme.gradient ? "border-rose-500 ring-2 ring-rose-500/30" : "border-slate-800 hover:border-slate-700"
+                            }`}
+                          >
+                            <div className={`w-full h-5 rounded-lg ${theme.color}`} />
+                            <span className="text-[10px] font-bold text-slate-300 truncate w-full">{theme.name}</span>
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
 
-              {/* Shared Link & Sort Order */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Click Redirect URL Link</label>
+              {/* 4. Shared Settings: Link & Display Order */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-950/70 border border-slate-800 p-4 rounded-xl">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Click Destination URL / Route *</label>
                   <input
                     type="text"
                     required
                     value={bannerLink}
                     onChange={(e) => setBannerLink(e.target.value)}
-                    placeholder="/shop or /shop/new-arrivals"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500"
+                    placeholder="/shop, /deals, or /shop?category=toys"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Sort Display Order</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Sort Order #</label>
                   <input
                     type="number"
                     value={bannerSortOrder}
                     onChange={(e) => setBannerSortOrder(parseInt(e.target.value, 10) || 0)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-mono"
                   />
                 </div>
               </div>
 
-              {/* Form Action Buttons */}
+              {/* 5. Live Slide Preview Box */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                  <Eye className="h-3.5 w-3.5 text-emerald-400" />
+                  Live Hero Section Preview (গ্রাহক সাইটের প্রিভিউ)
+                </label>
+                <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-slate-800 shadow-inner bg-slate-950">
+                  {bannerType === "image" ? (
+                    bannerImageUrl ? (
+                      <img src={bannerImageUrl} alt="Live Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-1">
+                        <ImageIcon className="h-6 w-6 text-slate-600" />
+                        <span>Upload or enter an image URL to preview</span>
+                      </div>
+                    )
+                  ) : bannerType === "overlay" ? (
+                    <div className="relative w-full h-full">
+                      {bannerImageUrl ? (
+                        <img src={bannerImageUrl} alt="Live Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-slate-800" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent p-6 flex flex-col justify-center text-white">
+                        <span className="text-xl font-black">{bannerBadge || "৳৬,০০০"} <span className="text-amber-400 text-sm">{bannerBadgeLabel || "ছাড়!"}</span></span>
+                        <p className="text-xs text-slate-200 mt-1 line-clamp-1">{bannerSubtitle || "ঈদের কেনাকাটায় দারুণ সারপ্রাইজ"}</p>
+                        <span className="inline-block mt-3 bg-primary-600 text-white font-bold text-xs px-4 py-1.5 rounded-lg w-fit shadow">
+                          {bannerButtonText || "অফার দেখুন"}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`w-full h-full bg-gradient-to-r ${bannerBgGradient || "from-orange-50 to-amber-100"} flex flex-col justify-center p-6 text-slate-900 relative overflow-hidden`}>
+                      <div className="relative z-10 max-w-xs">
+                        <span className="text-xl font-black">{bannerBadge || "৳৬,০০০"} <span className="text-primary-600 text-sm">{bannerBadgeLabel || "ছাড়!"}</span></span>
+                        <p className="text-xs font-medium text-slate-700 mt-1 line-clamp-2">{bannerSubtitle || "ঈদের কেনাকাটায় দারুণ সারপ্রাইজ"}</p>
+                        <span className="inline-block mt-3 bg-primary-600 text-white font-bold text-xs px-4 py-1.5 rounded-lg w-fit shadow">
+                          {bannerButtonText || "অফার দেখুন"}
+                        </span>
+                      </div>
+                      {bannerPromoImage && (
+                        <img src={bannerPromoImage} alt="Cutout Preview" className="absolute right-4 bottom-2 w-28 h-28 object-contain drop-shadow-md z-0" />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Form Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsBannerModalOpen(false)}
-                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-5 rounded-xl text-xs transition"
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-5 rounded-xl text-xs transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 px-6 rounded-xl text-xs shadow-lg shadow-rose-500/20 transition flex items-center gap-1.5"
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 px-7 rounded-xl text-xs shadow-lg shadow-rose-500/20 transition flex items-center gap-1.5"
                 >
                   <Save className="h-4 w-4" />
                   Save Hero Banner
@@ -2508,6 +2798,15 @@ export default function ContentPage() {
             </div>
 
             <form onSubmit={handleSubmitUISection} className="p-6 space-y-4 text-xs text-slate-300">
+              {/* Guidance Callout */}
+              <div className="bg-rose-950/30 border border-rose-800/40 rounded-xl p-3 flex items-start gap-2.5">
+                <ImageIcon className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                <div className="text-[11px] text-slate-300">
+                  <span className="font-bold text-rose-300">Looking for Top Hero Carousel Banners?</span>
+                  <p className="text-slate-400 mt-0.5">To upload image banners or create rotating slides for the top hero section, use the dedicated <button type="button" onClick={() => { setIsUiModalOpen(false); setActiveTab("banners"); }} className="text-rose-400 underline font-bold hover:text-rose-300">Hero Banners tab</button>.</p>
+                </div>
+              </div>
+
               <div>
                 <label className="block font-bold uppercase tracking-wider text-slate-400 mb-2">Block Section Type *</label>
                 <select
@@ -2515,10 +2814,11 @@ export default function ContentPage() {
                   onChange={(e) => setUiType(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500"
                 >
-                  <option value="HERO_BANNER">Hero Banner</option>
                   <option value="QUICK_DEAL">Quick Deals Slider</option>
                   <option value="FLASH_SALE">Flash Sales Grid</option>
                   <option value="BEST_SELLERS">Best Sellers Section</option>
+                  <option value="GRID_COLLECTION">Category Grid Collection</option>
+                  <option value="HERO_BANNER">Custom Banner Block</option>
                 </select>
               </div>
 
