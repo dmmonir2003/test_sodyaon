@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAppSelector } from '@/store/hooks';
+import { useGetBannersQuery } from '@/store/admin/adminContentApi';
 import { ArrowRight, ChevronLeft, ChevronRight, Sparkles, BrainCircuit, ScanFace, Gift, ArrowLeftRight, Baby } from 'lucide-react';
 
 const AI_TOOLS = [
@@ -56,7 +57,6 @@ const MOCK_BANNERS = [
     id: 2,
     type: 'image',
     link: "/shop/new-arrivals",
-    // Example placeholder image. In production, this will be the URL uploaded by the Admin.
     imageUrl: "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&h=400&q=80"
   },
   {
@@ -75,6 +75,8 @@ const MOCK_BANNERS = [
 
 export default function HomeHeroBanner() {
   const isAuthenticatedRaw = useAppSelector((state) => state.profile.isAuthenticated);
+  const { data: apiBannerData } = useGetBannersQuery();
+  const activeBanners = (apiBannerData?.data && apiBannerData.data.length > 0) ? apiBannerData.data : MOCK_BANNERS;
   
   const [mounted, setMounted] = useState(false);
   const [currentTool, setCurrentTool] = useState(0);
@@ -96,14 +98,15 @@ export default function HomeHeroBanner() {
 
   // Auto-scroll logic for Main Hero Slider
   useEffect(() => {
+    if (!activeBanners || activeBanners.length === 0) return;
     const slideInterval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % MOCK_BANNERS.length);
+      setCurrentSlide((prev) => (prev + 1) % activeBanners.length);
     }, 5000);
     return () => clearInterval(slideInterval);
-  }, []);
+  }, [activeBanners]);
 
-  const slideNext = () => setCurrentSlide((prev) => (prev + 1) % MOCK_BANNERS.length);
-  const slidePrev = () => setCurrentSlide((prev) => (prev - 1 + MOCK_BANNERS.length) % MOCK_BANNERS.length);
+  const slideNext = () => setCurrentSlide((prev) => (prev + 1) % activeBanners.length);
+  const slidePrev = () => setCurrentSlide((prev) => (prev - 1 + activeBanners.length) % activeBanners.length);
 
   return (
     <section className="bg-white dark:bg-slate-950 pb-6 md:py-8 lg:py-10 border-b border-slate-100 dark:border-slate-800">
@@ -124,13 +127,13 @@ export default function HomeHeroBanner() {
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
             >
               {/* Sliding Contents */}
-              {MOCK_BANNERS.map((banner, index) => (
+              {activeBanners.map((banner: any, index: number) => (
                 <div 
-                  key={banner.id}
+                  key={banner._id || banner.id || index}
                   className="min-w-full relative flex flex-col justify-center overflow-hidden "
                 >
                   {banner.type === 'image' ? (
-                     <Link href={banner.link} className="block w-full h-full relative group ">
+                     <Link href={banner.link || "/shop"} className="block w-full h-full relative group ">
                         {banner.imageUrl && (
                           <Image 
                             src={banner.imageUrl} 
@@ -144,7 +147,7 @@ export default function HomeHeroBanner() {
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 z-10"></div>
                      </Link>
                   ) : (
-                    <div className={`w-full h-full bg-gradient-to-r ${banner.bgGradient} flex flex-col justify-center p-6 sm:p-10 lg:p-14`}>
+                    <div className={`w-full h-full bg-gradient-to-r ${banner.bgGradient || "from-orange-50 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/20"} flex flex-col justify-center p-6 sm:p-10 lg:p-14`}>
                       <div className="max-w-xs sm:max-w-sm lg:max-w-md relative z-20">
                         <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black font-heading text-slate-900 dark:text-white leading-tight mb-2 lg:mb-4">
                             {banner.badge} <span className="text-xl sm:text-2xl lg:text-3xl text-primary-600 block sm:inline">{banner.badgeLabel}</span>
@@ -152,8 +155,8 @@ export default function HomeHeroBanner() {
                         <p className="text-slate-700 dark:text-slate-300 font-medium text-sm sm:text-base lg:text-lg mb-4 sm:mb-6">
                             {banner.subtitle}
                         </p>
-                        <Link href={banner.link} className="inline-block bg-primary-600 text-white font-bold px-6 sm:px-8 py-2 sm:py-3 rounded text-sm sm:text-base hover:bg-primary-700 transition shadow-lg">
-                            {banner.buttonText}
+                        <Link href={banner.link || "/shop"} className="inline-block bg-primary-600 text-white font-bold px-6 sm:px-8 py-2 sm:py-3 rounded text-sm sm:text-base hover:bg-primary-700 transition shadow-lg">
+                            {banner.buttonText || "অফার দেখুন"}
                         </Link>
                       </div>
 
@@ -171,7 +174,7 @@ export default function HomeHeroBanner() {
                               />
                             </div>
                           )}
-                          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 sm:w-56 sm:h-56 lg:w-72 lg:h-72 rounded-full blur-3xl -z-10 opacity-70 ${banner.blobColor}`}></div>
+                          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 sm:w-56 sm:h-56 lg:w-72 lg:h-72 rounded-full blur-3xl -z-10 opacity-70 ${banner.blobColor || "bg-orange-200 dark:bg-orange-800/50"}`}></div>
                       </div>
                     </div>
                   )}
@@ -195,7 +198,7 @@ export default function HomeHeroBanner() {
 
             {/* Pagination Dots */}
             <div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-30">
-                {MOCK_BANNERS.map((_, i) => (
+                {activeBanners.map((_: any, i: number) => (
                    <span 
                      key={i}
                      onClick={() => setCurrentSlide(i)}

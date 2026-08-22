@@ -17,7 +17,11 @@ import {
   useCreateMenuItemMutation,
   useUpdateMenuItemMutation,
   useDeleteMenuItemMutation,
-  useParseGoogleSheetMutation
+  useParseGoogleSheetMutation,
+  useGetAdminBannersQuery,
+  useCreateBannerMutation,
+  useUpdateBannerMutation,
+  useDeleteBannerMutation,
 } from "@/store/admin/adminContentApi";
 import { useGetMenuItemsQuery } from "@/store/user/menu/menuApi";
 import {
@@ -49,7 +53,7 @@ import {
 
 export default function ContentPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"products" | "categories" | "ui-sections" | "campaigns" | "menus">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "categories" | "ui-sections" | "campaigns" | "menus" | "banners">("products");
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,6 +77,91 @@ export default function ContentPage() {
   const [createMenuItem] = useCreateMenuItemMutation();
   const [updateMenuItem] = useUpdateMenuItemMutation();
   const [deleteMenuItem] = useDeleteMenuItemMutation();
+
+  // Hero Banners RTK Hooks
+  const { data: bannerData, refetch: refetchBanners } = useGetAdminBannersQuery();
+  const [createBanner] = useCreateBannerMutation();
+  const [updateBanner] = useUpdateBannerMutation();
+  const [deleteBanner] = useDeleteBannerMutation();
+
+  // 6. HERO BANNER FORM STATE
+  const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
+  const [editingBannerId, setEditingBannerId] = useState<string | null>(null);
+  const [bannerType, setBannerType] = useState<"promo" | "image">("promo");
+  const [bannerBadge, setBannerBadge] = useState("");
+  const [bannerBadgeLabel, setBannerBadgeLabel] = useState("");
+  const [bannerSubtitle, setBannerSubtitle] = useState("");
+  const [bannerButtonText, setBannerButtonText] = useState("");
+  const [bannerLink, setBannerLink] = useState("/shop");
+  const [bannerImageUrl, setBannerImageUrl] = useState("");
+  const [bannerPromoImage, setBannerPromoImage] = useState("");
+  const [bannerSortOrder, setBannerSortOrder] = useState(0);
+
+  const handleAddBannerClick = () => {
+    setEditingBannerId(null);
+    setBannerType("promo");
+    setBannerBadge("");
+    setBannerBadgeLabel("");
+    setBannerSubtitle("");
+    setBannerButtonText("অফার দেখুন");
+    setBannerLink("/shop");
+    setBannerImageUrl("");
+    setBannerPromoImage("");
+    setBannerSortOrder(0);
+    setIsBannerModalOpen(true);
+  };
+
+  const handleEditBannerClick = (b: any) => {
+    setEditingBannerId(b._id || b.id);
+    setBannerType(b.type || "promo");
+    setBannerBadge(b.badge || "");
+    setBannerBadgeLabel(b.badgeLabel || "");
+    setBannerSubtitle(b.subtitle || "");
+    setBannerButtonText(b.buttonText || "");
+    setBannerLink(b.link || "/shop");
+    setBannerImageUrl(b.imageUrl || "");
+    setBannerPromoImage(b.promoImage || "");
+    setBannerSortOrder(b.sortOrder || 0);
+    setIsBannerModalOpen(true);
+  };
+
+  const handleSubmitBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = {
+      type: bannerType,
+      badge: bannerBadge || undefined,
+      badgeLabel: bannerBadgeLabel || undefined,
+      subtitle: bannerSubtitle || undefined,
+      buttonText: bannerButtonText || undefined,
+      link: bannerLink || "/shop",
+      imageUrl: bannerImageUrl || undefined,
+      promoImage: bannerPromoImage || undefined,
+      sortOrder: Number(bannerSortOrder),
+      isActive: true
+    };
+
+    try {
+      if (editingBannerId) {
+        await updateBanner({ id: editingBannerId, body: payload }).unwrap();
+      } else {
+        await createBanner(payload).unwrap();
+      }
+      refetchBanners();
+      setIsBannerModalOpen(false);
+    } catch (err: any) {
+      alert(err?.data?.message || "Failed to save hero banner.");
+    }
+  };
+
+  const handleDeleteBannerClick = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this banner?")) return;
+    try {
+      await deleteBanner(id).unwrap();
+      refetchBanners();
+    } catch (err: any) {
+      alert("Failed to delete banner.");
+    }
+  };
 
   // 5. DYNAMIC MENU FORM STATE
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
@@ -741,6 +830,15 @@ export default function ContentPage() {
               Add Menu Link
             </button>
           )}
+          {activeTab === "banners" && (
+            <button
+              onClick={handleAddBannerClick}
+              className="bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+            >
+              <PlusCircle className="h-5 w-5" />
+              Add Hero Banner
+            </button>
+          )}
         </div>
       </div>
 
@@ -790,6 +888,15 @@ export default function ContentPage() {
         >
           <Sliders className="h-4 w-4" />
           Navigation Menus ({menuData?.count || 0})
+        </button>
+        <button
+          onClick={() => setActiveTab("banners")}
+          className={`py-3 px-6 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${
+            activeTab === "banners" ? "border-rose-500 text-rose-400 bg-slate-900/50" : "border-transparent text-slate-400 hover:text-slate-200"
+          } flex items-center gap-2 rounded-t-xl`}
+        >
+          <ImageIcon className="h-4 w-4" />
+          Hero Banners ({bannerData?.count || 0})
         </button>
       </div>
 
@@ -1122,6 +1229,312 @@ export default function ContentPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================
+          TAB 6: HERO BANNERS MANAGEMENT
+          ========================================================= */}
+      {activeTab === "banners" && (
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+          <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+            <div>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <ImageIcon className="h-5 w-5 text-rose-500" />
+                Hero Section Image & Promo Banners (হিরো ব্যানার সমূহের তালিকা)
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Upload image banners directly to Cloudinary or build rich text promo slides displayed on the Homepage Hero carousel.
+              </p>
+            </div>
+            <button
+              onClick={handleAddBannerClick}
+              className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs py-2 px-4 rounded-xl transition flex items-center gap-2"
+            >
+              <PlusCircle className="h-4 w-4" />
+              New Hero Banner
+            </button>
+          </div>
+
+          {/* Banner Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bannerData?.data?.map((b: any, idx: number) => (
+              <div key={b._id || b.id || idx} className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-md flex flex-col group relative">
+                {/* Visual Preview */}
+                <div className="relative h-44 w-full bg-slate-900 overflow-hidden flex items-center justify-center">
+                  {b.type === "image" ? (
+                    b.imageUrl ? (
+                      <img src={b.imageUrl} alt="Banner" className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                    ) : (
+                      <div className="text-slate-600 text-xs">No image uploaded</div>
+                    )
+                  ) : (
+                    <div className={`w-full h-full bg-gradient-to-r ${b.bgGradient || "from-orange-50 to-amber-100"} flex flex-col justify-center p-4 text-slate-900`}>
+                      <span className="text-lg font-black">{b.badge} <span className="text-sm text-primary-600">{b.badgeLabel}</span></span>
+                      <p className="text-xs font-medium text-slate-700 mt-1 line-clamp-2">{b.subtitle}</p>
+                      <span className="inline-block mt-2 bg-primary-600 text-white font-bold text-[10px] px-3 py-1 rounded w-fit">{b.buttonText || "অফার দেখুন"}</span>
+                    </div>
+                  )}
+                  <div className="absolute top-2 right-2 bg-slate-900/80 backdrop-blur-sm text-xs px-2.5 py-1 rounded-full text-slate-300 font-mono">
+                    Order #{b.sortOrder ?? 0}
+                  </div>
+                </div>
+
+                {/* Details Body */}
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${b.type === "image" ? "bg-blue-500/20 text-blue-400" : "bg-orange-500/20 text-orange-400"}`}>
+                        {b.type === "image" ? "Full Image Banner" : "Promo Text Banner"}
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${b.isActive ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-700 text-slate-400"}`}>
+                        {b.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2 font-mono truncate">
+                      Link: <span className="text-slate-200">{b.link || "/shop"}</span>
+                    </p>
+                  </div>
+
+                  {/* Card Actions */}
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-900">
+                    <button
+                      onClick={() => handleEditBannerClick(b)}
+                      className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+                    >
+                      <Edit3 className="h-3.5 w-3.5 text-amber-400" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteBannerClick(b._id || b.id)}
+                      className="text-xs bg-red-950/40 hover:bg-red-900/60 text-red-400 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================
+          MODAL: HERO BANNER CREATION & UPDATE (Cloudinary Image Upload)
+          ========================================================= */}
+      {isBannerModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-300 flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center bg-slate-950/80 px-6 py-4 border-b border-slate-800">
+              <h2 className="text-sm font-black text-white flex items-center gap-2">
+                <ImageIcon className="h-4 w-4 text-rose-500" />
+                {editingBannerId ? "Edit Hero Banner" : "Add New Hero Banner"}
+              </h2>
+              <button onClick={() => setIsBannerModalOpen(false)} className="text-slate-400 hover:text-white p-1">
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitBanner} className="p-6 space-y-4 overflow-y-auto">
+              {/* Banner Type selector */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Banner Format Type</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setBannerType("promo")}
+                    className={`py-3 px-4 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 ${
+                      bannerType === "promo" ? "bg-rose-600/20 border-rose-500 text-rose-400" : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <span>Promo Text + Image Slide</span>
+                    <span className="text-[10px] font-normal text-slate-400">Custom Title, Badge & Subtitle</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBannerType("image")}
+                    className={`py-3 px-4 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 ${
+                      bannerType === "image" ? "bg-rose-600/20 border-rose-500 text-rose-400" : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <span>Full Custom Image Banner</span>
+                    <span className="text-[10px] font-normal text-slate-400">Cloudinary Uploaded Graphic</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Full Image Banner Fields */}
+              {bannerType === "image" ? (
+                <div className="space-y-4 bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
+                      Cloudinary Banner Image (ক্লাউডিনারিতে আপলোড করুন) *
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="text"
+                        value={bannerImageUrl}
+                        onChange={(e) => setBannerImageUrl(e.target.value)}
+                        placeholder="https://res.cloudinary.com/..."
+                        className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500"
+                      />
+                      <label className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl cursor-pointer transition flex items-center gap-1.5 whitespace-nowrap">
+                        <UploadCloud className="h-4 w-4" />
+                        {isUploadingImage ? "Uploading..." : "Upload File"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const formData = new FormData();
+                            formData.append("file", file);
+                            try {
+                              const res = await uploadMedia(formData).unwrap();
+                              if (res.url) setBannerImageUrl(res.url);
+                            } catch (err) {
+                              alert("Cloudinary upload failed!");
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                    {bannerImageUrl && (
+                      <div className="mt-3 relative h-32 w-full rounded-xl overflow-hidden border border-slate-800">
+                        <img src={bannerImageUrl} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Promo Text Fields */
+                <div className="space-y-4 bg-slate-950/60 border border-slate-800 p-4 rounded-xl">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Badge Text (e.g. ৳৬,০০০)</label>
+                      <input
+                        type="text"
+                        value={bannerBadge}
+                        onChange={(e) => setBannerBadge(e.target.value)}
+                        placeholder="৳৬,০০০"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Badge Label (e.g. ছাড়!)</label>
+                      <input
+                        type="text"
+                        value={bannerBadgeLabel}
+                        onChange={(e) => setBannerBadgeLabel(e.target.value)}
+                        placeholder="ছাড়!"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Subtitle / Description</label>
+                    <textarea
+                      rows={2}
+                      value={bannerSubtitle}
+                      onChange={(e) => setBannerSubtitle(e.target.value)}
+                      placeholder="ঈদের কেনাকাটায় দারুণ সারপ্রাইজ..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Button Text</label>
+                      <input
+                        type="text"
+                        value={bannerButtonText}
+                        onChange={(e) => setBannerButtonText(e.target.value)}
+                        placeholder="অফার দেখুন"
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-rose-500 font-bengali"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Cloudinary Promo Image</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={bannerPromoImage}
+                          onChange={(e) => setBannerPromoImage(e.target.value)}
+                          placeholder="Image URL"
+                          className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-rose-500"
+                        />
+                        <label className="bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold px-3 py-2 rounded-xl cursor-pointer whitespace-nowrap">
+                          Upload
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const formData = new FormData();
+                              formData.append("file", file);
+                              try {
+                                const res = await uploadMedia(formData).unwrap();
+                                if (res.url) setBannerPromoImage(res.url);
+                              } catch (err) {
+                                alert("Cloudinary upload failed!");
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Shared Link & Sort Order */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Click Redirect URL Link</label>
+                  <input
+                    type="text"
+                    required
+                    value={bannerLink}
+                    onChange={(e) => setBannerLink(e.target.value)}
+                    placeholder="/shop or /shop/new-arrivals"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Sort Display Order</label>
+                  <input
+                    type="number"
+                    value={bannerSortOrder}
+                    onChange={(e) => setBannerSortOrder(parseInt(e.target.value, 10) || 0)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500"
+                  />
+                </div>
+              </div>
+
+              {/* Form Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsBannerModalOpen(false)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 px-5 rounded-xl text-xs transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 px-6 rounded-xl text-xs shadow-lg shadow-rose-500/20 transition flex items-center gap-1.5"
+                >
+                  <Save className="h-4 w-4" />
+                  Save Hero Banner
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

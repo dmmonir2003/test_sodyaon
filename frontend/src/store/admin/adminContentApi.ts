@@ -203,6 +203,41 @@ export const adminContentApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+
+    // ---------------------------------------------------------
+    // HERO BANNERS CRUD
+    // ---------------------------------------------------------
+    getBanners: builder.query<any, void>({
+      query: () => '/banners',
+      providesTags: ['Deals'],
+    }),
+    getAdminBanners: builder.query<any, void>({
+      query: () => '/banners/admin',
+      providesTags: ['Deals'],
+    }),
+    createBanner: builder.mutation<any, any>({
+      query: (body) => ({
+        url: '/banners',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Deals'],
+    }),
+    updateBanner: builder.mutation<any, { id: string; body: any }>({
+      query: ({ id, body }) => ({
+        url: `/banners/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['Deals'],
+    }),
+    deleteBanner: builder.mutation<any, string>({
+      query: (id) => ({
+        url: `/banners/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Deals'],
+    }),
   }),
 });
 
@@ -241,4 +276,11 @@ export const {
   useCreateMenuItemMutation,
   useUpdateMenuItemMutation,
   useDeleteMenuItemMutation,
+
+  // Hero Banner CRUD Hooks
+  useGetBannersQuery,
+  useGetAdminBannersQuery,
+  useCreateBannerMutation,
+  useUpdateBannerMutation,
+  useDeleteBannerMutation,
 } = adminContentApi;

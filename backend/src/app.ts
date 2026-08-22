@@ -32,6 +32,7 @@ import userActivityRouter from './modules/userActivity/userActivity.route';
 import comboRouter from './modules/campaign/combo.route';
 import menuRouter from './modules/menu/menu.route';
 import marketingSettingsRouter from './modules/marketingSettings/marketingSettings.route';
+import bannerRouter from './modules/banner/banner.route';
 
 // Import error handler
 import { errorHandler } from './middleware/errorHandler';
@@ -153,6 +154,11 @@ app.use(['/api/combos', '/api/combo'], (req, res, next) => {
 app.use(['/api/menus', '/api/menu'], (req, res, next) => {
   req.url = req.url === '' ? '/' : req.url;
   menuRouter(req, res, next);
+});
+
+app.use(['/api/banners', '/api/banner'], (req, res, next) => {
+  req.url = req.url === '' ? '/' : req.url;
+  bannerRouter(req, res, next);
 });
 
 app.use('/api/settings/marketing', marketingSettingsRouter);
