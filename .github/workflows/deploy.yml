@@ -21,33 +21,22 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
-          script_stop: true
+          script_stop: false
           script: |
-            # 1. Environment & PATH setup
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
             if [ -d "$HOME/.nvm" ]; then
               export NVM_DIR="$HOME/.nvm"
-              [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+              [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || true
             fi
-            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
             export NEXT_TELEMETRY_DISABLED=1
 
-            # 2. Ensure VPS has swap memory enabled to prevent build OOM crashes
-            if [ ! -f /swapfile ]; then
-              fallocate -l 2G /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=2048 2>/dev/null
-              chmod 600 /swapfile 2>/dev/null || true
-              mkswap /swapfile 2>/dev/null || true
-              swapon /swapfile 2>/dev/null || true
-            else
-              swapon /swapfile 2>/dev/null || true
-            fi
-
             echo "=== 1. Pulling Latest Production Code ==="
-            cd /var/www/sodayon
-            git fetch origin production
-            git reset --hard origin/production
+            cd /var/www/sodayon || exit 1
+            git fetch origin production || exit 1
+            git reset --hard origin/production || exit 1
 
             echo "=== 2. Configuring Backend Environment ==="
-            cd /var/www/sodayon/backend
+            cd /var/www/sodayon/backend || exit 1
             touch .env
             grep -q "EMAIL_USER=" .env || echo "EMAIL_USER=sodayonbd@gmail.com" >> .env
             sed -i 's/EMAIL_USER=.*/EMAIL_USER=sodayonbd@gmail.com/' .env
@@ -68,14 +57,14 @@ jobs:
 
             echo "=== 3. Building Backend & Reloading API Server ==="
             npm install --no-audit --no-fund
-            npm run build
+            npm run build || exit 1
             pm2 reload all || pm2 restart all || true
 
             echo "=== 4. Building Frontend Application ==="
-            cd /var/www/sodayon/frontend
+            cd /var/www/sodayon/frontend || exit 1
             touch .env.local
             npm install --no-audit --no-fund
-            NODE_OPTIONS="--max-old-space-size=2048" npm run build
+            NODE_OPTIONS="--max-old-space-size=2048" npm run build || exit 1
 
             echo "=== 5. Finalizing PM2 Process Reload ==="
             pm2 reload all || pm2 restart all || true
