@@ -23,10 +23,18 @@ jobs:
           port: 22
           script_stop: true
           script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            export PATH=$PATH:/usr/local/bin:/usr/bin:~/.nvm/versions/node/$(ls ~/.nvm/versions/node 2>/dev/null | tail -n 1)/bin
+            [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc" 2>/dev/null || true
+            [ -f "$HOME/.profile" ] && source "$HOME/.profile" 2>/dev/null || true
+
             cd /var/www/sodayon
             git fetch origin production
             git reset --hard origin/production
-            cd backend
+
+            cd /var/www/sodayon/backend
+            touch .env
             grep -q "EMAIL_USER=" .env || echo "EMAIL_USER=sodayonbd@gmail.com" >> .env
             sed -i 's/EMAIL_USER=.*/EMAIL_USER=sodayonbd@gmail.com/' .env
             grep -q "EMAIL_PASS=" .env || echo "EMAIL_PASS=ueyd setk eayo ugjg" >> .env
@@ -43,7 +51,14 @@ jobs:
             sed -i 's/CLOUDINARY_API_KEY=.*/CLOUDINARY_API_KEY=233439717885269/' .env
             grep -q "CLOUDINARY_API_SECRET=" .env || echo "CLOUDINARY_API_SECRET=TOa4JkGry55jHsljKLqKCDtRSNc" >> .env
             sed -i 's/CLOUDINARY_API_SECRET=.*/CLOUDINARY_API_SECRET=TOa4JkGry55jHsljKLqKCDtRSNc/' .env
+
+            npm install --no-audit --no-fund
             npm run build
-            cd ../frontend
-            npm run build
-            pm2 reload all
+
+            cd /var/www/sodayon/frontend
+            touch .env.local
+            npm install --no-audit --no-fund
+            NODE_OPTIONS="--max-old-space-size=2048" npm run build
+
+            pm2 reload all || pm2 restart all
+            pm2 save
