@@ -166,6 +166,14 @@ export default function HomeHeroBanner() {
 
                 // Case 2: Image Banner with Title Overlay
                 if (isImageBanner && (hasText || banner.showOverlay)) {
+                  const textAlign = banner.textAlignment || 'left';
+                  const alignClass = 
+                    textAlign === 'center' 
+                      ? 'items-center text-center mx-auto' 
+                      : textAlign === 'right' 
+                      ? 'items-end text-right ml-auto' 
+                      : 'items-start text-left mr-auto';
+
                   return (
                     <div 
                       key={banner._id || banner.id || index}
@@ -182,9 +190,15 @@ export default function HomeHeroBanner() {
                         />
                       )}
                       {/* Dark gradient overlay for text readability */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent z-10" />
+                      <div className={`absolute inset-0 z-10 ${
+                        textAlign === 'center' 
+                          ? 'bg-black/60 backdrop-blur-[1px]' 
+                          : textAlign === 'right'
+                          ? 'bg-gradient-to-l from-black/85 via-black/50 to-transparent'
+                          : 'bg-gradient-to-r from-black/85 via-black/50 to-transparent'
+                      }`} />
                       
-                      <div className="relative z-20 max-w-xs sm:max-w-sm lg:max-w-md p-6 sm:p-10 lg:p-14 text-white">
+                      <div className={`relative z-20 max-w-xs sm:max-w-sm lg:max-w-md p-6 sm:p-10 lg:p-14 text-white flex flex-col ${alignClass}`}>
                         {titleText && (
                           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black font-heading text-white leading-tight mb-2 lg:mb-3 drop-shadow-md">
                             {titleText} {badgeTag && <span className="text-xl sm:text-2xl lg:text-3xl text-amber-400 block sm:inline ml-1 font-bold">{badgeTag}</span>}
@@ -209,13 +223,24 @@ export default function HomeHeroBanner() {
                 }
 
                 // Case 3: Rich Promo Banner (With Title, Subtitle, CTA & Cutout Product Image)
+                const textAlign = banner.textAlignment || 'left';
+                const isCenter = textAlign === 'center';
+                const isRight = textAlign === 'right';
+
+                const alignClass = 
+                  isCenter 
+                    ? 'items-center text-center mx-auto max-w-sm sm:max-w-md lg:max-w-lg' 
+                    : isRight 
+                    ? 'items-end text-right ml-auto max-w-xs sm:max-w-sm lg:max-w-md' 
+                    : 'items-start text-left mr-auto max-w-xs sm:max-w-sm lg:max-w-md';
+
                 return (
                   <div 
                     key={banner._id || banner.id || index}
                     className="min-w-full h-full relative flex flex-col justify-center overflow-hidden"
                   >
                     <div className={`w-full h-full bg-gradient-to-r ${banner.bgGradient || "from-orange-50 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/20"} flex flex-col justify-center p-6 sm:p-10 lg:p-14 relative`}>
-                      <div className="max-w-xs sm:max-w-sm lg:max-w-md relative z-20">
+                      <div className={`relative z-20 flex flex-col ${alignClass}`}>
                         {(titleText || badgeTag) && (
                           <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black font-heading text-slate-900 dark:text-white leading-tight mb-2 lg:mb-4">
                             {titleText} {badgeTag && <span className="text-xl sm:text-2xl lg:text-3xl text-primary-600 block sm:inline ml-1">{badgeTag}</span>}
@@ -236,20 +261,28 @@ export default function HomeHeroBanner() {
                         )}
                       </div>
 
-                      {/* Right side Cutout Promo Image */}
-                      <div className="absolute right-0 bottom-0 w-2/3 sm:w-1/2 h-full flex justify-end items-end p-2 sm:p-6 lg:p-10 pointer-events-none z-10">
-                        {banner.promoImage && (
+                      {/* Promo Cutout Image (Positioned automatically based on text alignment) */}
+                      {banner.promoImage && (
+                        <div className={`absolute bottom-0 h-full pointer-events-none z-10 ${
+                          isCenter
+                            ? 'inset-0 w-full flex justify-center items-end opacity-20 dark:opacity-15 p-2'
+                            : isRight
+                            ? 'left-0 w-2/3 sm:w-1/2 flex justify-start items-end p-2 sm:p-6 lg:p-10'
+                            : 'right-0 w-2/3 sm:w-1/2 flex justify-end items-end p-2 sm:p-6 lg:p-10'
+                        }`}>
                           <div className="relative w-full h-full">
                             <img 
                               src={banner.promoImage} 
                               alt={titleText || "Promo product"} 
-                              className="w-full h-full object-contain object-right-bottom opacity-90 drop-shadow-xl z-20 mix-blend-multiply dark:mix-blend-normal"
+                              className={`w-full h-full object-contain opacity-90 drop-shadow-xl z-20 mix-blend-multiply dark:mix-blend-normal ${
+                                isCenter ? 'object-center-bottom' : isRight ? 'object-left-bottom' : 'object-right-bottom'
+                              }`}
                               onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
                             />
                           </div>
-                        )}
-                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 sm:w-56 sm:h-56 lg:w-72 lg:h-72 rounded-full blur-3xl -z-10 opacity-70 ${banner.blobColor || "bg-orange-200 dark:bg-orange-800/50"}`} />
-                      </div>
+                          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 sm:w-56 sm:h-56 lg:w-72 lg:h-72 rounded-full blur-3xl -z-10 opacity-70 ${banner.blobColor || "bg-orange-200 dark:bg-orange-800/50"}`} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

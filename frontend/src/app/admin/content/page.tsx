@@ -48,7 +48,10 @@ import {
   Lightbulb,
   Package,
   Video,
-  FileSpreadsheet
+  FileSpreadsheet,
+  AlignLeft,
+  AlignCenter,
+  AlignRight
 } from "lucide-react";
 
 export default function ContentPage() {
@@ -102,6 +105,7 @@ export default function ContentPage() {
   const [bannerFilter, setBannerFilter] = useState<"all" | "image" | "promo">("all");
   const [isUploadingBannerImage, setIsUploadingBannerImage] = useState(false);
   const [isUploadingPromoImage, setIsUploadingPromoImage] = useState(false);
+  const [bannerTextAlign, setBannerTextAlign] = useState<"left" | "center" | "right">("left");
 
   const handleAddBannerClick = (type: "image" | "promo" | "overlay" = "image") => {
     setEditingBannerId(null);
@@ -111,6 +115,7 @@ export default function ContentPage() {
     setBannerBadgeLabel(type === "promo" ? "ছাড়!" : "");
     setBannerSubtitle(type === "promo" ? "ঈদের কেনাকাটায় দারুণ সারপ্রাইজ" : "");
     setBannerButtonText(type === "promo" ? "অফার দেখুন" : "");
+    setBannerTextAlign("left");
     setBannerLink("/shop");
     setBannerImageUrl("");
     setBannerPromoImage("");
@@ -131,6 +136,7 @@ export default function ContentPage() {
     setBannerBadgeLabel(b.badgeLabel || "");
     setBannerSubtitle(b.subtitle || "");
     setBannerButtonText(b.buttonText || "");
+    setBannerTextAlign(b.textAlignment || "left");
     setBannerLink(b.link || "/shop");
     setBannerImageUrl(b.imageUrl || "");
     setBannerPromoImage(b.promoImage || "");
@@ -151,6 +157,7 @@ export default function ContentPage() {
       badgeLabel: bannerType === "image" && !isOverlay ? undefined : (bannerBadgeLabel || undefined),
       subtitle: bannerType === "image" && !isOverlay ? undefined : (bannerSubtitle || undefined),
       buttonText: bannerType === "image" && !isOverlay ? undefined : (bannerButtonText || undefined),
+      textAlignment: bannerTextAlign,
       link: bannerLink || "/shop",
       imageUrl: bannerImageUrl || undefined,
       promoImage: bannerPromoImage || undefined,
@@ -1376,7 +1383,13 @@ export default function ContentPage() {
                       ) : isOverlay ? (
                         <div className="relative w-full h-full">
                           {b.imageUrl && <img src={b.imageUrl} alt="Overlay Banner" className="w-full h-full object-cover" />}
-                          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent p-4 flex flex-col justify-center text-white">
+                          <div className={`absolute inset-0 p-4 flex flex-col justify-center text-white ${
+                            b.textAlignment === "center"
+                              ? "bg-black/65 items-center text-center"
+                              : b.textAlignment === "right"
+                              ? "bg-gradient-to-l from-black/85 via-black/40 to-transparent items-end text-right"
+                              : "bg-gradient-to-r from-black/85 via-black/40 to-transparent items-start text-left"
+                          }`}>
                             <span className="text-base font-black">{titleText} {b.badgeLabel && <span className="text-amber-400 text-xs">{b.badgeLabel}</span>}</span>
                             {b.subtitle && <p className="text-[11px] text-slate-300 line-clamp-1 mt-1">{b.subtitle}</p>}
                             {b.buttonText && <span className="inline-block mt-2 bg-primary-600 text-white font-bold text-[9px] px-2.5 py-0.5 rounded w-fit">{b.buttonText}</span>}
@@ -1384,13 +1397,29 @@ export default function ContentPage() {
                         </div>
                       ) : (
                         <div className={`w-full h-full bg-gradient-to-r ${b.bgGradient || "from-orange-50 to-amber-100"} flex flex-col justify-center p-4 text-slate-900 relative overflow-hidden`}>
-                          <div className="relative z-10">
+                          <div className={`relative z-10 flex flex-col ${
+                            b.textAlignment === "center"
+                              ? "items-center text-center mx-auto"
+                              : b.textAlignment === "right"
+                              ? "items-end text-right ml-auto"
+                              : "items-start text-left mr-auto"
+                          }`}>
                             <span className="text-base font-black">{titleText} <span className="text-xs text-primary-600">{b.badgeLabel}</span></span>
                             <p className="text-[11px] font-medium text-slate-700 mt-1 line-clamp-2">{b.subtitle}</p>
                             <span className="inline-block mt-2 bg-primary-600 text-white font-bold text-[10px] px-3 py-1 rounded w-fit">{b.buttonText || "অফার দেখুন"}</span>
                           </div>
                           {b.promoImage && (
-                            <img src={b.promoImage} alt="Cutout" className="absolute right-1 bottom-1 w-20 h-20 object-contain drop-shadow-md z-0 opacity-90" />
+                            <img 
+                              src={b.promoImage} 
+                              alt="Cutout" 
+                              className={`absolute bottom-1 w-20 h-20 object-contain drop-shadow-md z-0 opacity-90 ${
+                                b.textAlignment === "center"
+                                  ? "left-1/2 -translate-x-1/2 opacity-25"
+                                  : b.textAlignment === "right"
+                                  ? "left-1"
+                                  : "right-1"
+                              }`} 
+                            />
                           )}
                         </div>
                       )}
@@ -1639,6 +1668,51 @@ export default function ContentPage() {
                     </div>
                   </div>
 
+                  {/* Text Alignment Selector */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1.5">
+                      Text Alignment (টেক্সট পজিশন / অ্যালাইনমেন্ট)
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setBannerTextAlign("left")}
+                        className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                          bannerTextAlign === "left"
+                            ? "bg-rose-600/20 border-rose-500 text-rose-300 shadow-sm"
+                            : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <AlignLeft className="h-4 w-4" />
+                        <span>Left (বামে)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBannerTextAlign("center")}
+                        className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                          bannerTextAlign === "center"
+                            ? "bg-rose-600/20 border-rose-500 text-rose-300 shadow-sm"
+                            : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <AlignCenter className="h-4 w-4" />
+                        <span>Center (মাঝখানে)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBannerTextAlign("right")}
+                        className={`py-2 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                          bannerTextAlign === "right"
+                            ? "bg-rose-600/20 border-rose-500 text-rose-300 shadow-sm"
+                            : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        <AlignRight className="h-4 w-4" />
+                        <span>Right (ডানে)</span>
+                      </button>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-xs font-bold text-slate-400 mb-1">Subtitle / Promotional Description</label>
                     <textarea
@@ -1782,7 +1856,13 @@ export default function ContentPage() {
                       ) : (
                         <div className="w-full h-full bg-slate-800" />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent p-6 flex flex-col justify-center text-white">
+                      <div className={`absolute inset-0 p-6 flex flex-col justify-center text-white ${
+                        bannerTextAlign === "center"
+                          ? "bg-black/60 items-center text-center"
+                          : bannerTextAlign === "right"
+                          ? "bg-gradient-to-l from-black/85 via-black/40 to-transparent items-end text-right"
+                          : "bg-gradient-to-r from-black/85 via-black/40 to-transparent items-start text-left"
+                      }`}>
                         <span className="text-xl font-black">{bannerBadge || "৳৬,০০০"} <span className="text-amber-400 text-sm">{bannerBadgeLabel || "ছাড়!"}</span></span>
                         <p className="text-xs text-slate-200 mt-1 line-clamp-1">{bannerSubtitle || "ঈদের কেনাকাটায় দারুণ সারপ্রাইজ"}</p>
                         <span className="inline-block mt-3 bg-primary-600 text-white font-bold text-xs px-4 py-1.5 rounded-lg w-fit shadow">
@@ -1792,7 +1872,13 @@ export default function ContentPage() {
                     </div>
                   ) : (
                     <div className={`w-full h-full bg-gradient-to-r ${bannerBgGradient || "from-orange-50 to-amber-100"} flex flex-col justify-center p-6 text-slate-900 relative overflow-hidden`}>
-                      <div className="relative z-10 max-w-xs">
+                      <div className={`relative z-10 max-w-xs flex flex-col ${
+                        bannerTextAlign === "center"
+                          ? "items-center text-center mx-auto"
+                          : bannerTextAlign === "right"
+                          ? "items-end text-right ml-auto"
+                          : "items-start text-left mr-auto"
+                      }`}>
                         <span className="text-xl font-black">{bannerBadge || "৳৬,০০০"} <span className="text-primary-600 text-sm">{bannerBadgeLabel || "ছাড়!"}</span></span>
                         <p className="text-xs font-medium text-slate-700 mt-1 line-clamp-2">{bannerSubtitle || "ঈদের কেনাকাটায় দারুণ সারপ্রাইজ"}</p>
                         <span className="inline-block mt-3 bg-primary-600 text-white font-bold text-xs px-4 py-1.5 rounded-lg w-fit shadow">
@@ -1800,7 +1886,17 @@ export default function ContentPage() {
                         </span>
                       </div>
                       {bannerPromoImage && (
-                        <img src={bannerPromoImage} alt="Cutout Preview" className="absolute right-4 bottom-2 w-28 h-28 object-contain drop-shadow-md z-0" />
+                        <img 
+                          src={bannerPromoImage} 
+                          alt="Cutout Preview" 
+                          className={`absolute bottom-2 w-28 h-28 object-contain drop-shadow-md z-0 ${
+                            bannerTextAlign === "center"
+                              ? "left-1/2 -translate-x-1/2 opacity-25"
+                              : bannerTextAlign === "right"
+                              ? "left-4"
+                              : "right-4"
+                          }`} 
+                        />
                       )}
                     </div>
                   )}
