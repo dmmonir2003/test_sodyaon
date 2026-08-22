@@ -14,6 +14,7 @@ import {
   Bot,
   Heart,
   Package,
+  Sparkles,
 } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { setMobileMenuOpen } from "@/store/ui/uiSlice";
@@ -27,7 +28,7 @@ import AnimatedLogo from "@/components/shared/AnimatedLogo";
 import ShopMegaMenu from "./ShopMegaMenu";
 import MobileNavLink from "./MobileNavLink";
 import NavLink from "./NavLink";
-import MobileMenuSection from "./MobileMenuSection";
+import MobileNavDrawer from "./MobileNavDrawer";
 import NavDropdown from "./NavDropdown";
 import PopularSearchTags from "@/components/shared/PopularSearchTags";
 import { useGetMenuItemsQuery } from "@/store/user/menu/menuApi";
@@ -87,16 +88,14 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full glass-card border-b border-indigo-100 dark:border-slate-800">
-      {/* 1st Line: Top Banner */}
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-xs transition-colors duration-200">
+      {/* Top Banner / Announcement Bar */}
       <div className="bg-primary-600 text-white text-center py-1.5 md:py-1 px-4 text-xs md:text-sm font-medium tracking-wide">
         ২৫০০ টাকার উপরের অর্ডারে ফ্রি শিপিং! কোড ব্যবহার করুন TOYFUN24
       </div>
 
-      {/* Main Navbar Header Background */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* 2nd Line: Mobile Header (Logo Left after hamburger, Actions Right) */}
-        <div className="flex justify-between items-center h-16 md:h-20">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 md:h-20 gap-2 md:gap-8">
           {/* Mobile: Hamburger + Logo (left side) */}
           <div className="flex items-center md:hidden">
             <button
@@ -108,7 +107,7 @@ export default function Navbar() {
             <Link href="/" className="flex items-center gap-1 hover-lift -ml-1">
               <AnimatedLogo className="w-8 h-8 md:w-14 md:h-14" />
               <motion.span 
-                className="font-heading font-bold  text-slate-800 dark:text-white tracking-tight flex -ml-1 md:text-3xl text-xl"
+                className="font-heading font-bold text-slate-800 dark:text-white tracking-tight flex -ml-1 md:text-3xl text-xl"
                 variants={textContainerVariants}
                 initial="hidden"
                 animate="visible"
@@ -127,47 +126,20 @@ export default function Navbar() {
             className="hidden md:flex items-center gap-1 hover-lift"
           >
             <AnimatedLogo className="w-8 h-8 md:w-14 md:h-14" />
-              <motion.span 
-                className="font-heading font-bold  text-slate-800 dark:text-white tracking-tight flex -ml-1 md:text-3xl text-xl"
-                variants={textContainerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                <motion.span variants={letterVariants}>স</motion.span>
-                <motion.span variants={letterVariants}>দা</motion.span>
-                <motion.span variants={letterVariants} className="text-primary-600">য়</motion.span>
-                <motion.span variants={letterVariants} className="text-primary-600">ন</motion.span>
-              </motion.span>
+            <motion.span 
+              className="font-heading font-bold text-slate-800 dark:text-white tracking-tight flex -ml-1 md:text-3xl text-xl"
+              variants={textContainerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <motion.span variants={letterVariants}>স</motion.span>
+              <motion.span variants={letterVariants}>দা</motion.span>
+              <motion.span variants={letterVariants} className="text-primary-600">য়</motion.span>
+              <motion.span variants={letterVariants} className="text-primary-600">ন</motion.span>
+            </motion.span>
           </Link>
 
-          {/* Center/Left: Logo + Theme Switchers (Mobile) */}
-          <div className="flex justify-end md:justify-start flex-1 md:flex-none items-center gap-2">
-            {/* Mobile-only Theme Switchers right after Logo */}
-            <div className="flex sm:hidden justify-end gap-0.5 ml-1">
-              <BgThemeSwitcher />
-              <ThemeSwitcher />
-              <Link
-                href="/wishlist"
-                className="flex items-center justify-center text-slate-600 hover:text-accent-500 dark:text-slate-300 transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
-              >
-                <Heart className="h-5 w-5" />
-              </Link>
-
-              <button
-                onClick={() => dispatch(setCartOpen(true))}
-                className="flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 relative transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                {cartCount > 0 && (
-                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] sm:text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-accent-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Desktop Search (Hidden on Mobile) */}
+          {/* Center Search (Hidden on Mobile) */}
           <div className="hidden md:flex flex-1 max-w-lg mx-6 relative z-50">
             <div className="relative w-full group">
               <input
@@ -188,60 +160,62 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Right: Actions */}
-          <div className="flex items-center justify-end flex-none gap-2 md:gap-4 lg:space-x-4">
-            <Link
-              href="/ai-tools/gift-finder"
-              className="hidden lg:flex items-center gap-1.5 text-slate-600 hover:text-primary-600 dark:text-slate-300 transition-colors text-sm font-medium mr-2 group"
-            >
-              <Bot className="h-5 w-5 text-secondary-500 group-hover:scale-110 transition-transform" />
-              <span>এআই গিফট ফাইন্ডার</span>
-            </Link>
-
-            <div className="hidden sm:flex items-center gap-2">
-              <BgThemeSwitcher />
+          {/* Right Actions: AI Tools & Profile */}
+          <div className="flex items-center space-x-2 md:space-x-3">
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center space-x-2">
+              <Link
+                href="/ai-tools/gift-finder"
+                className="btn-soft text-sm flex items-center space-x-1.5 border border-primary-500/20 bg-primary-50/50 dark:bg-primary-950/30 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900/40 px-3 py-1.5 rounded-full"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>এআই গিফট ফাইন্ডার</span>
+              </Link>
               <ThemeSwitcher />
-
+              <BgThemeSwitcher />
               <Link
                 href="/wishlist"
-                className="flex items-center justify-center text-slate-600 hover:text-accent-500 dark:text-slate-300 transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+                className="p-2 text-slate-600 hover:text-accent-500 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full transition-colors relative"
               >
                 <Heart className="h-5 w-5" />
               </Link>
-
               <button
                 onClick={() => dispatch(setCartOpen(true))}
-                className="flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 relative transition-colors p-1.5 sm:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+                className="p-2 text-slate-600 hover:text-primary-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full transition-colors relative"
               >
                 <ShoppingCart className="h-5 w-5" />
                 {cartCount > 0 && (
-                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] sm:text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-accent-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm">
+                  <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white dark:border-slate-900">
                     {cartCount}
                   </span>
                 )}
               </button>
-
-               <a
-              href="https://m.me/sodayon26?ref=website_navbar"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 transition-colors p-1.5 sm:p-2 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-full"
-              title="আমাদের সাথে মেসেঞ্জারে কথা বলুন"
-            >
-              <svg 
-                className="w-5 h-5 sm:w-6 sm:h-6" 
-                viewBox="0 0 24 24" 
-                fill="currentColor" 
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M12 2C6.477 2 2 6.14 2 11.25C2 14.155 3.536 16.745 5.922 18.39V22L9.27 20.158C10.143 20.384 11.055 20.5 12 20.5C17.523 20.5 22 16.36 22 11.25C22 6.14 17.523 2 12 2ZM12.983 14.398L10.368 11.603L5.322 14.398L10.9 8.472L13.627 11.267L18.56 8.472L12.983 14.398Z"/>
-              </svg>
-            </a>
             </div>
 
-           
+            {/* Mobile Actions */}
+            <div className="flex md:hidden items-center gap-0.5">
+              <ThemeSwitcher />
+              <BgThemeSwitcher />
+              <Link
+                href="/wishlist"
+                className="flex items-center justify-center text-slate-600 hover:text-accent-500 dark:text-slate-300 transition-colors p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+              >
+                <Heart className="h-5 w-5" />
+              </Link>
+              <button
+                onClick={() => dispatch(setCartOpen(true))}
+                className="flex items-center justify-center text-slate-600 hover:text-primary-600 dark:text-slate-300 relative transition-colors p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center border-2 border-white dark:border-slate-900">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
 
-            {/* Desktop: User Auth Dropdown (Hidden on Mobile) */}
+            {/* Desktop: User Auth Dropdown */}
             <div className="hidden md:flex items-center">
               <UserDropdown />
             </div>
@@ -249,38 +223,27 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex space-x-8 py-3 w-full justify-center border-t border-slate-100 dark:border-slate-800/50 relative">
+        <nav className="hidden md:flex space-x-8 py-3 w-full justify-center border-t border-slate-100 dark:border-slate-800/50">
           {dbNavItems.length > 0 ? (
             dbNavItems.map((item: any) => {
               const children = menuData?.data?.filter((child: any) => child.parentId === item._id) || [];
-              const isShop = item.url === '/shop' || item.titleEn.toLowerCase() === 'shop';
+              const isShop = item.url === '/shop' || item.titleEn?.toLowerCase() === 'shop';
 
               if (isShop) {
                 return <ShopMegaMenu key={item._id} title={item.titleBn} childItems={children} />;
               }
 
               if (children.length > 0) {
-                const dropdownItems = children.map((c: any) => ({
-                  label: c.titleBn,
-                  href: c.url,
-                }));
                 return (
                   <NavDropdown
                     key={item._id}
                     title={item.titleBn}
-                    className="text-primary-600"
-                    items={dropdownItems}
+                    items={children.map((c: any) => ({ label: c.titleBn, href: c.url }))}
                   />
                 );
               }
 
-              return (
-                <NavLink 
-                  key={item._id} 
-                  href={item.url} 
-                  text={item.titleBn} 
-                />
-              );
+              return <NavLink key={item._id} href={item.url} text={item.titleBn} />;
             })
           ) : (
             <>
@@ -288,176 +251,21 @@ export default function Navbar() {
               <ShopMegaMenu title="শপ" childItems={[]} />
               <NavDropdown
                 title="এআই টুলস"
-                className="text-primary-600"
                 items={[
                   { label: "এআই গিফট ফাইন্ডার", href: "/ai-tools/gift-finder" },
-                  {
-                    label: "প্যারেন্টিং অ্যাসিস্ট্যান্ট",
-                    href: "/ai-tools/parenting-assistant",
-                  },
+                  { label: "প্যারেন্টিং অ্যাসিস্ট্যান্ট", href: "/ai-tools/parenting-assistant" },
                   { label: "খেলনা তুলনা", href: "/ai-tools/compare" },
                 ]}
               />
               <NavLink href="/features" text="ফিচারসমূহ" />
-              <NavLink href="/blog" text="ব্লগ ও প্লে আইডিয়াস" />
+              <NavLink href="/blog" text="ব্লগ" />
             </>
           )}
         </nav>
       </div>
 
-      {/* Note: The Mobile Search Drawer is now triggered by the MobileBottomNav globally and handled by the separate MobileSearchDrawer component at layout level. */}
-
-      {/* Left Sidebar Overlay & Menu (Mobile Hamburger) */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[100] flex">
-          {/* Black Overlay Background */}
-          <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
-            onClick={() => dispatch(setMobileMenuOpen(false))}
-          />
-
-          {/* Main Left Drawer */}
-          <div className="relative flex flex-col w-4/5 max-w-sm h-dvh bg-white dark:bg-slate-900 shadow-2xl transform transition-transform duration-300 ease-in-out border-r border-slate-100 dark:border-slate-800">
-            {/* Header in Left Sidebar */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-              <span className="font-heading font-black text-xl text-slate-800 dark:text-white tracking-tight">
-                মেন্যু{" "}
-                <span className="text-primary-600 dark:text-primary-500">
-                  অন্বেষণ
-                </span>
-              </span>
-              <button
-                onClick={() => dispatch(setMobileMenuOpen(false))}
-                className="p-2 -mr-2 text-slate-400 hover:text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-900/20 rounded-full transition-colors"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            {/* Menu Items */}
-            <div className="flex-1 overflow-y-auto py-2">
-              <MobileNavLink
-                href="/"
-                text="হোম"
-                onClick={() => dispatch(setMobileMenuOpen(false))}
-              />
-
-              <MobileMenuSection
-                id="shopping"
-                title="কেনাকাটা"
-                isExpanded={expandedSections.shopping}
-                onToggle={() => toggleSection("shopping")}
-                showSubcategories={true}
-                items={[
-                  {
-                    label: "খেলনা সংগ্রহ",
-                    href: "#",
-                    color: "slate",
-                    subItems: [
-                      { label: "সব খেলনা দেখুন", href: "/shop" },
-                      { label: "বয়স-ভিত্তিক ফাইন্ডার", href: "/shop/age" },
-                      {
-                        label: "ফ্ল্যাশ ডিল",
-                        href: "/deals",
-                        isHighlighted: true,
-                      },
-                      { label: "কম্বো অফার", href: "/combo" },
-                    ],
-                  },
-
-                  {
-                    label: "শীর্ষ ক্যাটাগরি",
-                    href: "#",
-                    color: "slate",
-                    subItems: [
-                      {
-                        label: "অ্যাকশন ফিগার",
-                        href: "/shop/categories/action-figures",
-                      },
-                      {
-                        label: "বিল্ডিং সেট",
-                        href: "/shop/categories/building-sets",
-                      },
-                      {
-                        label: "শিক্ষামূলক",
-                        href: "/shop/categories/educational",
-                      },
-                      {
-                        label: "পুতুল ও ফিগার",
-                        href: "/shop/categories/dolls",
-                      },
-                      {
-                        label: "আউটডোর প্লে",
-                        href: "/shop/categories/outdoor",
-                      },
-                    ],
-                  },
-                  {
-                    label: "শিশু পণ্য",
-                    href: "#",
-                    color: "primary",
-                    isHighlighted: true,
-                    subItems: [
-                      { label: "শিশু খাবার", href: "/shop/food" },
-                      {
-                        label: "শিশু ব্যাগ",
-                        href: "/shop/bags",
-                        isHighlighted: true,
-                      },
-                      { label: "ডায়াপার", href: "/shop/diapers" },
-                      { label: "শিশু পোশাক", href: "/shop/clothes" },
-                      { label: "শিশু যত্ন পণ্য", href: "/shop/care" },
-                    ],
-                  },
-                  {
-                    label: "উইশলিস্ট",
-                    href: "/wishlist",
-                    color: "slate",
-                  },
-                ]}
-                onClose={() => dispatch(setMobileMenuOpen(false))}
-              />
-
-              <MobileMenuSection
-                id="ai-solutions"
-                title="এআই সল্যুশনস"
-                isExpanded={expandedSections["ai-solutions"]}
-                onToggle={() => toggleSection("ai-solutions")}
-                items={[
-                  {
-                    label: "এআই গিফট ফাইন্ডার",
-                    href: "/ai-tools/gift-finder",
-                    color: "secondary",
-                    icon: Bot,
-                  },
-                  {
-                    label: "প্যারেন্টিং অ্যাসিস্ট্যান্ট",
-                    href: "/ai-tools/parenting-assistant",
-                    color: "slate",
-                  },
-                  {
-                    label: "খেলনা তুলনা",
-                    href: "/ai-tools/compare",
-                    color: "slate",
-                  },
-                ]}
-                onClose={() => dispatch(setMobileMenuOpen(false))}
-              />
-
-              <MobileNavLink
-                href="/features"
-                text="ফিচারসমূহ"
-                onClick={() => dispatch(setMobileMenuOpen(false))}
-              />
-              <MobileNavLink
-                href="/blog"
-                text="ব্লগ ও শিখন"
-                onClick={() => dispatch(setMobileMenuOpen(false))}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Dynamic Interactive Mobile Drawer Navigation */}
+      <MobileNavDrawer />
     </header>
   );
 }
