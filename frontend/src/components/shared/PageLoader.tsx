@@ -19,14 +19,14 @@ export default function PageLoader({
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.15,
-        delayChildren: 3.2, // Starts right after AnimatedLogo cart arrives
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
       },
     },
   };
 
   const letterVariants = {
-    hidden: { opacity: 0, y: 15 },
+    hidden: { opacity: 0, y: 12 },
     visible: {
       opacity: 1,
       y: 0,
@@ -42,12 +42,12 @@ export default function PageLoader({
           : "flex-1 min-h-[60vh] w-full py-16 px-4 flex flex-col items-center justify-center"
       }`}
     >
-      <div className="flex flex-col items-center justify-center gap-4 text-center">
-        {/* Centered Navbar style Logo + Animated Text */}
-        <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-          <AnimatedLogo className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 text-slate-800 dark:text-white" />
+      <div className="flex flex-col items-center justify-center gap-3 text-center">
+        {/* Centered Navbar-style Logo + Brand Name */}
+        <div className="flex items-center justify-center gap-1">
+          <AnimatedLogo className="w-10 h-10 md:w-14 md:h-14 text-slate-800 dark:text-white" />
           <motion.span
-            className="font-heading font-bold text-slate-800 dark:text-white tracking-tight flex -ml-1 text-2xl sm:text-4xl md:text-5xl"
+            className="font-heading font-bold text-slate-800 dark:text-white tracking-tight flex -ml-1 text-2xl md:text-3xl"
             variants={textContainerVariants}
             initial="hidden"
             animate="visible"
@@ -63,14 +63,14 @@ export default function PageLoader({
           </motion.span>
         </div>
 
-        {/* Minimal text indicator */}
+        {/* Text indicator */}
         {text && (
-          <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 animate-pulse">
+          <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 animate-pulse mt-1">
             {text}
           </p>
         )}
 
-        {/* Minimal Progress Line without card or backdrop */}
+        {/* Minimal Progress Line */}
         <div className="w-32 sm:w-44 h-1 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mt-1">
           <motion.div
             className="h-full bg-gradient-to-r from-primary-500 via-purple-500 to-secondary-500 rounded-full"
