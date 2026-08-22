@@ -19,6 +19,7 @@ export default function LoginForm() {
   const [loginMethod, setLoginMethod] = useState<"phone" | "email">("email");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [verificationError, setVerificationError] = useState("");
  
   const router = useRouter();
@@ -295,13 +296,25 @@ export default function LoginForm() {
                 <div className="relative">
                   <Lock className="absolute left-3.5 sm:left-4 top-3 sm:top-3.5 h-4 w-4 sm:h-5 sm:w-5 text-slate-400 dark:!text-slate-500" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 text-xs sm:text-sm md:text-base rounded-xl border border-slate-200 dark:!border-slate-700 bg-slate-50 dark:!bg-slate-800/80 text-slate-900 dark:!text-white placeholder-slate-400 dark:!placeholder-slate-500 focus:bg-white dark:focus:!bg-slate-800 focus:border-primary-500 dark:focus:!border-primary-400 focus:ring-2 focus:ring-primary-100 dark:focus:!ring-primary-950 transition-all outline-none"
+                    className="w-full pl-10 sm:pl-11 pr-10 sm:pr-11 py-2.5 sm:py-3 text-xs sm:text-sm md:text-base rounded-xl border border-slate-200 dark:!border-slate-700 bg-slate-50 dark:!bg-slate-800/80 text-slate-900 dark:!text-white placeholder-slate-400 dark:!placeholder-slate-500 focus:bg-white dark:focus:!bg-slate-800 focus:border-primary-500 dark:focus:!border-primary-400 focus:ring-2 focus:ring-primary-100 dark:focus:!ring-primary-950 transition-all outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 sm:right-3.5 top-2.5 sm:top-3 text-slate-400 dark:!text-slate-500 hover:text-slate-600 dark:hover:!text-slate-300 focus:outline-none transition-colors cursor-pointer"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
+                    ) : (
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                    )}
+                  </button>
                 </div>
               </div>
             )}
