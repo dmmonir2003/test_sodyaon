@@ -29,13 +29,24 @@ jobs:
               [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             fi
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+            export NEXT_TELEMETRY_DISABLED=1
 
-            echo "=== Pulling Latest Production Code ==="
+            # 2. Ensure VPS has swap memory enabled to prevent build OOM crashes
+            if [ ! -f /swapfile ]; then
+              fallocate -l 2G /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=2048 2>/dev/null
+              chmod 600 /swapfile 2>/dev/null || true
+              mkswap /swapfile 2>/dev/null || true
+              swapon /swapfile 2>/dev/null || true
+            else
+              swapon /swapfile 2>/dev/null || true
+            fi
+
+            echo "=== 1. Pulling Latest Production Code ==="
             cd /var/www/sodayon
             git fetch origin production
             git reset --hard origin/production
 
-            echo "=== Configuring Backend .env ==="
+            echo "=== 2. Configuring Backend Environment ==="
             cd /var/www/sodayon/backend
             touch .env
             grep -q "EMAIL_USER=" .env || echo "EMAIL_USER=sodayonbd@gmail.com" >> .env
@@ -55,15 +66,18 @@ jobs:
             grep -q "CLOUDINARY_API_SECRET=" .env || echo "CLOUDINARY_API_SECRET=TOa4JkGry55jHsljKLqKCDtRSNc" >> .env
             sed -i 's/CLOUDINARY_API_SECRET=.*/CLOUDINARY_API_SECRET=TOa4JkGry55jHsljKLqKCDtRSNc/' .env
 
-            echo "=== Building Backend ==="
+            echo "=== 3. Building Backend & Reloading API Server ==="
+            npm install --no-audit --no-fund
             npm run build
+            pm2 reload all || pm2 restart all || true
 
-            echo "=== Building Frontend ==="
+            echo "=== 4. Building Frontend Application ==="
             cd /var/www/sodayon/frontend
             touch .env.local
-            NODE_OPTIONS="--max-old-space-size=1536" npm run build
+            npm install --no-audit --no-fund
+            NODE_OPTIONS="--max-old-space-size=2048" npm run build
 
-            echo "=== Reloading PM2 Processes ==="
+            echo "=== 5. Finalizing PM2 Process Reload ==="
             pm2 reload all || pm2 restart all || true
             pm2 save || true
-            echo "=== Deployment Completed Successfully ==="
+            echo "=== 6. Production Deployment Completed Successfully ==="
