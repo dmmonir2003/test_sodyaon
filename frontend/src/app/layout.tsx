@@ -12,6 +12,7 @@ import CartDrawer from "@/components/shared/CartDrawer";
 import MobileSearchDrawer from "@/components/shared/MobileSearchDrawer";
 import ScrollToTop from "@/components/shared/ScrollToTop";
 import ThemeInitializer from "@/components/shared/ThemeInitializer";
+import GlobalNavigationLoader from "@/components/shared/GlobalNavigationLoader";
 
 const inter = Hind_Siliguri({
   variable: "--font-inter",
@@ -95,6 +96,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <ThemeInitializer />
         <StoreProvider>
+          <GlobalNavigationLoader />
           <Analytics />
           <Navbar />
           <main className="flex-grow flex flex-col pb-20 md:pb-0">
