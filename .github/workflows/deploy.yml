@@ -37,6 +37,12 @@ jobs:
             sed -i 's/EMAIL_PORT=.*/EMAIL_PORT=587/' .env
             grep -q "EMAIL_FROM=" .env || echo 'EMAIL_FROM="সদায়ন <sodayonbd@gmail.com>"' >> .env
             sed -i 's/EMAIL_FROM=.*/EMAIL_FROM="সদায়ন <sodayonbd@gmail.com>"/' .env
+            grep -q "CLOUDINARY_CLOUD_NAME=" .env || echo "CLOUDINARY_CLOUD_NAME=ub7sbihp" >> .env
+            sed -i 's/CLOUDINARY_CLOUD_NAME=.*/CLOUDINARY_CLOUD_NAME=ub7sbihp/' .env
+            grep -q "CLOUDINARY_API_KEY=" .env || echo "CLOUDINARY_API_KEY=233439717885269" >> .env
+            sed -i 's/CLOUDINARY_API_KEY=.*/CLOUDINARY_API_KEY=233439717885269/' .env
+            grep -q "CLOUDINARY_API_SECRET=" .env || echo "CLOUDINARY_API_SECRET=TOa4JkGry55jHsljKLqKCDtRSNc" >> .env
+            sed -i 's/CLOUDINARY_API_SECRET=.*/CLOUDINARY_API_SECRET=TOa4JkGry55jHsljKLqKCDtRSNc/' .env
             npm run build
             cd ../frontend
             npm run build
