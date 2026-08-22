@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Phone, Mail, Lock, User, ArrowRight, CheckCircle2, ShieldCheck, X } from "lucide-react";
+import { Phone, Mail, Lock, User, ArrowRight, CheckCircle2, ShieldCheck, X, Sparkles } from "lucide-react";
 import AnimatedLogo from "@/components/shared/AnimatedLogo";
 import { 
   useRegisterProfileMutation,
@@ -294,6 +294,34 @@ function RegisterContent() {
           
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black font-heading mb-1.5 sm:mb-2">রেজিস্টার করুন</h1>
           <p className="text-xs sm:text-sm text-slate-500 mb-5 sm:mb-8">সদায়ন-এ আপনার ফ্রী একাউন্ট তৈরি করুন।</p>
+
+          {/* Compact Mobile Feature Highlights Banner (Mobile Only) */}
+          <div className="block lg:hidden mb-5 p-3.5 rounded-2xl bg-gradient-to-br from-primary-500/10 via-slate-100 to-emerald-500/10 dark:from-primary-950/40 dark:via-slate-800/60 dark:to-emerald-950/40 border border-primary-500/20 dark:border-primary-500/30">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-primary-500 shrink-0 animate-pulse" />
+              <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                কেন সদায়নে যোগ দিবেন?
+              </h3>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-medium text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/60 p-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span className="truncate">খেলনার সুপারিশ</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/60 p-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span className="truncate">অর্ডার ট্র্যাক</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/60 p-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span className="truncate">এআই প্যারেন্টিং</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/60 p-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span className="truncate">চাইল্ড প্রোফাইল</span>
+              </div>
+            </div>
+          </div>
 
           <div className="space-y-2.5 sm:space-y-3 mb-5 sm:mb-6">
             {/* Prominent Google Register */}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Phone, Mail, Lock, ArrowRight } from "lucide-react";
+import { Phone, Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
 import { 
   useLoginProfileMutation,
   useSocialLoginMutation
@@ -154,6 +154,29 @@ export default function LoginForm() {
           <p className="text-xs sm:text-sm text-slate-500 mb-5 sm:mb-8">
             সদায়ন-এ আবার ফিরে আসার জন্য ধন্যবাদ। আপনার অ্যাকাউন্টে লগইন করুন।
           </p>
+
+          {/* Compact Mobile Feature Highlights Banner (Mobile Only) */}
+          <div className="block lg:hidden mb-5 p-3.5 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-slate-100 to-purple-500/10 dark:from-indigo-950/40 dark:via-slate-800/60 dark:to-purple-950/40 border border-indigo-500/20 dark:border-indigo-500/30">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0 animate-pulse" />
+              <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                চাইল্ড প্রোফাইল ও এআই ফাইন্ডার
+              </h3>
+            </div>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 mb-2.5 leading-tight">
+              সন্তানের বয়স ও পছন্দ সংরক্ষণ করে জন্মদিনে এআই গিফট সুপারিশ পান।
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-[11px] font-bold text-slate-800 dark:text-slate-200">
+              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/60 p-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                <span className="text-sm">🎁</span>
+                <span>স্মার্ট ম্যাচ</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/60 p-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                <span className="text-sm">🎂</span>
+                <span>জন্মদিন রিমাইন্ডার</span>
+              </div>
+            </div>
+          </div>
 
           <div className="space-y-2.5 sm:space-y-3 mb-5 sm:mb-6">
             {/* Prominent Google Login */}
