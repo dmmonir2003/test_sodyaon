@@ -159,7 +159,7 @@ import PageLoader from '@/components/shared/PageLoader';
 
 export default function ShopClient() {
   return (
-    <Suspense fallback={<PageLoader text="পণ্যগুলো লোড হচ্ছে..." fullScreen={true} />}>
+    <Suspense fallback={<PageLoader text="পণ্যগুলো লোড হচ্ছে..." fullScreen={false} />}>
       <ShopPageContent />
     </Suspense>
   );

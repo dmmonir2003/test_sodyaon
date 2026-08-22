@@ -270,11 +270,12 @@
 // app/forgot-password/page.tsx
 export const dynamic = "force-dynamic";
 import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm";
+import PageLoader from "@/components/shared/PageLoader";
 import { Suspense } from "react";
 
 export default function ForgotPasswordPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<PageLoader text="পাসওয়ার্ড রিকভারি লোড হচ্ছে..." fullScreen={false} />}>
       <ForgotPasswordForm />
     </Suspense>
   );

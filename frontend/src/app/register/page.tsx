@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Phone, Mail, Lock, User, ArrowRight, CheckCircle2, ShieldCheck, X, Sparkles, Eye, EyeOff } from "lucide-react";
 import AnimatedLogo from "@/components/shared/AnimatedLogo";
+import PageLoader from "@/components/shared/PageLoader";
 import { 
   useRegisterProfileMutation,
   usePhoneLoginMutation,
@@ -564,7 +565,7 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">লোড হচ্ছে...</div>}>
+    <Suspense fallback={<PageLoader text="রেজিস্টার পেজ লোড হচ্ছে..." fullScreen={false} />}>
       <RegisterContent />
     </Suspense>
   );
