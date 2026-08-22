@@ -10,7 +10,7 @@ export const getAllCategories = catchAsync(async (req: Request, res: Response) =
   if (tree === 'true') {
     // Recursive populate: fetch root categories (parentId = null) and nested children
     const categories = await Category.find({ parentId: null })
-      .sort('sortOrder')
+      .sort({ isMegaMenuDefault: -1, sortOrder: 1 })
       .populate({
         path: 'children',
         populate: { path: 'children' } // Nested secondary/tertiary levels
@@ -24,7 +24,7 @@ export const getAllCategories = catchAsync(async (req: Request, res: Response) =
   }
 
   // Standard flat representation
-  const categories = await Category.find().sort('sortOrder').populate('parentId');
+  const categories = await Category.find().sort({ isMegaMenuDefault: -1, sortOrder: 1 }).populate('parentId');
   
   res.status(200).json({
     success: true,
@@ -52,6 +52,10 @@ export const getCategoryByIdOrSlug = catchAsync(async (req: Request, res: Respon
 
 // Admin: Create Category
 export const createCategory = catchAsync(async (req: Request, res: Response) => {
+  if (req.body.isMegaMenuDefault) {
+    await Category.updateMany({}, { isMegaMenuDefault: false });
+  }
+
   const category = await Category.create(req.body);
   
   res.status(201).json({
@@ -63,6 +67,10 @@ export const createCategory = catchAsync(async (req: Request, res: Response) => 
 // Admin: Update Category
 export const updateCategory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
+
+  if (req.body.isMegaMenuDefault) {
+    await Category.updateMany({ _id: { $ne: id } }, { isMegaMenuDefault: false });
+  }
 
   const category = await Category.findByIdAndUpdate(id, req.body, {
     new: true,

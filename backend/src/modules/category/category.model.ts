@@ -13,6 +13,7 @@ export interface ICategory {
   showInMegaMenu: boolean;
   showInDropdown: boolean;
   showInIconGrid: boolean;
+  isMegaMenuDefault?: boolean;
 
   // Hierarchical recursive tree reference
   parentId?: Schema.Types.ObjectId | null;
@@ -72,6 +73,11 @@ const CategorySchema = new Schema<ICategoryDocument>(
       index: true,
     },
     showInIconGrid: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    isMegaMenuDefault: {
       type: Boolean,
       default: false,
       index: true,

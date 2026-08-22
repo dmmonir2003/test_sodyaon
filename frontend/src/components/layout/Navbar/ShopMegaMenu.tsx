@@ -70,10 +70,12 @@ export default function ShopMegaMenu({ title, childItems = [] }: ShopMegaMenuPro
   const dbRootCategories = dbCategories.filter((c: any) => !c.parentId && c.showInMegaMenu !== false);
   const rootCategories = dbRootCategories.length > 0 ? dbRootCategories : fallbackCategories;
 
-  // Active Category (default to first category when opening)
+  // Active Category (default to the category marked as isMegaMenuDefault, or first category)
+  const defaultCategory = rootCategories.find((c: any) => c.isMegaMenuDefault) || rootCategories[0] || null;
+
   const activeCategory = (selectedCatSlug
     ? rootCategories.find((c: any) => c.slug === selectedCatSlug || (c.id || c._id) === selectedCatSlug)
-    : null) || rootCategories[0] || null;
+    : null) || defaultCategory;
 
   const activeSubcategories = activeCategory?.children || [];
 

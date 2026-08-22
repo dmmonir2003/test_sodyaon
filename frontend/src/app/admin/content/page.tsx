@@ -53,7 +53,8 @@ import {
   FileSpreadsheet,
   AlignLeft,
   AlignCenter,
-  AlignRight
+  AlignRight,
+  Star
 } from "lucide-react";
 
 export default function ContentPage() {
@@ -458,6 +459,7 @@ export default function ContentPage() {
   const [catShowMega, setCatShowMega] = useState(true);
   const [catShowDrop, setCatShowDrop] = useState(true);
   const [catShowIconGrid, setCatShowIconGrid] = useState(true);
+  const [catIsMegaMenuDefault, setCatIsMegaMenuDefault] = useState(false);
   const [catSort, setCatSort] = useState(1);
   const [isUploadingCatIcon, setIsUploadingCatIcon] = useState(false);
 
@@ -473,6 +475,7 @@ export default function ContentPage() {
     setCatShowMega(true);
     setCatShowDrop(true);
     setCatShowIconGrid(!parentId);
+    setCatIsMegaMenuDefault(false);
     setCatSort((catData?.data?.length || 0) + 1);
     setIsCatModalOpen(true);
   };
@@ -489,6 +492,7 @@ export default function ContentPage() {
     setCatShowMega(c.showInMegaMenu !== false);
     setCatShowDrop(c.showInDropdown !== false);
     setCatShowIconGrid(c.showInIconGrid !== false);
+    setCatIsMegaMenuDefault(c.isMegaMenuDefault === true);
     setCatSort(c.sortOrder ?? 1);
     setIsCatModalOpen(true);
   };
@@ -779,6 +783,7 @@ export default function ContentPage() {
       showInMegaMenu: catShowMega,
       showInDropdown: catShowDrop,
       showInIconGrid: catShowIconGrid,
+      isMegaMenuDefault: catIsMegaMenuDefault,
       sortOrder: Number(catSort) || 0
     };
 
@@ -1161,6 +1166,12 @@ export default function ContentPage() {
                           <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                             Main Category
                           </span>
+                          {c.isMegaMenuDefault && (
+                            <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <Star className="h-3 w-3 fill-amber-300" />
+                              Mega Menu Default (ডিফল্ট)
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400 font-mono flex-wrap">
                           <span>Slug: <span className="text-slate-300">/shop/categories/{c.slug}</span></span>
@@ -1175,7 +1186,25 @@ export default function ContentPage() {
                     </div>
 
                     {/* Main Category Action Buttons */}
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+                      {!c.isMegaMenuDefault && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await updateCategory({ id: c.id || c._id, body: { isMegaMenuDefault: true } }).unwrap();
+                              refetchCats();
+                            } catch (err: any) {
+                              alert(err?.data?.message || "Failed to set default category.");
+                            }
+                          }}
+                          className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold px-2.5 py-1.5 rounded-xl transition flex items-center gap-1"
+                          title="Set as Default in Mega Menu (মেগামেনুতে ডিফল্ট করুন)"
+                        >
+                          <Star className="h-3.5 w-3.5" />
+                          <span>Set as Default</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => handleAddCategoryClick(c.id || c._id)}
                         className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"
@@ -3155,6 +3184,26 @@ export default function ContentPage() {
                     className="w-24 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-white focus:outline-none focus:border-emerald-500 font-mono text-xs text-right"
                   />
                 </div>
+
+                {!catParentId && (
+                  <label className="flex items-center gap-2.5 cursor-pointer p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/15 transition">
+                    <input
+                      type="checkbox"
+                      checked={catIsMegaMenuDefault}
+                      onChange={(e) => setCatIsMegaMenuDefault(e.target.checked)}
+                      className="rounded accent-amber-500 h-4 w-4"
+                    />
+                    <div>
+                      <div className="text-xs font-bold text-amber-300 flex items-center gap-1">
+                        <Star className="h-3.5 w-3.5 fill-amber-300" />
+                        মেগামেনুতে ডিফল্ট ক্যাটাগরি হিসেবে সেট করুন (Set as Mega Menu Default)
+                      </div>
+                      <div className="text-[10px] text-slate-400">
+                        গ্রাহক ন্যাভবারের "শপ" মেনু ওপেন করার সাথে সাথে কোনো ক্লিক ছাড়াই ১ম এই ক্যাটাগরির সাব-ক্যাটাগরিগুলো ডিসপ্লে করবে।
+                      </div>
+                    </div>
+                  </label>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-800/80">
                   <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg bg-slate-900/50 hover:bg-slate-900">
