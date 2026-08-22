@@ -17,11 +17,16 @@ export const baseApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: getBaseUrl(),
     prepareHeaders: (headers, { getState }) => {
-      // Attach JWT token from cookie automatically if needed
+      // Attach JWT token from cookie or localStorage automatically
       if (typeof document !== 'undefined') {
         const match = document.cookie.match(/(?:^|;\s*)auth_token=([^;]*)/);
         if (match) {
           headers.set('Authorization', `Bearer ${decodeURIComponent(match[1])}`);
+        } else if (typeof localStorage !== 'undefined') {
+          const localToken = localStorage.getItem('auth_token');
+          if (localToken) {
+            headers.set('Authorization', `Bearer ${localToken}`);
+          }
         }
       }
       return headers;

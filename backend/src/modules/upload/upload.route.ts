@@ -4,7 +4,8 @@ import { protect } from '../../middleware/auth';
 
 const router = Router();
 
-// Only authenticated sessions can perform media uploads
+// Allow uploads at both /api/upload and /api/upload/media
+router.post('/', protect, uploadMiddleware.single('file'), uploadMedia);
 router.post('/media', protect, uploadMiddleware.single('file'), uploadMedia);
 
 export default router;
