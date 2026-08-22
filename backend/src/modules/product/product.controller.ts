@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Product } from './product.model';
 import { Brand } from '../brand/brand.model';
+import { Category } from '../category/category.model';
 import { ApiError } from '../../utils/ApiError';
 import { catchAsync } from '../../utils/catchAsync';
 import axios from 'axios';
@@ -19,14 +20,32 @@ export const getAllProducts = catchAsync(async (req: Request, res: Response, nex
 
   if (categoryId) {
     if ((categoryId as string).match(/^[0-9a-fA-F]{24}$/)) {
-      queryObj.categories = categoryId;
+      const subCats = await Category.find({ parentId: categoryId }).select('_id');
+      const allCatIds = [categoryId, ...subCats.map(s => s._id)];
+      queryObj.categories = { $in: allCatIds };
     } else {
-      queryObj.categoryId = Number(categoryId);
+      const foundCategory = await Category.findOne({ slug: (categoryId as string).toLowerCase() });
+      if (foundCategory) {
+        const subCats = await Category.find({ parentId: foundCategory._id }).select('_id');
+        const allCatIds = [foundCategory._id, ...subCats.map(s => s._id)];
+        queryObj.categories = { $in: allCatIds };
+      } else {
+        queryObj.categoryId = Number(categoryId) || 0;
+      }
     }
   }
 
   if (subcategoryId) {
-    queryObj.subcategoryId = subcategoryId;
+    if ((subcategoryId as string).match(/^[0-9a-fA-F]{24}$/)) {
+      queryObj.categories = subcategoryId;
+    } else {
+      const foundSubCategory = await Category.findOne({ slug: (subcategoryId as string).toLowerCase() });
+      if (foundSubCategory) {
+        queryObj.categories = foundSubCategory._id;
+      } else {
+        queryObj.subcategoryId = subcategoryId;
+      }
+    }
   }
 
   if (ageRange) {

@@ -9,6 +9,8 @@ import {
   useDeleteProductMutation,
   useGetCategoriesQuery,
   useCreateCategoryMutation,
+  useUpdateCategoryMutation,
+  useDeleteCategoryMutation,
   useGetUISectionsQuery,
   useCreateUISectionMutation,
   useGetFlashSalesQuery,
@@ -74,6 +76,8 @@ export default function ContentPage() {
   const [uploadMedia, { isLoading: isUploadingImage }] = useUploadMediaMutation();
 
   const [createCategory, { isLoading: isCreatingCat }] = useCreateCategoryMutation();
+  const [updateCategory] = useUpdateCategoryMutation();
+  const [deleteCategory] = useDeleteCategoryMutation();
   const [createUISection, { isLoading: isCreatingUi }] = useCreateUISectionMutation();
   const [createFlashSale, { isLoading: isCreatingCamp }] = useCreateFlashSaleMutation();
   const { data: menuData, refetch: refetchMenus } = useGetMenuItemsQuery();
@@ -443,13 +447,61 @@ export default function ContentPage() {
   const [formVideos, setFormVideos] = useState<{ youtubeUrl: string; titleBn?: string; channelName?: string; duration?: string }[]>([]);
 
   // 2. CATEGORY FORM STATE
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
   const [catSlug, setCatSlug] = useState("");
   const [catNameEn, setCatNameEn] = useState("");
   const [catNameBn, setCatNameBn] = useState("");
+  const [catDescEn, setCatDescEn] = useState("");
+  const [catDescBn, setCatDescBn] = useState("");
+  const [catIcon, setCatIcon] = useState("");
   const [catParentId, setCatParentId] = useState("");
   const [catShowMega, setCatShowMega] = useState(true);
   const [catShowDrop, setCatShowDrop] = useState(true);
+  const [catShowIconGrid, setCatShowIconGrid] = useState(true);
   const [catSort, setCatSort] = useState(1);
+  const [isUploadingCatIcon, setIsUploadingCatIcon] = useState(false);
+
+  const handleAddCategoryClick = (parentId: string = "") => {
+    setEditingCatId(null);
+    setCatSlug("");
+    setCatNameEn("");
+    setCatNameBn("");
+    setCatDescEn("");
+    setCatDescBn("");
+    setCatIcon("");
+    setCatParentId(parentId);
+    setCatShowMega(true);
+    setCatShowDrop(true);
+    setCatShowIconGrid(!parentId);
+    setCatSort((catData?.data?.length || 0) + 1);
+    setIsCatModalOpen(true);
+  };
+
+  const handleEditCategoryClick = (c: any) => {
+    setEditingCatId(c.id || c._id);
+    setCatSlug(c.slug || "");
+    setCatNameEn(c.nameEn || "");
+    setCatNameBn(c.nameBn || "");
+    setCatDescEn(c.descriptionEn || "");
+    setCatDescBn(c.descriptionBn || "");
+    setCatIcon(c.icon || "");
+    setCatParentId(c.parentId?._id || c.parentId || "");
+    setCatShowMega(c.showInMegaMenu !== false);
+    setCatShowDrop(c.showInDropdown !== false);
+    setCatShowIconGrid(c.showInIconGrid !== false);
+    setCatSort(c.sortOrder ?? 1);
+    setIsCatModalOpen(true);
+  };
+
+  const handleDeleteCategoryClick = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete category "${name}"?`)) return;
+    try {
+      await deleteCategory(id).unwrap();
+      refetchCats();
+    } catch (err: any) {
+      alert(err?.data?.message || "Failed to delete category.");
+    }
+  };
 
   // 3. UI SECTION FORM STATE
   const [uiType, setUiType] = useState("QUICK_DEAL");
@@ -709,31 +761,38 @@ export default function ContentPage() {
   // Submit Category Form
   const handleSubmitCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!catSlug || !catNameEn || !catNameBn) {
-      alert("Please fill in category slug and titles.");
+    if (!catNameEn || !catNameBn) {
+      alert("Please fill in category English and Bengali titles.");
       return;
     }
 
+    const finalSlug = (catSlug.trim() || catNameEn.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")).toLowerCase();
+
     const payload = {
-      slug: catSlug,
+      slug: finalSlug,
       nameEn: catNameEn,
       nameBn: catNameBn,
-      parentId: catParentId || undefined,
+      descriptionEn: catDescEn || undefined,
+      descriptionBn: catDescBn || undefined,
+      icon: catIcon || undefined,
+      parentId: catParentId || null,
       showInMegaMenu: catShowMega,
       showInDropdown: catShowDrop,
-      sortOrder: Number(catSort)
+      showInIconGrid: catShowIconGrid,
+      sortOrder: Number(catSort) || 0
     };
 
     try {
-      await createCategory(payload).unwrap();
+      if (editingCatId) {
+        await updateCategory({ id: editingCatId, body: payload }).unwrap();
+      } else {
+        await createCategory(payload).unwrap();
+      }
       refetchCats();
       setIsCatModalOpen(false);
-      setCatSlug("");
-      setCatNameEn("");
-      setCatNameBn("");
-      setCatParentId("");
+      setEditingCatId(null);
     } catch (err: any) {
-      alert(err?.data?.message || "Failed to create category node.");
+      alert(err?.data?.message || "Failed to save category.");
     }
   };
 
@@ -1049,47 +1108,165 @@ export default function ContentPage() {
       )}
 
       {/* =========================================================
-          TAB 2: CATEGORY SUBSYSTEM
+          TAB 2: CATEGORY & SUBCATEGORY SUBSYSTEM
           ========================================================= */}
       {activeTab === "categories" && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Layers className="text-emerald-500 h-5 w-5" />
-            Categories Taxonomy Tree
-          </h2>
-          
-          <div className="space-y-4">
-            {catData?.data?.map((c: any) => (
-              <div key={c.id || c._id} className="border border-slate-850 p-4 rounded-2xl bg-slate-950/40">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center font-bold text-emerald-400">
-                      {c.nameEn[0]}
-                    </div>
-                    <div>
-                      <span className="font-bold text-white">{c.nameEn}</span>
-                      <span className="text-xs text-slate-400 font-bengali ml-2">({c.nameBn})</span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Root</span>
-                </div>
-                
-                {/* Secondary subcategories */}
-                {c.children && c.children.length > 0 && (
-                  <div className="pl-10 mt-3 border-l border-slate-800 space-y-2">
-                    {c.children.map((child: any) => (
-                      <div key={child.id || child._id} className="flex justify-between items-center text-xs py-2 border-b border-slate-900/60 last:border-0 hover:bg-slate-900/20 px-2 rounded-lg">
-                        <div>
-                          <span className="text-slate-200 font-semibold">{child.nameEn}</span>
-                          <span className="text-slate-400 font-bengali ml-2">({child.nameBn})</span>
-                        </div>
-                        <span className="text-[10px] text-slate-500">Slug: {child.slug}</span>
+        <div className="space-y-6">
+          {/* Top Action Bar */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-black text-white flex items-center gap-2">
+                <Layers className="text-emerald-500 h-6 w-6" />
+                Main Categories & Subcategories (ক্যাটাগরি ও সাব-ক্যাটাগরি)
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">
+                মেইন ক্যাটাগরি তৈরি করুন, আইকন/ইমেজ আপলোড করুন এবং প্রতিটি মেইন ক্যাটাগরির অধীনে প্রয়োজনীয় সাব-ক্যাটাগরি সাজান।
+              </p>
+            </div>
+            <button
+              onClick={() => handleAddCategoryClick("")}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/50 transition whitespace-nowrap self-start md:self-auto"
+            >
+              <PlusCircle className="h-4 w-4" />
+              + Add Main Category (নতুন মেইন ক্যাটাগরি)
+            </button>
+          </div>
+
+          {/* Categories List */}
+          <div className="space-y-6">
+            {catData?.data?.filter((c: any) => !c.parentId)?.map((c: any) => {
+              const isImage = c.icon && (c.icon.startsWith("http") || c.icon.startsWith("/") || c.icon.startsWith("data:"));
+              const subcats = c.children || [];
+
+              return (
+                <div key={c.id || c._id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg transition-all hover:border-slate-700">
+                  {/* Main Category Header Bar */}
+                  <div className="bg-slate-950/80 p-5 border-b border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      {/* Icon / Image thumbnail */}
+                      <div className="w-12 h-12 rounded-2xl bg-slate-850 border border-slate-700/60 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {isImage ? (
+                          <img src={c.icon} alt={c.nameEn} className="w-8 h-8 object-contain" />
+                        ) : (
+                          <span className="text-lg font-black text-emerald-400 uppercase">
+                            {c.nameEn?.[0] || "C"}
+                          </span>
+                        )}
                       </div>
-                    ))}
+
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-base font-black text-white">{c.nameBn}</span>
+                          <span className="text-xs text-slate-400 font-semibold">({c.nameEn})</span>
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            Main Category
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400 font-mono flex-wrap">
+                          <span>Slug: <span className="text-slate-300">/shop/categories/{c.slug}</span></span>
+                          <span>•</span>
+                          <span>Order: <span className="text-slate-300">#{c.sortOrder ?? 0}</span></span>
+                          <span>•</span>
+                          <span className={c.showInIconGrid ? "text-emerald-400 font-semibold" : "text-slate-500"}>
+                            Homepage Circle: {c.showInIconGrid ? "Active" : "Hidden"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Main Category Action Buttons */}
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                      <button
+                        onClick={() => handleAddCategoryClick(c.id || c._id)}
+                        className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"
+                        title="Add Subcategory under this Main Category"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>+ Add Subcategory</span>
+                      </button>
+                      <button
+                        onClick={() => handleEditCategoryClick(c)}
+                        className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1"
+                        title="Edit Main Category"
+                      >
+                        <Edit3 className="h-3.5 w-3.5" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategoryClick(c.id || c._id, c.nameEn)}
+                        className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold px-2.5 py-1.5 rounded-xl transition"
+                        title="Delete Category"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {/* Subcategories Section */}
+                  <div className="p-5 bg-slate-900/40">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                        <Tag className="h-3.5 w-3.5 text-emerald-400" />
+                        Subcategories ({subcats.length})
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        গ্রাহক যখন এই ক্যাটাগরিতে যাবে, এই সাব-ক্যাটাগরিগুলো ফিল্টার হিসেবে দেখাবে
+                      </span>
+                    </div>
+
+                    {subcats.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {subcats.map((child: any) => (
+                          <div
+                            key={child.id || child._id}
+                            className="bg-slate-950 border border-slate-800/90 hover:border-slate-700 p-3 rounded-xl flex items-center justify-between group transition"
+                          >
+                            <div className="truncate mr-2">
+                              <div className="font-bold text-slate-200 text-xs truncate">
+                                {child.nameBn || child.nameEn}
+                              </div>
+                              <div className="text-[10px] text-slate-400 truncate">
+                                {child.nameEn} • <span className="font-mono text-slate-500">{child.slug}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => handleEditCategoryClick(child)}
+                                className="p-1 hover:text-emerald-400 text-slate-400 transition"
+                                title="Edit Subcategory"
+                              >
+                                <Edit3 className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCategoryClick(child.id || child._id, child.nameEn)}
+                                className="p-1 hover:text-red-400 text-slate-400 transition"
+                                title="Delete Subcategory"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="border border-dashed border-slate-800 rounded-xl p-4 text-center bg-slate-950/30 flex flex-col items-center justify-center gap-2">
+                        <p className="text-xs text-slate-500">
+                          এই মেইন ক্যাটাগরির অধীনে এখনো কোনো সাব-ক্যাটাগরি তৈরি করা হয়নি।
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => handleAddCategoryClick(c.id || c._id)}
+                          className="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          + Add First Subcategory (e.g. বেবি ব্যাগ, বেবি ফুড, বেবি ক্লথ)
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -2028,7 +2205,16 @@ export default function ContentPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Choose Category *</label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">Choose Main Category *</label>
+                        <button
+                          type="button"
+                          onClick={() => handleAddCategoryClick("")}
+                          className="text-[10px] text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-0.5"
+                        >
+                          <Plus className="h-3 w-3" /> New Category
+                        </button>
+                      </div>
                       <select
                         required
                         value={formCategory}
@@ -2038,24 +2224,39 @@ export default function ContentPage() {
                         }}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs"
                       >
-                        <option value="">Select Category</option>
+                        <option value="">Select Main Category</option>
                         {catData?.data?.filter((c: any) => !c.parentId).map((c: any) => (
-                          <option key={c.id || c._id} value={c.id || c._id}>{c.nameEn} ({c.nameBn})</option>
+                          <option key={c.id || c._id} value={c.id || c._id}>{c.nameBn} ({c.nameEn})</option>
                         ))}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Choose Subcategory</label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-400">Choose Subcategory</label>
+                        {formCategory && (
+                          <button
+                            type="button"
+                            onClick={() => handleAddCategoryClick(formCategory)}
+                            className="text-[10px] text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-0.5"
+                          >
+                            <Plus className="h-3 w-3" /> Quick Add Subcategory
+                          </button>
+                        )}
+                      </div>
                       <select
                         value={formSubcategory}
                         onChange={(e) => setFormSubcategory(e.target.value)}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-xs"
                         disabled={!formCategory}
                       >
-                        <option value="">Select Subcategory</option>
-                        {catData?.data?.filter((c: any) => c.parentId === formCategory).map((c: any) => (
-                          <option key={c.id || c._id} value={c.id || c._id}>{c.nameEn} ({c.nameBn})</option>
-                        ))}
+                        <option value="">Select Subcategory (Optional)</option>
+                        {(() => {
+                          const selectedParent = catData?.data?.find((c: any) => (c.id || c._id) === formCategory);
+                          const subcategories = selectedParent?.children || [];
+                          return subcategories.map((c: any) => (
+                            <option key={c.id || c._id} value={c.id || c._id}>{c.nameBn} ({c.nameEn})</option>
+                          ));
+                        })()}
                       </select>
                     </div>
                   </div>
@@ -2778,98 +2979,229 @@ export default function ContentPage() {
       )}
 
       {/* =========================================================
-          MODAL 2: ADD CATEGORY NODE
+          MODAL 2: ADD / EDIT CATEGORY & SUBCATEGORY
           ========================================================= */}
       {isCatModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-300 flex flex-col">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-300 flex flex-col max-h-[90vh]">
             <div className="flex justify-between items-center bg-slate-950/80 px-6 py-4 border-b border-slate-800">
               <h2 className="text-sm font-black text-white flex items-center gap-2">
                 <Layers className="h-4 w-4 text-emerald-500" />
-                Add Taxonomy Node Category
+                {editingCatId ? "Edit Category (ক্যাটাগরি সম্পাদনা)" : catParentId ? "Add Subcategory (সাব-ক্যাটাগরি যোগ করুন)" : "Add Main Category (নতুন মেইন ক্যাটাগরি)"}
               </h2>
               <button onClick={() => setIsCatModalOpen(false)} className="text-slate-400 hover:text-white p-1">
                 <X className="h-6 w-6" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitCategory} className="p-6 space-y-4 text-xs text-slate-300">
-              <div>
-                <label className="block font-bold uppercase tracking-wider text-slate-400 mb-2">Category Slug *</label>
-                <input
-                  type="text"
-                  required
-                  value={catSlug}
-                  onChange={(e) => setCatSlug(e.target.value)}
-                  placeholder="e.g., educational-STEM"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500"
-                />
+            <form onSubmit={handleSubmitCategory} className="p-6 space-y-4 text-xs text-slate-300 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-400 mb-1.5">Name (Bengali) *</label>
+                  <input
+                    type="text"
+                    required
+                    value={catNameBn}
+                    onChange={(e) => {
+                      setCatNameBn(e.target.value);
+                    }}
+                    placeholder="যেমন: বেবি কেয়ার ও ডায়াপার"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 font-bengali text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-400 mb-1.5">Name (English) *</label>
+                  <input
+                    type="text"
+                    required
+                    value={catNameEn}
+                    onChange={(e) => {
+                      setCatNameEn(e.target.value);
+                      if (!editingCatId && !catSlug) {
+                        setCatSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
+                      }
+                    }}
+                    placeholder="e.g., Baby Care & Diapers"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 text-xs"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block font-bold uppercase tracking-wider text-slate-400 mb-2">Name (English) *</label>
-                <input
-                  type="text"
-                  required
-                  value={catNameEn}
-                  onChange={(e) => setCatNameEn(e.target.value)}
-                  placeholder="STEM Kits"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-400 mb-1.5">Category URL Slug *</label>
+                  <input
+                    type="text"
+                    required
+                    value={catSlug}
+                    onChange={(e) => setCatSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, "-"))}
+                    placeholder="e.g. baby-care"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 font-mono text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-400 mb-1.5">Parent Category (প্যারেন্ট ক্যাটাগরি)</label>
+                  <select
+                    value={catParentId}
+                    onChange={(e) => {
+                      setCatParentId(e.target.value);
+                      if (e.target.value) {
+                        setCatShowIconGrid(false); // Subcategories usually not in main icon grid
+                      }
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 text-xs"
+                  >
+                    <option value="">No Parent - Root Main Category (মেইন ক্যাটাগরি)</option>
+                    {catData?.data?.filter((c: any) => !c.parentId && (c.id || c._id) !== editingCatId)?.map((c: any) => (
+                      <option key={c.id || c._id} value={c.id || c._id}>{c.nameBn} ({c.nameEn})</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div>
-                <label className="block font-bold uppercase tracking-wider text-slate-400 mb-2">Name (Bengali) *</label>
-                <input
-                  type="text"
-                  required
-                  value={catNameBn}
-                  onChange={(e) => setCatNameBn(e.target.value)}
-                  placeholder="স্টেম কিটস"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500 font-bengali"
-                />
+              {/* Icon / Image Uploader */}
+              <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/60 space-y-3">
+                <label className="block font-bold uppercase tracking-wider text-slate-400 mb-1">Category Icon / Image (আইকন বা ইমেজ আপলোড)</label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={catIcon}
+                    onChange={(e) => setCatIcon(e.target.value)}
+                    placeholder="Image URL or Icon Name (e.g. Baby, Shapes, BookOpen)"
+                    className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                  <label className="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer whitespace-nowrap flex items-center gap-1.5">
+                    {isUploadingCatIcon ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5" />}
+                    <span>{isUploadingCatIcon ? "Uploading..." : "Upload File"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isUploadingCatIcon}
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setIsUploadingCatIcon(true);
+                        const formData = new FormData();
+                        formData.append("file", file);
+                        try {
+                          const res = await uploadMedia(formData).unwrap();
+                          if (res.url) setCatIcon(res.url);
+                        } catch (err: any) {
+                          alert(err?.data?.message || "Category icon upload failed!");
+                        } finally {
+                          setIsUploadingCatIcon(false);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {catIcon && (
+                  <div className="flex items-center gap-3 pt-1">
+                    <span className="text-[11px] text-slate-400">Preview:</span>
+                    <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center overflow-hidden">
+                      {catIcon.startsWith("http") || catIcon.startsWith("/") || catIcon.startsWith("data:") ? (
+                        <img src={catIcon} alt="Preview" className="w-8 h-8 object-contain" />
+                      ) : (
+                        <span className="text-xs font-bold text-emerald-400 font-mono">{catIcon}</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCatIcon("")}
+                      className="text-xs text-red-400 hover:text-red-300 font-semibold"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="block font-bold uppercase tracking-wider text-slate-400 mb-2">Parent Category (Optional)</label>
-                <select
-                  value={catParentId}
-                  onChange={(e) => setCatParentId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="">No Parent (Root Node)</option>
-                  {catData?.data?.map((c: any) => (
-                    <option key={c.id || c._id} value={c.id || c._id}>{c.nameEn}</option>
-                  ))}
-                </select>
+              {/* Description */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-400 mb-1">Description (Bengali)</label>
+                  <textarea
+                    rows={2}
+                    value={catDescBn}
+                    onChange={(e) => setCatDescBn(e.target.value)}
+                    placeholder="ক্যাটাগরির সংক্ষিপ্ত বিবরণ..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 font-bengali text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold uppercase tracking-wider text-slate-400 mb-1">Description (English)</label>
+                  <textarea
+                    rows={2}
+                    value={catDescEn}
+                    onChange={(e) => setCatDescEn(e.target.value)}
+                    placeholder="Short category description..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-emerald-500 text-xs"
+                  />
+                </div>
               </div>
 
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={catShowMega} onChange={(e) => setCatShowMega(e.target.checked)} className="rounded accent-emerald-500" />
-                  <span>Show in Mega Menu</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={catShowDrop} onChange={(e) => setCatShowDrop(e.target.checked)} className="rounded accent-emerald-500" />
-                  <span>Show in Dropdown</span>
-                </label>
+              {/* Display & Order Settings */}
+              <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold uppercase tracking-wider text-slate-400">Sort Order #</label>
+                  <input
+                    type="number"
+                    value={catSort}
+                    onChange={(e) => setCatSort(parseInt(e.target.value, 10) || 0)}
+                    className="w-24 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-white focus:outline-none focus:border-emerald-500 font-mono text-xs text-right"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-800/80">
+                  <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg bg-slate-900/50 hover:bg-slate-900">
+                    <input
+                      type="checkbox"
+                      checked={catShowIconGrid}
+                      onChange={(e) => setCatShowIconGrid(e.target.checked)}
+                      className="rounded accent-emerald-500 h-4 w-4"
+                    />
+                    <span className="text-[11px] font-semibold text-slate-200">Show on Homepage Circle (হোমপেজ সার্কেল)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg bg-slate-900/50 hover:bg-slate-900">
+                    <input
+                      type="checkbox"
+                      checked={catShowMega}
+                      onChange={(e) => setCatShowMega(e.target.checked)}
+                      className="rounded accent-emerald-500 h-4 w-4"
+                    />
+                    <span className="text-[11px] font-semibold text-slate-200">Show in Mega Menu</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg bg-slate-900/50 hover:bg-slate-900">
+                    <input
+                      type="checkbox"
+                      checked={catShowDrop}
+                      onChange={(e) => setCatShowDrop(e.target.checked)}
+                      className="rounded accent-emerald-500 h-4 w-4"
+                    />
+                    <span className="text-[11px] font-semibold text-slate-200">Show in Dropdown</span>
+                  </label>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-850">
                 <button
                   type="button"
                   onClick={() => setIsCatModalOpen(false)}
-                  className="bg-slate-850 hover:bg-slate-800 text-slate-300 font-bold py-2 px-4 rounded-xl"
+                  className="bg-slate-850 hover:bg-slate-800 text-slate-300 font-bold py-2.5 px-5 rounded-xl text-xs transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreatingCat}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-xl flex items-center gap-1.5"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-7 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-emerald-950/50 transition"
                 >
                   <Save className="h-4 w-4" />
-                  {isCreatingCat ? "Saving..." : "Create Category"}
+                  {isCreatingCat ? "Saving..." : editingCatId ? "Update Category" : "Save Category"}
                 </button>
               </div>
             </form>

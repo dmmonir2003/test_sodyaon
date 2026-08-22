@@ -16,10 +16,18 @@ export const adminContentApi = baseApi.injectEndpoints({
     // ---------------------------------------------------------
     // PRODUCT CRUD
     // ---------------------------------------------------------
-    getAdminProducts: builder.query<any, { search?: string; limit?: number; page?: number; categoryId?: string; sort?: string; ageRange?: string }>({
-      query: ({ search = '', limit = 50, page = 1, categoryId = '', sort = '', ageRange = '' } = {}) => ({
+    getAdminProducts: builder.query<any, { search?: string; limit?: number; page?: number; categoryId?: string; subcategoryId?: string; sort?: string; ageRange?: string } | void>({
+      query: (params) => ({
         url: '/products',
-        params: { search, limit, page, categoryId, sort, ageRange },
+        params: {
+          search: params?.search || '',
+          limit: params?.limit || 50,
+          page: params?.page || 1,
+          categoryId: params?.categoryId || '',
+          subcategoryId: params?.subcategoryId || '',
+          sort: params?.sort || '',
+          ageRange: params?.ageRange || ''
+        },
       }),
       providesTags: ['Product'],
     }),
@@ -122,11 +130,15 @@ export const adminContentApi = baseApi.injectEndpoints({
     // ---------------------------------------------------------
     // CATEGORIES CRUD
     // ---------------------------------------------------------
-    getCategories: builder.query<any, { tree?: boolean }>({
-      query: ({ tree = true } = {}) => ({
+    getCategories: builder.query<any, { tree?: boolean } | void>({
+      query: (params) => ({
         url: '/categories',
-        params: { tree: tree ? 'true' : 'false' },
+        params: { tree: params?.tree !== false ? 'true' : 'false' },
       }),
+      providesTags: ['Product'],
+    }),
+    getCategoryBySlug: builder.query<any, string>({
+      query: (slug) => `/categories/${slug}`,
       providesTags: ['Product'],
     }),
     createCategory: builder.mutation<any, any>({
@@ -134,6 +146,21 @@ export const adminContentApi = baseApi.injectEndpoints({
         url: '/categories',
         method: 'POST',
         body,
+      }),
+      invalidatesTags: ['Product'],
+    }),
+    updateCategory: builder.mutation<any, { id: string; body: any }>({
+      query: ({ id, body }) => ({
+        url: `/categories/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['Product'],
+    }),
+    deleteCategory: builder.mutation<any, string>({
+      query: (id) => ({
+        url: `/categories/${id}`,
+        method: 'DELETE',
       }),
       invalidatesTags: ['Product'],
     }),
@@ -266,7 +293,10 @@ export const {
   useDeleteCouponMutation,
 
   useGetCategoriesQuery,
+  useGetCategoryBySlugQuery,
   useCreateCategoryMutation,
+  useUpdateCategoryMutation,
+  useDeleteCategoryMutation,
   useGetUISectionsQuery,
   useCreateUISectionMutation,
   useGetFlashSalesQuery,
