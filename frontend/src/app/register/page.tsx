@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Phone, Mail, Lock, User, ArrowRight, CheckCircle2, ShieldCheck, X, Sparkles } from "lucide-react";
+import { Phone, Mail, Lock, User, ArrowRight, CheckCircle2, ShieldCheck, X, Sparkles, Eye, EyeOff } from "lucide-react";
 import AnimatedLogo from "@/components/shared/AnimatedLogo";
 import { 
   useRegisterProfileMutation,

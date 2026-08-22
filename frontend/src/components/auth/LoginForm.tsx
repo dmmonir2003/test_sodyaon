@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Phone, Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
+import { Phone, Mail, Lock, ArrowRight, Sparkles, Eye, EyeOff } from "lucide-react";
 import { 
   useLoginProfileMutation,
   useSocialLoginMutation
