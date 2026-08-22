@@ -7,15 +7,13 @@ interface AnimatedLogoProps {
   fillColor?: string;
   primaryColor?: string;
   secondaryColor?: string;
-  slideIn?: boolean;
 }
 
 export default function AnimatedLogo({ 
   className = "w-full max-w-xs", 
   fillColor = "currentColor",
   primaryColor = "var(--color-primary-600)",
-  secondaryColor = "var(--color-secondary-500)",
-  slideIn = false
+  secondaryColor = "var(--color-secondary-500)"
 }: AnimatedLogoProps) {
   
   // Outer container
@@ -26,24 +24,17 @@ export default function AnimatedLogo({
     }
   };
 
-  // Group that moves the Cart Body & Wheels
-  const cartSlideVariants = slideIn ? {
+  // Group that moves the Cart Body & Wheels from Left to Right
+  const cartSlideVariants = {
     hidden: { x: -800 },
     visible: {
       x: 0,
       transition: { duration: 2.5, ease: "easeInOut" as const }
     }
-  } : {
-    hidden: { x: -30, opacity: 0 },
-    visible: {
-      x: 0,
-      opacity: 1,
-      transition: { duration: 0.7, ease: "easeOut" as const }
-    }
   };
 
-  // Cart body draws itself while sliding
-  const bodyVariants = slideIn ? {
+  // Cart body draws itself (requires stroke) while sliding
+  const bodyVariants = {
     hidden: { pathLength: 0, fillOpacity: 0 },
     visible: { 
       pathLength: 1, 
@@ -53,49 +44,27 @@ export default function AnimatedLogo({
         fillOpacity: { duration: 0.8, delay: 2.0 }
       }
     }
-  } : {
-    hidden: { pathLength: 0, fillOpacity: 0 },
-    visible: { 
-      pathLength: 1, 
-      fillOpacity: 1,
-      transition: { 
-        pathLength: { duration: 0.8, ease: "easeInOut" as const },
-        fillOpacity: { duration: 0.3, delay: 0.4 }
-      }
-    }
   };
 
-  // Checkmark pops in AFTER the cart and wheels arrive
-  const checkmarkVariants = slideIn ? {
+  // Wheels use the exact same drawing logic as the cart body.
+
+  // Checkmark pops in AFTER the cart and wheels arrive (starts at 2.6s)
+  const checkmarkVariants = {
     hidden: { scale: 0, opacity: 0, originX: 0.5, originY: 0.5 },
     visible: { 
       scale: 1, 
       opacity: 1,
       transition: { type: "spring" as const, stiffness: 200, damping: 15, delay: 2.6 }
     }
-  } : {
-    hidden: { scale: 0, opacity: 0, originX: 0.5, originY: 0.5 },
-    visible: { 
-      scale: 1, 
-      opacity: 1,
-      transition: { type: "spring" as const, stiffness: 200, damping: 15, delay: 0.5 }
-    }
   };
 
-  // 'স' character (Path 1) drops from top to bottom
-  const dropDownVariants = slideIn ? {
+  // 'স' character (Path 1) drops from top to bottom AFTER Checkmark (starts at 3.3s)
+  const dropDownVariants = {
     hidden: { y: -300, opacity: 0 },
     visible: { 
       y: 0, 
       opacity: 1,
       transition: { type: "spring" as const, bounce: 0.5, duration: 1.5, delay: 3.3 }
-    }
-  } : {
-    hidden: { y: -40, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { type: "spring" as const, bounce: 0.4, duration: 0.8, delay: 0.6 }
     }
   };
 
@@ -110,7 +79,7 @@ export default function AnimatedLogo({
       initial="hidden"
       animate="visible"
     >
-      {/* The Entire Cart (Body + Wheels) */}
+      {/* The Entire Cart (Body + Wheels) slides from left to right */}
       <motion.g variants={cartSlideVariants}>
         
         {/* Path 2: Main Cart Body */}
